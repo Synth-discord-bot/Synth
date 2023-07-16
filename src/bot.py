@@ -27,10 +27,10 @@ class Bot(commands.Bot):
                     self.load_extension(f"src.cogs.{directory[:-3]}")
                     logging.debug(directory)
                 except (
-                        commands.ExtensionNotFound,
-                        commands.NoEntryPointError,
-                        commands.ExtensionFailed,
-                        commands.ExtensionError,
+                    commands.ExtensionNotFound,
+                    commands.NoEntryPointError,
+                    commands.ExtensionFailed,
+                    commands.ExtensionError,
                 ) as e:
                     _, __, exc_tb = sys.exc_info()
                     logging.error(
