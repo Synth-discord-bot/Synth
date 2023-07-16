@@ -1,5 +1,5 @@
-from src.cfg import bot, cfg
+from src import bot, config
 
 bot = bot.Bot()
 
-bot.run(cfg.token)
+bot.run(config.token)
