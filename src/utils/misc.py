@@ -20,7 +20,7 @@ def command_is_disabled():
             guild_id,
             ctx.command.qualified_name.split()[0]
             if ctx.command.parent
-            else ctx.command.name
+            else ctx.command.name,
         )
 
         if result:
@@ -28,7 +28,7 @@ def command_is_disabled():
                 embed=Embed(
                     title="Error",
                     description="This command is disabled in this guild.",
-                    colour=0xff0000
+                    colour=0xFF0000,
                 )
             )
             return False
