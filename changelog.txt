@@ -1,0 +1,10 @@
+0.0.2.1:
+add main bot (AKA bot settings) database
+users can change prefix to bot in guilds
+
+0.0.2:
+add database ORM-like
+add test cog
+
+0.0.1:
+init

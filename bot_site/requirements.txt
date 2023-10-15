@@ -1,0 +1,3 @@
+Quart
+Quart-Discord
+git+https://github.com/CollectorStudio/better-ipc-disnake

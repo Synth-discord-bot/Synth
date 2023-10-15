@@ -1,6 +1,6 @@
 import disnake
 from disnake.ext import commands
-from src import testdb
+from src.utils import testdb
 
 
 class FirstTestCog(commands.Cog):
@@ -18,7 +18,7 @@ class FirstTestCog(commands.Cog):
 
     @commands.command()
     async def search_one(self, ctx: commands.Context) -> None:
-        # await self.testdb.add_to_db({"id": 1, "test": False})
+        await self.testdb.add_to_db({"id": 1, "test": True})
         msg = await ctx.send("Successfully added to database. Now lets try to find it.")
         result = await self.testdb.find_one_cache({"test": True})
         await msg.edit(content="The result is {}".format(result))
