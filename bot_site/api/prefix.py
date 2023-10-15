@@ -19,4 +19,6 @@ async def prefix():
     if guild_id and bot_prefix:
         response = await ipc.request("set_prefix", prefix=bot_prefix, guild_id=guild_id)
         return response.response
-    raise Exception("Please provide a guild_id or/and bot_prefix parameters in the request header")
+    raise Exception(
+        "Please provide a guild_id or/and bot_prefix parameters in the request header"
+    )

@@ -45,7 +45,9 @@ class Economy(commands.Cog):
 
         # Check if money is a valid number
         if not isinstance(money, int):
-            return await ctx.reply("Please enter a valid number or \"all\" argument to send 🪙 to bank!")
+            return await ctx.reply(
+                'Please enter a valid number or "all" argument to send 🪙 to bank!'
+            )
 
         # Check if money is positive
         if money <= 0:
@@ -61,14 +63,14 @@ class Economy(commands.Cog):
             {
                 "bank": current_money if money == current_money else money,
                 "balance": 0 if money == current_money else current_money - money,
-            }
+            },
         )
-        
+
         # Calculate bank, cash, and total values
         bank = await self.economy.get_bank(ctx.author)
         cash = current_money - money
         total = cash + bank
-        
+
         # Reply with balance information
         await ctx.reply(
             embed=Embed(

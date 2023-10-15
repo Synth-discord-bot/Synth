@@ -29,10 +29,10 @@ class BaseDatabase:
         return param_filter
 
     async def get_items_in_db(
-            self,
-            find_dict: Mapping[str, Any],
-            to_list: bool = True,
-            count: Union[int, None] = None,
+        self,
+        find_dict: Mapping[str, Any],
+        to_list: bool = True,
+        count: Union[int, None] = None,
     ) -> Union[List[Mapping[str, Any]], AsyncIOMotorCursor]:
         result = self.collection.find(filter=find_dict)
         if to_list:
@@ -61,7 +61,7 @@ class BaseDatabase:
         return results[0] if results else None
 
     async def find_one_from_db(
-            self, param_filter: Mapping[str, Any]
+        self, param_filter: Mapping[str, Any]
     ) -> Mapping[str, Any]:
         results = await self.get_items_in_db(find_dict=param_filter, to_list=True)
         return results[0] if len(results) >= 1 else None
@@ -90,7 +90,7 @@ class BaseDatabase:
             self.collection_cache[index] = data
 
     async def update_db(
-            self, data: Mapping[str, Any], new_value: Mapping[str, Any]
+        self, data: Mapping[str, Any], new_value: Mapping[str, Any]
     ) -> None:
         await self.collection.update_one(data, {"$set": new_value}, upsert=True)
 
@@ -100,14 +100,14 @@ class Economy(BaseDatabase):
         super().__init__(database_name)
 
     async def get_balance(
-            self, user_id: Union[int, str, disnake.User, disnake.Member]
+        self, user_id: Union[int, str, disnake.User, disnake.Member]
     ) -> int:
         user_id = int(user_id) if isinstance(user_id, (str, int)) else user_id.id
 
         return (await self.find_one_from_db({"id": user_id})).get("balance", 0)
 
     async def get_bank(
-            self, user_id: Union[int, str, disnake.User, disnake.Member]
+        self, user_id: Union[int, str, disnake.User, disnake.Member]
     ) -> int:
         user_id = int(user_id) if isinstance(user_id, (str, int)) else user_id.id
 
@@ -135,7 +135,9 @@ class MainDatabase(BaseDatabase):
         if await self.find_one_from_db({"id": guild_id}) is None:
             return []
 
-        return (await self.find_one_from_db({"id": guild_id})).get("disabled_commands", [])
+        return (await self.find_one_from_db({"id": guild_id})).get(
+            "disabled_commands", []
+        )
 
     async def check_command(self, guild_id: int, command: str) -> bool:
         if await self.find_one_from_db({"id": guild_id}) is None:
@@ -146,7 +148,9 @@ class MainDatabase(BaseDatabase):
 
     async def add_command(self, guild_id: int, command: str) -> None:
         if await self.find_one_from_db({"id": guild_id}) is None:
-            return await self.update_db({"id": guild_id}, {"disabled_commands": [command]})
+            return await self.update_db(
+                {"id": guild_id}, {"disabled_commands": [command]}
+            )
 
         if not await self.check_command(guild_id=guild_id, command=command):
             commands = await self._get_commands_list(guild_id=guild_id)

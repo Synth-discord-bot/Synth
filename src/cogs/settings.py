@@ -20,7 +20,11 @@ class SettingsCog(commands.Cog):
     async def get_prefix(self, data: ClientPayload) -> Dict[str, str]:
         prefix = await self.settings_db.get_prefix(data.guild_id)
 
-        return {"message": f"Current prefix is {prefix}", "prefix": prefix, "status": "OK"}
+        return {
+            "message": f"Current prefix is {prefix}",
+            "prefix": prefix,
+            "status": "OK",
+        }
 
     @Server.route()
     async def set_prefix(self, data: ClientPayload) -> Dict[str, str]:
@@ -30,12 +34,16 @@ class SettingsCog(commands.Cog):
             return {
                 "message": f"Prefix already set to {data.prefix}",
                 "prefix": current_prefix,
-                "status": "ALREADY_IN_DB"
+                "status": "ALREADY_IN_DB",
             }
 
         await self.settings_db.set_prefix(data.guild_id, data.prefix)
-        print('ok')
-        return {"message": f"Successfully set prefix to {data.prefix}", "prefix": data.prefix, "status": "OK"}
+        print("ok")
+        return {
+            "message": f"Successfully set prefix to {data.prefix}",
+            "prefix": data.prefix,
+            "status": "OK",
+        }
 
     @commands.command()
     @command_is_disabled()
@@ -62,20 +70,32 @@ class SettingsCog(commands.Cog):
         if command_name and command_name != ctx.command:
             if isinstance(command_name, commands.Group):
                 for command in command_name.commands:
-                    await self.settings_db.add_command(guild_id=ctx.guild.id, command=command.name)
-            await self.settings_db.add_command(guild_id=ctx.guild.id, command=command_name.name)
+                    await self.settings_db.add_command(
+                        guild_id=ctx.guild.id, command=command.name
+                    )
+            await self.settings_db.add_command(
+                guild_id=ctx.guild.id, command=command_name.name
+            )
             return await ctx.reply(
                 embed=Embed(
                     title="Information",
                     description=f"Successfully disabled command "
-                                f"{'group' if isinstance(command_name, commands.Group) else ''} "
-                                f"{command_name.name}"
+                    f"{'group' if isinstance(command_name, commands.Group) else ''} "
+                    f"{command_name.name}",
                 )
             )
         elif command_name == ctx.command:
-            return await ctx.reply(embed=Embed(title="Error", description=f"You can't disable this command"))
+            return await ctx.reply(
+                embed=Embed(
+                    title="Error", description=f"You can't disable this command"
+                )
+            )
         else:
-            return await ctx.reply(embed=Embed(title="Error", description=f"Could not find command {command}"))
+            return await ctx.reply(
+                embed=Embed(
+                    title="Error", description=f"Could not find command {command}"
+                )
+            )
 
 
 def setup(bot: commands.Bot) -> None:
