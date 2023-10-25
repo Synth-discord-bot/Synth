@@ -36,10 +36,10 @@ class Bot(commands.Bot):
                     cog_path = f"src.cogs.{cog_name}"
                     self.load_extension(cog_path)
                 except (
-                        commands.ExtensionNotFound,
-                        commands.NoEntryPointError,
-                        commands.ExtensionFailed,
-                        commands.ExtensionError,
+                    commands.ExtensionNotFound,
+                    commands.NoEntryPointError,
+                    commands.ExtensionFailed,
+                    commands.ExtensionError,
                 ) as e:
                     exc_type = e.__class__.__name__
                     exc_line = sys.exc_info()[2].tb_lineno
