@@ -7,7 +7,7 @@ from disnake.ext import commands
 from disnake_ipc.ext.ipc import Server
 
 from bot_site import config
-from .utils import misc
+from .utils import misc, help
 
 
 class Bot(commands.Bot):
@@ -15,7 +15,7 @@ class Bot(commands.Bot):
 
     def __init__(self) -> None:
         super(Bot, self).__init__(
-            help_command=None,
+            help_command=help.CustomHelpCommand(),
             command_prefix=misc.get_guild_prefix,
             intents=disnake.Intents.all(),
             reload=True,
