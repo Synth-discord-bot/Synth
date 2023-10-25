@@ -6,7 +6,7 @@ from disnake.ext import commands
 
 class CustomHelpCommand(commands.MinimalHelpCommand):
     def get_command_signature(self, command: commands.Command) -> str:
-        command_signature = command.signature.replace('=', ' or ')
+        command_signature = command.signature.replace("=", " or ")
         return (
             f"{self.context.clean_prefix}{command.qualified_name} {command_signature}"
         )
@@ -17,8 +17,7 @@ class CustomHelpCommand(commands.MinimalHelpCommand):
         description: Optional[str] = None,
         mapping: Optional[Mapping] = None,
         command_set: Union[
-            List[commands.Command],
-            Optional[Set[commands.Command]]
+            List[commands.Command], Optional[Set[commands.Command]]
         ] = None,
     ) -> Embed:
         embed = Embed(title=title)
