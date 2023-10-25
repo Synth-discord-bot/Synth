@@ -1,11 +1,12 @@
+import logging
 import os
 import sys
 
+import disnake
 from disnake.ext import commands
 from disnake_ipc.ext.ipc import Server
-from bot_site import config
 
-from .utils import *
+from bot_site import config
 from .utils import misc
 
 
@@ -23,7 +24,6 @@ class Bot(commands.Bot):
         self.ipc = Server(self, secret_key=config.SECRET_IPC_KEY)
 
     async def setup_hook(self):
-        await testdb.fetch_and_cache_all()
         await self.ipc.start()
 
     async def on_ready(self) -> None:
@@ -36,10 +36,10 @@ class Bot(commands.Bot):
                     cog_path = f"src.cogs.{cog_name}"
                     self.load_extension(cog_path)
                 except (
-                    commands.ExtensionNotFound,
-                    commands.NoEntryPointError,
-                    commands.ExtensionFailed,
-                    commands.ExtensionError,
+                        commands.ExtensionNotFound,
+                        commands.NoEntryPointError,
+                        commands.ExtensionFailed,
+                        commands.ExtensionError,
                 ) as e:
                     exc_type = e.__class__.__name__
                     exc_line = sys.exc_info()[2].tb_lineno

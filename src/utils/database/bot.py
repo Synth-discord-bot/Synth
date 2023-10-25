@@ -1,0 +1,47 @@
+from typing import Optional, List
+
+from .base import BaseDatabase
+
+
+class MainDatabase(BaseDatabase):
+    def __init__(self, database_name: str) -> None:
+        super().__init__(database_name)
+
+    # prefixes
+    async def get_prefix(self, guild_id: int) -> Optional[str]:
+        if await self.find_one_from_db({"id": guild_id}) is None:
+            return ">>"
+
+        return (await self.find_one_from_db({"id": guild_id})).get("prefix", ">>")
+
+    async def set_prefix(self, guild_id: int, prefix: str) -> None:
+        if await self.find_one_from_db({"id": guild_id}) is None:
+            return await self.add_to_db({"id": guild_id, "prefix": prefix})
+
+        return await self.update_db({"id": guild_id}, {"prefix": prefix})
+
+    async def _get_commands_list(self, guild_id: int) -> List[str]:
+        if await self.find_one_from_db({"id": guild_id}) is None:
+            return []
+
+        return (await self.find_one_from_db({"id": guild_id})).get(
+            "disabled_commands", []
+        )
+
+    async def check_command(self, guild_id: int, command: str) -> bool:
+        if await self.find_one_from_db({"id": guild_id}) is None:
+            await self.update_db({"id": guild_id}, {"disabled_commands": [command]})
+
+        commands_list = await self._get_commands_list(guild_id=guild_id)
+        return command in commands_list
+
+    async def add_command(self, guild_id: int, command: str) -> None:
+        if await self.find_one_from_db({"id": guild_id}) is None:
+            return await self.update_db(
+                {"id": guild_id}, {"disabled_commands": [command]}
+            )
+
+        if not await self.check_command(guild_id=guild_id, command=command):
+            commands = await self._get_commands_list(guild_id=guild_id)
+            commands.append(command)
+            await self.update_db({"id": guild_id}, {"disabled_commands": commands})
