@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional, Mapping
 from disnake import Message, Embed
 from disnake.ext import commands
 from . import main_db

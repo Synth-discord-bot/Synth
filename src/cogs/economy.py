@@ -1,11 +1,13 @@
 from typing import Union
 
-from disnake import Embed
+from disnake import Embed, Message
 from disnake.ext import commands
 from src.utils import economy
 
 
 class Economy(commands.Cog):
+    """Economy commands"""
+
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
         self.economy = economy
@@ -15,6 +17,7 @@ class Economy(commands.Cog):
 
     @commands.command()
     async def balance(self, ctx: commands.Context) -> None:
+        """Gets current balance"""
         if await self.economy.find_one({"id": ctx.author.id}) is None:
             await self.economy.add_to_db({"id": ctx.author.id, "balance": 0, "bank": 0})
 
@@ -25,13 +28,20 @@ class Economy(commands.Cog):
         await ctx.reply(
             embed=Embed(
                 title="Balance",
-                description=f"{ctx.author.name}, your balance:\n**Cash:** {money} 🪙\n**Bank:** {bank }🪙\n**Total:** {total }🪙",
+                description=f"{ctx.author.name}, your balance:\n**Cash:** {money} 🪙\n**Bank:** {bank}🪙\n**Total:** {total}🪙",
             )
         )
         # await ctx.send(f"Your balance is {await self.economy.get_balance(ctx.author)}")
 
     @commands.command()
-    async def bank(self, ctx: commands.Context, money: Union[int, str] = "all") -> None:
+    async def bank(
+        self, ctx: commands.Context, money: Union[int, str] = "all"
+    ) -> Message:
+        """Send money to the bank
+
+        Arguments: number or "all"
+        """
+
         # Check if user has an existing economy record, if not, add one
         if await self.economy.find_one({"id": ctx.author.id}) is None:
             await self.economy.add_to_db({"id": ctx.author.id, "balance": 0, "bank": 0})
