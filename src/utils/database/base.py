@@ -10,6 +10,7 @@ class BaseDatabase:
         self._database = self._client["synth"]
         self.collection = self._database[database_name]
         self.collection_cache = {}
+        self.name = database_name
 
     def _add_to_cache(self, param_filter: Mapping[str, Any]) -> Any:
         """
@@ -83,7 +84,7 @@ class BaseDatabase:
 
     async def fetch_and_cache_all(self) -> None:
         results = await self.get_items_in_db({}, to_list=True)
-        logging.info(f"Found {len(results)} items in database")
+        logging.info(f"[{self.name}]: Found {len(results)} items in database")
         for index, data in enumerate(results, start=1):
             self.collection_cache[index] = data
 

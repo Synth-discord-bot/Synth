@@ -1,3 +1,7 @@
+0.2.3:
+Rewritten check if command is disabled in this guild (also fix bug with invoking help command)
+Rewritten help command (with Dropdowns!!!)
+
 0.2.0.1:
 Re-module database (better than before)
 

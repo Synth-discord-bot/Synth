@@ -1,12 +1,15 @@
 from typing import Union
 
-from disnake import Embed, Message
+from disnake import Embed, Message, Localized, CommandInteraction, Attachment, File
 from disnake.ext import commands
 from src.utils import economy
+import io
 
 
 class Economy(commands.Cog):
     """Economy commands"""
+
+    EMOJI = "🪙"
 
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
@@ -15,23 +18,48 @@ class Economy(commands.Cog):
     async def cog_load(self) -> None:
         await self.economy.fetch_and_cache_all()
 
-    @commands.command()
-    async def balance(self, ctx: commands.Context) -> None:
-        """Gets current balance"""
-        if await self.economy.find_one({"id": ctx.author.id}) is None:
-            await self.economy.add_to_db({"id": ctx.author.id, "balance": 0, "bank": 0})
+    @commands.slash_command(description=Localized("test", key="test"))
+    async def test(self, interaction: CommandInteraction, image: Attachment):
+        file = io.BytesIO()
+        await image.save(fp=file)
 
-        money = await self.economy.get_balance(ctx.author)
-        bank = await self.economy.get_bank(ctx.author)
+        await interaction.send(
+            content="your image:",
+            file=File(fp=file, filename="image.png", spoiler=image.is_spoiler()),
+        )
+
+    @commands.slash_command(description=Localized("test", key="test"))
+    async def balance(self, interaction: CommandInteraction):
+        await interaction.send("idin axyu", ephemeral=True)
+        """Gets current balance"""
+        """
+                    choices=[
+                # lookup keys for choices
+                Localized("a", key="CHOICE_A"),
+                Localized("o", key="CHOICE_O"),
+                Localized("u", key="CHOICE_U"),
+            ]
+        ),
+        """
+        if await self.economy.find_one({"id": interaction.author.id}) is None:
+            await self.economy.add_to_db(
+                {"id": interaction.author.id, "balance": 0, "bank": 0}
+            )
+
+        money = await self.economy.get_balance(interaction.author)
+        bank = await self.economy.get_bank(interaction.author)
         total = money + bank
 
-        await ctx.reply(
+        await interaction.send(
             embed=Embed(
                 title="Balance",
-                description=f"{ctx.author.name}, your balance:\n**Cash:** {money} 🪙\n**Bank:** {bank}🪙\n**Total:** {total}🪙",
-            )
+                description=f"{interaction.author.name}, your balance:\n**Cash:** {money} 🪙\n**Bank:** {bank}🪙\n**Total:** {total}🪙",
+            ),
+            ephemeral=True,
         )
-        # await ctx.send(f"Your balance is {await self.economy.get_balance(ctx.author)}")
+        await interaction.send(
+            f"Your balance is {await self.economy.get_balance(interaction.author)}"
+        )
 
     @commands.command()
     async def bank(
