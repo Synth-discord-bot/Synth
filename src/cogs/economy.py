@@ -21,12 +21,12 @@ from src.utils import economy, Economy as EcoDB
 
 class Buttons(ui.View):
     def __init__(
-            self,
-            ctx: commands.Context,
-            bot: commands.Bot,
-            receiver: Member,
-            money: int,
-            economy_data: EcoDB,
+        self,
+        ctx: commands.Context,
+        bot: commands.Bot,
+        receiver: Member,
+        money: int,
+        economy_data: EcoDB,
     ) -> None:
         super().__init__(timeout=20)
         self.ctx = ctx
@@ -37,9 +37,7 @@ class Buttons(ui.View):
         self.economy = economy_data
 
     @ui.button(emoji="✅", style=ButtonStyle.secondary, custom_id="test")
-    async def yes_callback(
-            self, _: ui.Button, interaction: MessageInteraction
-    ) -> None:
+    async def yes_callback(self, _: ui.Button, interaction: MessageInteraction) -> None:
         await interaction.send(content="Please, wait...")
         # old_balance = await self.bot.economy_add.get_money(
         #     self.receiver.id
@@ -127,7 +125,7 @@ class Economy(commands.Cog):
 
     @commands.command()
     async def bank(
-            self, ctx: commands.Context, money: Union[int, str] = "all"
+        self, ctx: commands.Context, money: Union[int, str] = "all"
     ) -> Message:
         """Send money to the bank
 
@@ -183,7 +181,10 @@ class Economy(commands.Cog):
 
     @commands.command()
     async def pay(
-            self, ctx: commands.Context, money: int = 0, user: Union[int, str, Member] = None
+        self,
+        ctx: commands.Context,
+        money: int = 0,
+        user: Union[int, str, Member] = None,
     ):
         if user is None:
             return await ctx.send("Please specify the user (mention or id)")
