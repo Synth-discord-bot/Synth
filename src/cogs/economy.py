@@ -31,7 +31,6 @@ class Buttons(ui.View):
         super().__init__(timeout=20)
         self.ctx = ctx
         self.bot = bot
-        # self.author_id = author_id
         self.receiver = receiver
         self.money = money
         self.economy = economy_data
@@ -39,9 +38,6 @@ class Buttons(ui.View):
     @ui.button(emoji="✅", style=ButtonStyle.secondary, custom_id="test")
     async def yes_callback(self, _: ui.Button, interaction: MessageInteraction) -> None:
         await interaction.send(content="Please, wait...")
-        # old_balance = await self.bot.economy_add.get_money(
-        #     self.receiver.id
-        # )  # self.res - участник, tosend - участник, которому будет отправлено
         received_balance = await self.economy.get_balance(user_id=self.receiver.id)
         new_received_balance = received_balance + self.money
         old_bal_sender = await self.economy.get_balance(user_id=self.ctx.author.id)
