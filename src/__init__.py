@@ -1,6 +1,7 @@
-import logging
 import datetime
+import logging
 
+import src.bot
 
 startup = datetime.datetime.now()
 logger = logging.getLogger()
