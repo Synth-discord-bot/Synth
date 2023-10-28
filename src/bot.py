@@ -6,7 +6,6 @@ import disnake
 from disnake.ext import commands
 from disnake_ipc.ext.ipc import Server
 
-from bot_site import config
 from src.cogs.TicketsCog import SetupTicketSettings
 from .utils import misc
 from .utils.help import CustomHelpCommand
@@ -24,7 +23,7 @@ class Bot(commands.Bot):
             reload=True,
         )
 
-        self.ipc = Server(self, secret_key=config.SECRET_IPC_KEY)
+        # self.ipc = Server(self, secret_key=config.SECRET_IPC_KEY)  # well... need talk about config
         self.i18n.load("src/utils/locale")
 
     def view_add(self):
@@ -47,8 +46,8 @@ class Bot(commands.Bot):
 
         return await self.process_commands(message=message)
 
-    async def setup_hook(self):
-        await self.ipc.start()
+    # async def setup_hook(self):
+    #     await self.ipc.start()
 
     async def on_ready(self) -> None:
         logging.info(

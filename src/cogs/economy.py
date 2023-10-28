@@ -1,9 +1,97 @@
 from typing import Union
 
-from disnake import Embed, Message, Localized, CommandInteraction, Attachment, File
+import disnake
+from disnake import (
+    Embed,
+    Message,
+    Localized,
+    CommandInteraction,
+    ui,
+    ButtonStyle,
+    MessageInteraction,
+    Color,
+    Member,
+    InteractionResponse,
+)
 from disnake.ext import commands
-from src.utils import economy
-import io
+from disnake.ext.commands import MemberConverter
+
+from src.utils import economy, Economy as EcoDB
+
+
+class Buttons(ui.View):
+    def __init__(
+            self,
+            ctx: commands.Context,
+            bot: commands.Bot,
+            receiver: Member,
+            money: int,
+            economy_data: EcoDB,
+    ) -> None:
+        super().__init__(timeout=20)
+        self.ctx = ctx
+        self.bot = bot
+        # self.author_id = author_id
+        self.receiver = receiver
+        self.money = money
+        self.economy = economy_data
+
+    @ui.button(emoji="✅", style=ButtonStyle.secondary, custom_id="test")
+    async def yes_callback(
+            self, _: ui.Button, interaction: MessageInteraction
+    ) -> None:
+        await interaction.send(content="Please, wait...")
+        # old_balance = await self.bot.economy_add.get_money(
+        #     self.receiver.id
+        # )  # self.res - участник, tosend - участник, которому будет отправлено
+        received_balance = await self.economy.get_balance(user_id=self.receiver.id)
+        new_received_balance = received_balance + self.money
+        old_bal_sender = await self.economy.get_balance(user_id=self.ctx.author.id)
+        new_sender_balance = old_bal_sender - self.money
+        print(new_received_balance, new_sender_balance)
+        try:
+            await self.economy.update_db(
+                {"id": self.receiver.id}, {"balance": new_received_balance}
+            )
+            await self.economy.update_db(
+                {"id": self.ctx.author.id}, {"balance": new_sender_balance}
+            )
+            await interaction.edit_original_response(
+                content="",
+                embed=Embed(
+                    title="Successful",
+                    description=f"You successfully transferred {self.receiver} {self.money} 🪙!",
+                    color=Color.green(),
+                ),
+            )
+        except (Exception, BaseException):
+            await interaction.edit_original_response(
+                content="",
+                embed=Embed(
+                    title="Error",
+                    description=f"Failed to transfer to {self.receiver} {self.money} 🪙",
+                    color=Color.red(),
+                ),
+            )
+
+    @disnake.ui.button(
+        emoji="❌",
+        style=ButtonStyle.secondary,
+        custom_id="danger",
+    )
+    async def no_callback(self, _, interaction):
+        await interaction.response.send_message("OK!")
+
+    async def interaction_check(self, interaction: MessageInteraction) -> bool:
+        if interaction.user != self.ctx.author:
+            return await interaction.response.send_message(
+                "You cannot press these buttons!", ephemeral=True
+            )
+        else:
+            return True
+
+    async def on_timeout(self) -> None:
+        return
 
 
 class Economy(commands.Cog):
@@ -19,28 +107,7 @@ class Economy(commands.Cog):
         await self.economy.fetch_and_cache_all()
 
     @commands.slash_command(description=Localized("test", key="test"))
-    async def test(self, interaction: CommandInteraction, image: Attachment):
-        file = io.BytesIO()
-        await image.save(fp=file)
-
-        await interaction.send(
-            content="your image:",
-            file=File(fp=file, filename="image.png", spoiler=image.is_spoiler()),
-        )
-
-    @commands.slash_command(description=Localized("test", key="test"))
     async def balance(self, interaction: CommandInteraction):
-        await interaction.send("idin axyu", ephemeral=True)
-        """Gets current balance"""
-        """
-                    choices=[
-                # lookup keys for choices
-                Localized("a", key="CHOICE_A"),
-                Localized("o", key="CHOICE_O"),
-                Localized("u", key="CHOICE_U"),
-            ]
-        ),
-        """
         if await self.economy.find_one({"id": interaction.author.id}) is None:
             await self.economy.add_to_db(
                 {"id": interaction.author.id, "balance": 0, "bank": 0}
@@ -57,13 +124,10 @@ class Economy(commands.Cog):
             ),
             ephemeral=True,
         )
-        await interaction.send(
-            f"Your balance is {await self.economy.get_balance(interaction.author)}"
-        )
 
     @commands.command()
     async def bank(
-        self, ctx: commands.Context, money: Union[int, str] = "all"
+            self, ctx: commands.Context, money: Union[int, str] = "all"
     ) -> Message:
         """Send money to the bank
 
@@ -116,6 +180,54 @@ class Economy(commands.Cog):
                 description=f"{ctx.author.name}, your balance now:\n**Cash:** {cash} 🪙\n**Bank:** {bank}🪙\n**Total:** {total}🪙",
             )
         )
+
+    @commands.command()
+    async def pay(
+            self, ctx: commands.Context, money: int = 0, user: Union[int, str, Member] = None
+    ):
+        if user is None:
+            return await ctx.send("Please specify the user (mention or id)")
+
+        if money == 0:
+            return await ctx.send("Please specify money to transfer")
+
+        elif await self.economy.get_balance(user_id=ctx.author.id) < money:
+            return await ctx.reply(
+                "Not enough to transfer the money to the user", mention_author=False
+            )
+        elif money > 9223372036854775807:
+            await ctx.reply(
+                embed=Embed(
+                    title="🚫 | Transfer error",
+                    description="You want to transfer too much money!",
+                    color=Color.red(),
+                ),
+                mention_author=False,
+            )
+        elif money < 1:
+            return await ctx.reply(
+                embed=Embed(
+                    title="🚫 | Transfer error",
+                    description="You can't transfer less than 1 🪙",
+                    color=Color.red(),
+                ).set_footer(text=f"Command executed by {ctx.author}"),
+                mention_author=False,
+            )  #
+        else:
+            if isinstance(user, Member):
+                res = user.id
+            else:
+                res = await MemberConverter().convert(ctx, user)
+            await ctx.reply(
+                f"Are you sure you want transfer {money} 🪙 to {res.mention}?",
+                view=Buttons(
+                    ctx=ctx,
+                    bot=self.bot,
+                    receiver=res,
+                    money=money,
+                    economy_data=self.economy,
+                ),
+            )
 
 
 def setup(bot: commands.Bot) -> None:

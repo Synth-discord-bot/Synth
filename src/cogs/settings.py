@@ -19,33 +19,33 @@ class Settings(commands.Cog):
     async def cog_load(self) -> None:
         await self.settings_db.fetch_and_cache_all()
 
-    @Server.route()
-    async def get_prefix(self, data: ClientPayload) -> Dict[str, str]:
-        prefix = await self.settings_db.get_prefix(data.guild_id)
-
-        return {
-            "message": f"Current prefix is {prefix}",
-            "prefix": prefix,
-            "status": "OK",
-        }
-
-    @Server.route()
-    async def set_prefix(self, data: ClientPayload) -> Dict[str, str]:
-        current_prefix = await self.settings_db.get_prefix(data.guild_id)
-
-        if current_prefix == data.prefix:
-            return {
-                "message": f"Prefix already set to {data.prefix}",
-                "prefix": current_prefix,
-                "status": "ALREADY_IN_DB",
-            }
-
-        await self.settings_db.set_prefix(data.guild_id, data.prefix)
-        return {
-            "message": f"Successfully set prefix to {data.prefix}",
-            "prefix": data.prefix,
-            "status": "OK",
-        }
+    # @Server.route()
+    # async def get_prefix(self, data: ClientPayload) -> Dict[str, str]:
+    #     prefix = await self.settings_db.get_prefix(data.guild_id)
+    #
+    #     return {
+    #         "message": f"Current prefix is {prefix}",
+    #         "prefix": prefix,
+    #         "status": "OK",
+    #     }
+    #
+    # @Server.route()
+    # async def set_prefix(self, data: ClientPayload) -> Dict[str, str]:
+    #     current_prefix = await self.settings_db.get_prefix(data.guild_id)
+    #
+    #     if current_prefix == data.prefix:
+    #         return {
+    #             "message": f"Prefix already set to {data.prefix}",
+    #             "prefix": current_prefix,
+    #             "status": "ALREADY_IN_DB",
+    #         }
+    #
+    #     await self.settings_db.set_prefix(data.guild_id, data.prefix)
+    #     return {
+    #         "message": f"Successfully set prefix to {data.prefix}",
+    #         "prefix": data.prefix,
+    #         "status": "OK",
+    #     }
 
     @commands.command()
     async def set_prefix(self, ctx: commands.Context, prefix: str) -> Message:
