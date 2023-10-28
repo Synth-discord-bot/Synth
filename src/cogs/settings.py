@@ -5,10 +5,13 @@ from disnake.ext import commands
 from disnake_ipc.ext.ipc import Server, ClientPayload
 
 from src.utils import main_db
-from src.utils.misc import command_is_disabled
 
 
-class SettingsCog(commands.Cog):
+class Settings(commands.Cog):
+    """Helper commands to set up the bot."""
+
+    EMOJI = "⚙️"
+
     def __init__(self, bot) -> None:
         self.bot = bot
         self.settings_db = main_db
@@ -38,7 +41,6 @@ class SettingsCog(commands.Cog):
             }
 
         await self.settings_db.set_prefix(data.guild_id, data.prefix)
-        print("ok")
         return {
             "message": f"Successfully set prefix to {data.prefix}",
             "prefix": data.prefix,
@@ -46,8 +48,8 @@ class SettingsCog(commands.Cog):
         }
 
     @commands.command()
-    @command_is_disabled()
     async def set_prefix(self, ctx: commands.Context, prefix: str) -> Message:
+        """Set current prefix to another one"""
         if prefix is None or prefix == "":
             return await ctx.reply("Please enter a prefix!")
         elif len(prefix) >= 5:
@@ -58,6 +60,8 @@ class SettingsCog(commands.Cog):
 
     @commands.command()
     async def command_disable(self, ctx: commands.Context, command: str) -> Message:
+        """Disable command for this guild (required administrator privileges)"""
+
         # first, try to get command from name
         command_name = ctx.bot.get_command(command)
         if command_name is None:
@@ -99,4 +103,4 @@ class SettingsCog(commands.Cog):
 
 
 def setup(bot: commands.Bot) -> None:
-    bot.add_cog(SettingsCog(bot=bot))
+    bot.add_cog(Settings(bot=bot))
