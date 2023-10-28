@@ -114,7 +114,8 @@ class CustomHelpCommand(commands.MinimalHelpCommand):
                         emoji = getattr(cog, "EMOJI", None)
                         cog_label = f"{emoji} {name}" if emoji else name
                         cmd_list = "\u2002".join(
-                            f"`{self.context.clean_prefix}{cmd.name}`" for cmd in filtered
+                            f"`{self.context.clean_prefix}{cmd.name}`"
+                            for cmd in filtered
                         )
                         value = (
                             f"{cog.description}\n{cmd_list}"
