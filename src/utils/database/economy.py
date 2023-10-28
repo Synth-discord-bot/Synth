@@ -25,6 +25,4 @@ class Economy(BaseDatabase):
         return (await self.find_one_from_db({"id": user_id})).get("bank", 0)
 
     async def add_member(self, member: Member) -> None:
-        return await self.add_to_db(
-            {"id": member.id, "balance": 0, "bank": 0}
-        )
+        return await self.add_to_db({"id": member.id, "balance": 0, "bank": 0})
