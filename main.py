@@ -1,5 +1,6 @@
-from src import bot, config
+from src import bot
+from os import getenv
 
 bot = bot.Bot()
 
-bot.run(config.token) #я хз но я бы как то этот файл редакнул
+bot.run(getenv("DISCORD_TOKEN", "token"))

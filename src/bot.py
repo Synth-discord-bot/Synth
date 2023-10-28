@@ -59,9 +59,8 @@ class Bot(commands.Bot):
         for extension in os.listdir("src\\cogs"):
             if extension.endswith(".py"):
                 try:
-                    cog_name = extension[:-3]
-                    cog_path = f"src.cogs.{cog_name}"
-                    self.load_extension(cog_path)
+                    event_name = extension[:-3]
+                    self.load_extension(f"src.cogs.{event_name}")
                 except (
                     commands.ExtensionNotFound,
                     commands.NoEntryPointError,
@@ -78,22 +77,22 @@ class Bot(commands.Bot):
                     logging.info(f"{extension} is loaded!")
 
         for event in os.listdir("src\\events"):
-            if event.endswith(".py"):
-                try:
-                    cog_name = event[:-3]
-                    cog_path = f"src.events.{cog_name}"
-                    self.load_extension(cog_path)
-                except (
-                    commands.ExtensionNotFound,
-                    commands.NoEntryPointError,
-                    commands.ExtensionFailed,
-                    commands.ExtensionError,
-                ) as e:
-                    exc_type = e.__class__.__name__
-                    exc_line = sys.exc_info()[2].tb_lineno
-                    logging.error(
-                        f"Failed to load {event}! {exc_type}: {str(e)}, line {exc_line}"
-                    )
-                    continue
-                finally:
-                    logging.info(f"{event} event is loaded!")
+            if not event.endswith(".py"):
+                continue
+
+            try:
+                self.load_extension(f"src.events.{event[:-3]}")
+            except (
+                commands.ExtensionNotFound,
+                commands.NoEntryPointError,
+                commands.ExtensionFailed,
+                commands.ExtensionError,
+            ) as e:
+                exc_type = e.__class__.__name__
+                exc_line = sys.exc_info()[2].tb_lineno
+                logging.error(
+                    f"Failed to load {event}! {exc_type}: {str(e)}, line {exc_line}"
+                )
+                continue
+            finally:
+                logging.info(f"{event} event is loaded!")
