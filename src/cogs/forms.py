@@ -1,11 +1,11 @@
 from disnake.ext import commands
 from disnake.ext.commands import TextChannelConverter, BadArgument
 import disnake
-from src.utils import forms, FormsDatabase
+from src.utils import forms
 
 
 class ButtonOrSelect(disnake.ui.Select):
-    def __init__(self, bot: commands.Bot, forms: FormsDatabase):
+    def __init__(self, bot: commands.Bot, forms: forms):
         super().__init__(
             placeholder="Choose a category",
             min_values=1,
