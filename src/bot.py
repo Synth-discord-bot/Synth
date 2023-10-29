@@ -4,7 +4,7 @@ import sys
 
 import disnake
 from disnake.ext import commands
-from disnake_ipc.ext.ipc import Server
+from disnake.ext.ipc import Server
 
 from src.cogs.TicketsCog import SetupTicketSettings
 from .utils import misc
@@ -39,7 +39,7 @@ class Bot(commands.Bot):
             # TODO: blacklist
 
             # check if command is disabled
-            command = message.content.split()[0][len(prefix) :]
+            command = message.content.split()[0][len(prefix):]
             result = await is_command_disabled(message=message, command=command)
             if result:
                 return
@@ -55,7 +55,7 @@ class Bot(commands.Bot):
             f"{self.user.id}&permissions=980937982&scope=bot%20applications.commands"
         )
         logging.debug(f"Connected to {self.user}")
-        for extension in os.listdir("src\\cogs"):
+        for extension in os.listdir("src/cogs"):
             if extension.endswith(".py"):
                 try:
                     event_name = extension[:-3]
@@ -75,7 +75,7 @@ class Bot(commands.Bot):
                 finally:
                     logging.info(f"{extension} is loaded!")
 
-        for event in os.listdir("src\\events"):
+        for event in os.listdir("src/events"):
             if not event.endswith(".py"):
                 continue
 

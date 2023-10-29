@@ -2,7 +2,7 @@ from typing import Dict
 
 from disnake import Message, Embed
 from disnake.ext import commands
-from disnake_ipc.ext.ipc import Server, ClientPayload
+# from disnake.ext.ipc import Server, ClientPayload
 
 from src.utils import main_db
 

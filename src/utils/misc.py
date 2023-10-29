@@ -24,7 +24,7 @@ async def get_prefix(message: Message) -> Union[List[str], str]:
 async def is_command_disabled(message: Message, command: str) -> bool:
     guild_id = message.guild.id
 
-    result = await main_db.check_command(guild_id, command)
+    result = await main_db.check_command(guild_id, command, False)
     if result is not False:
         await message.reply(
             embed=Embed(
