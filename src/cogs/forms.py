@@ -1,11 +1,11 @@
 from disnake.ext import commands
 from disnake.ext.commands import TextChannelConverter, BadArgument
 import disnake
-from src.utils import forms
+from src.utils import forms, FormsDatabase
 
 
 class ButtonOrSelect(disnake.ui.Select):
-    def __init__(self, bot: commands.Bot, forms: forms):
+    def __init__(self, bot: commands.Bot, forms: FormsDatabase):
         super().__init__(
             placeholder="Choose a category",
             min_values=1,
@@ -84,9 +84,10 @@ class ButtonOrSelect(disnake.ui.Select):
             form_name=name,
             form_description=description,
             form_channel_id=channel_id,
-            form_type=form_type,
+            form_type=form_type,  # Надо будет добавить чтобы цвет менялся по желанию пользователя + надо сделать чтобы текст в кнопке/селекте менялся, Короче БАБАХ
         )
-
+        embed = disnake.Embed(title=name, description=description, color=0x43ADF3)
+        await channel.send(embed=embed)
         await msg.edit("Form has been created", delete_after=10)
 
 
