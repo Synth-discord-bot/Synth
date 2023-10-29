@@ -39,7 +39,7 @@ class Bot(commands.Bot):
             # TODO: blacklist
 
             # check if command is disabled
-            command = message.content.split()[0][len(prefix):]
+            command = message.content.split()[0][len(prefix) :]
             result = await is_command_disabled(message=message, command=command)
             if result:
                 return

@@ -28,7 +28,9 @@ class MainDatabase(BaseDatabase):
             "disabled_commands", []
         )
 
-    async def check_command(self, guild_id: int, command: str, add_if_not_exists: bool = True) -> bool:
+    async def check_command(
+        self, guild_id: int, command: str, add_if_not_exists: bool = True
+    ) -> bool:
         if await self.find_one_from_db({"id": guild_id}) is None and add_if_not_exists:
             await self.update_db({"id": guild_id}, {"disabled_commands": [command]})
 
