@@ -11,7 +11,6 @@ from disnake import (
     MessageInteraction,
     Color,
     Member,
-    InteractionResponse,
 )
 from disnake.ext import commands
 from disnake.ext.commands import MemberConverter
