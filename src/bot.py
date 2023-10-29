@@ -4,7 +4,8 @@ import sys
 
 import disnake
 from disnake.ext import commands
-from disnake.ext.ipc import Server
+
+# from disnake.ext.ipc import Server
 
 from src.cogs.TicketsCog import SetupTicketSettings
 from .utils import misc

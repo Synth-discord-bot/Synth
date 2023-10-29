@@ -3,6 +3,7 @@ import disnake
 from .base import BaseDatabase
 from typing import Dict, Any, Union
 
+
 class BackupsDatabase(BaseDatabase):
     def __init__(self, database_name: str) -> None:
         super().__init__(database_name)
