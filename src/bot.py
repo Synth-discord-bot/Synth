@@ -55,7 +55,7 @@ class Bot(commands.Bot):
             f"{self.user.id}&permissions=980937982&scope=bot%20applications.commands"
         )
         logging.debug(f"Connected to {self.user}")
-        for extension in os.listdir("src/cogs"):
+        for extension in os.listdir("src\\cogs"):
             if extension.endswith(".py"):
                 try:
                     event_name = extension[:-3]
@@ -75,7 +75,7 @@ class Bot(commands.Bot):
                 finally:
                     logging.info(f"{extension} is loaded!")
 
-        for event in os.listdir("src/events"):
+        for event in os.listdir("src\\events"):
             if not event.endswith(".py"):
                 continue
 
