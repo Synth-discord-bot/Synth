@@ -153,7 +153,11 @@ class EditFormView(disnake.ui.View):
         await interaction.channel.send(f"New title: `{title}`", delete_after=10)
 
 
-class FormsCog(commands.Cog):
+class Forms(commands.Cog):
+    """Helper commands to setup forms."""
+
+    EMOJI = "📝"
+
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
         self.forms = forms
@@ -197,4 +201,4 @@ class FormsCog(commands.Cog):
 
 
 def setup(bot: commands.Bot) -> None:
-    bot.add_cog(FormsCog(bot=bot))
+    bot.add_cog(Forms(bot=bot))

@@ -160,7 +160,7 @@ class CustomHelpCommand(commands.MinimalHelpCommand):
             )
         emoji = getattr(cog, "EMOJI", None)
         return await self.embed_help(
-            title=f"{emoji} {cog.qualified_name}" if emoji else cog.qualified_name,
+            title=f"{emoji} {cog.qualified_name}\n" if emoji else cog.qualified_name,
             description=cog.description,
             command_list=cog.get_commands(),
         )

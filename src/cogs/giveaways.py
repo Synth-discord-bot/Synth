@@ -9,7 +9,11 @@ from disnake import Localized
 time_units = {"d": "days", "h": "hours", "m": "minutes", "s": "seconds"}
 
 
-class GiveawayCog(commands.Cog):  # Need rewrite
+class Giveaway(commands.Cog):  # Need rewrite
+    """Helper commands to setup giveaway."""
+
+    EMOJI = "🎉"
+
     def __init__(self, bot) -> None:
         self.bot = bot
 
@@ -179,4 +183,4 @@ class GiveawayCog(commands.Cog):  # Need rewrite
 
 
 def setup(bot: commands.Bot) -> None:
-    bot.add_cog(GiveawayCog(bot))
+    bot.add_cog(Giveaway(bot))
