@@ -118,9 +118,14 @@ class Economy(commands.Cog):
             ephemeral=True,
         )
 
-    @commands.slash_command(name = Localized("bank", key="BANK_COMMAND_NAME"), description=Localized("bank", key="BANK_COMMAND_DESC"))
+    @commands.slash_command(
+        name=Localized("bank", key="BANK_COMMAND_NAME"),
+        description=Localized("bank", key="BANK_COMMAND_DESC"),
+    )
     async def bank(
-        self, interaction: disnake.MessageCommandInteraction, money: Union[int, str] = "all"
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        money: Union[int, str] = "all",
     ) -> Message:
         """Send money to the bank
 
@@ -129,7 +134,9 @@ class Economy(commands.Cog):
 
         # Check if user has an existing economy record, if not, add one
         if await self.economy.find_one({"id": interaction.author.id}) is None:
-            await self.economy.add_to_db({"id": interaction.author.id, "balance": 0, "bank": 0})
+            await self.economy.add_to_db(
+                {"id": interaction.author.id, "balance": 0, "bank": 0}
+            )
 
         # Get the current balance
         current_money = await self.economy.get_balance(interaction.author)
@@ -146,7 +153,9 @@ class Economy(commands.Cog):
 
         # Check if money is positive
         if money <= 0:
-            return await interaction.send("You can't send negative or zero 🪙 to your bank!")
+            return await interaction.send(
+                "You can't send negative or zero 🪙 to your bank!"
+            )
 
         # Check if user has enough money
         if current_money < money:
@@ -174,7 +183,10 @@ class Economy(commands.Cog):
             )
         )
 
-    @commands.slash_command(name = Localized("pay", key="PAY_COMMAND_NAME"), description = Localized("", key="PAY_COMMAND_DESC"))
+    @commands.slash_command(
+        name=Localized("pay", key="PAY_COMMAND_NAME"),
+        description=Localized("", key="PAY_COMMAND_DESC"),
+    )
     async def pay(
         self,
         interaction: disnake.MessageCommandInteraction,
