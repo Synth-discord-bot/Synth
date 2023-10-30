@@ -1,0 +1,15 @@
+{
+    "USER_COMMAND_NAME": "user",
+    "USER_COMMAND_DESC": "Display information about user.",
+
+    "SERVER_COMMAND_NAME": "server",
+    "SERVER_COMMAND_DESC": "Display information about server.",
+
+
+
+
+
+    "PAY_COMMAND_NAME": "pay",
+    "PAY_COMMAND_DESC:": ""
+
+}
