@@ -36,7 +36,7 @@ class InviteTrackerDatabase(BaseDatabase):
         inviter: Union[disnake.Member, disnake.User] = None,
         invited: Union[disnake.Member, disnake.User] = None,
         
-    ) -> Dict[str, str]:
+    ) -> Optional[Dict[str, str]]:
         if await self.find_one_from_db({"guild_id": guild_id}) is None:
             return await self.add_to_db({
                     "guild_id": guild_id,
@@ -67,7 +67,7 @@ class InviteTrackerDatabase(BaseDatabase):
         self,
         guild_id: Union[int, str, disnake.Guild],
         inviter_id: Union[disnake.Member, disnake.User],
-        invited_users: List[Union[disnake.Member, disnake.User]],
+        invited_user: Union[disnake.Member, disnake.User],
     ) -> None:
         guild_id = (
             guild_id.id
@@ -76,11 +76,15 @@ class InviteTrackerDatabase(BaseDatabase):
             if isinstance(guild_id, str)
             else guild_id
         )
+        count = await self.get_invites(guild_id=guild_id, to_return="count")
+        invites = await self.get_invites(guild_id=guild_id, to_return="invites")
+        invites.append(invited_user)
+
         return await self.update_db(
             {"guild_id": guild_id},
             {
-                "invites": [
-                    {"inviter_id": inviter_id.id, "invited_users": invited_users, "count": 0}
-                ]
+                "invited_id": inviter_id.id,
+                "count": count + 1,
+                "invites": invites
             },
         )
