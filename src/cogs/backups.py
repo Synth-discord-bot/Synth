@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import sys
 import time
 
 import disnake
@@ -15,10 +14,6 @@ class Backup(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         super(Backup, self).__init__()
         self.bot = bot
-        self.backups = backups
-
-    async def cog_load(self) -> None:
-        await self.backups.fetch_and_cache_all()
 
     @commands.group(invoke_without_command=True)
     @commands.has_permissions(administrator=True)
@@ -36,8 +31,7 @@ class Backup(commands.Cog):
             )
 
             if backups.check_backup(ctx.guild):
-                data = await backups.get(guild_id=ctx.guild.id)
-                data = data["backup_data"]
+                data = backups.get({"id": ctx.guild.id, "info": True})
                 embed.add_field(
                     name="Last Backup:",
                     value=f"<t:{data['info']['created']}:f> (<t:{data['info']['created']}:R>)",
@@ -81,10 +75,7 @@ class Backup(commands.Cog):
                         "nsfw": text_channel.nsfw,
                         "position": text_channel.position,
                         "perms": {
-                            role.name: {
-                                "a": ovw.pair()[0].value,
-                                "d": ovw.pair()[1].value,
-                            }
+                            role.name: {"a": ovw[0].value, "d": ovw[1].value}
                             for role, ovw in text_channel.overwrites.items()
                         },
                     }
@@ -101,10 +92,7 @@ class Backup(commands.Cog):
                         "bitrate": voice_channel.bitrate,
                         "position": voice_channel.position,
                         "perms": {
-                            role.name: {
-                                "a": ovw.pair()[0].value,
-                                "d": ovw.pair()[1].value,
-                            }
+                            role.name: {"a": ovw[0].value, "d": ovw[1].value}
                             for role, ovw in voice_channel.overwrites.items()
                         },
                     }
@@ -117,10 +105,7 @@ class Backup(commands.Cog):
                         "name": category.name.replace(".", ""),
                         "position": category.position,
                         "perms": {
-                            role.name: {
-                                "a": ovw.pair()[0].value,
-                                "d": ovw.pair()[1].value,
-                            }
+                            role.name: {"a": ovw[0].value, "d": ovw[1].value}
                             for role, ovw in category.overwrites.items()
                         },
                     }
@@ -137,7 +122,7 @@ class Backup(commands.Cog):
                         }
                         backup_data["roles"][str(index)] = role_data
 
-                await self.backups.update_backups_info(ctx.guild.id, backup_data)
+                await backups.update_backups_info(ctx.guild.id, backup_data)
 
                 embed.colour = 0x2F3136
                 embed.title = "Finished"
@@ -145,10 +130,7 @@ class Backup(commands.Cog):
                 await msg.edit(embed=embed)
 
             except (Exception, ExceptionGroup) as e:
-                raise e
-                exc_type = e.__class__.__name__
-                exc_line = sys.exc_info()[2].tb_lineno
-                logging.error(f"[log]! {exc_type}: {str(e)}, line {exc_line}")
+                logging.info(e)
                 embed.colour = 0x2F3136
                 embed.title = "An error occurred"
                 embed.description = (
@@ -168,6 +150,7 @@ class Backup(commands.Cog):
     @is_owner()
     @has_bot_permissions()
     async def load(self, ctx: commands.Context) -> None:
+
         embed = disnake.Embed(color=0x2F3136)
         embed.title = "Loading Backup"
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar)
@@ -175,7 +158,7 @@ class Backup(commands.Cog):
         msg = await ctx.send(embed=embed)
 
         if ctx.author == ctx.guild.owner:
-            data = await self.backups.get(ctx.guild.id, 0)
+            data = backups.get(ctx.guild.id, 0)
 
             embed.description = "Stage 1 of 6\n> **Restoring the server name**"
             await msg.edit(embed=embed)
@@ -218,10 +201,10 @@ class Backup(commands.Cog):
                         mentionable=data["roles"][str(k)]["mentionable"],
                     )
                 except (
-                    disnake.NotFound,
-                    disnake.Forbidden,
-                    disnake.HTTPException,
-                    TypeError,
+                        disnake.NotFound,
+                        disnake.Forbidden,
+                        disnake.HTTPException,
+                        TypeError,
                 ):
                     pass
 
@@ -306,7 +289,7 @@ class Backup(commands.Cog):
                             nsfw=data["text"][str(i)]["nsfw"],
                             slowmode_delay=data["text"][str(i)]["slowmode"],
                             position=data["text"][str(i)]["position"],
-                            category=await self.backups.get(  # TODO: FIX
+                            category=backups.get(
                                 ctx.guild.categories,
                                 name=data["text"][str(i)]["category"],
                             ),
@@ -353,7 +336,7 @@ class Backup(commands.Cog):
                             user_limit=data["voice"][str(i)]["limit"],
                             bitrate=data["voice"][str(i)]["bitrate"],
                             position=data["voice"][str(i)]["position"],
-                            category=await self.backups.get(  # TODO: FIX
+                            category=backups.get(
                                 ctx.guild.categories,
                                 name=data["voice"][str(i)]["category"],
                             ),
@@ -386,9 +369,7 @@ class Backup(commands.Cog):
                 "categories": {},
                 "roles": {},
             }
-            data = await self.backups.get(
-                ctx.guild.id
-            )  # TODO: need refactor because see line 174
+            data = backups.get(ctx.guild.id)  # TODO: need refactor because see line 174
             backup["guild"]["name"] = data["guild"]["name"]
             backup["text_channels"] = data["text"]
             backup["voice_channels"] = data["voice"]
@@ -396,7 +377,7 @@ class Backup(commands.Cog):
             backup["roles"] = data["roles"]
 
             with open(
-                str(ctx.guild.id) + ".json", "w"
+                    str(ctx.guild.id) + ".json", "w"
             ) as f:  # TODO: use ujson + f-string
                 json.dump(backup, f, indent=4)
 
@@ -419,7 +400,7 @@ class Backup(commands.Cog):
         embed = disnake.Embed(color=0x2F3136)
 
         if backups.check_backup(ctx.guild):
-            await self.backups.remove_from_db({"_id": ctx.guild.id})
+            backups.remove_from_db({"_id": ctx.guild.id})
             embed.title = "Finished"
             embed.description = "Server backup has been successfully deleted"
             await ctx.send(embed=embed)
