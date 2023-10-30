@@ -27,6 +27,19 @@ class BaseDatabase:
         self.collection_cache[index] = param_filter
         return param_filter
 
+    def _remove_from_cache(self, param_filter: Mapping[str, Any]) -> Any:
+        """
+        Remove an item from the cache based on the provided filter.
+
+        :param param_filter: Filter criteria for finding the item to remove from the cache.
+        :return: The removed item, or None if not found.
+        """
+        for index, item in self.collection_cache.items():
+            if all(item.get(key) == value for key, value in param_filter.items()):
+                removed_item = self.collection_cache.pop(index, None)
+                return removed_item
+        return None
+
     async def get_items_in_db(
         self,
         find_dict: Mapping[str, Any],
@@ -94,3 +107,7 @@ class BaseDatabase:
         self, data: Mapping[str, Any], new_value: Mapping[str, Any]
     ) -> None:
         await self.collection.update_one(data, {"$set": new_value}, upsert=True)
+
+    async def remove_from_db(self, data: Mapping[str, Any]) -> None:
+        await self.collection.delete_one(data)
+        self._remove_from_cache(data)

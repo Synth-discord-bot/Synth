@@ -34,3 +34,41 @@ async def is_command_disabled(message: Message, command: str) -> bool:
             )
         )
         return False
+
+
+def is_owner():
+    async def predicate(ctx: commands.Context) -> bool:
+        result = ctx.author == ctx.guild.owner
+
+        if not result:
+            await ctx.send(
+                embed=Embed(
+                    title="<a:error:1168599839899144253> Error",
+                    description="This command can be only used by the server owner",
+                    colour=0xFF0000,
+                )
+            )
+            return False
+
+        return True
+
+    return commands.check(predicate)
+
+
+def has_bot_permissions():
+    async def predicate(ctx: commands.Context) -> bool:
+        bot_member = ctx.guild.get_member(ctx.bot.user.id)
+        print(bot_member.guild_permissions.administrator)
+        if not bot_member.guild_permissions.administrator:
+            await ctx.send(
+                embed=Embed(
+                    title="<<a:error:1168599839899144253> Error",
+                    description="Bot hasn't got enough permissions to do this.",
+                    colour=0xFF0000,
+                )
+            )
+            return False
+
+        return True
+
+    return commands.check(predicate)

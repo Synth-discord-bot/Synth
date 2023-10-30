@@ -5,9 +5,9 @@ import time
 
 import disnake
 from disnake.ext import commands
-from disnake.utils import get
 
 from src.utils import backups
+from src.utils.misc import is_owner, has_bot_permissions
 
 
 class Backup(commands.Cog):
@@ -16,13 +16,13 @@ class Backup(commands.Cog):
         self.bot = bot
 
     @commands.group(invoke_without_command=True)
-    @commands.cooldown(1, 5, commands.BucketType.guild)
     @commands.has_permissions(administrator=True)
+    @commands.cooldown(1, 5, commands.BucketType.guild)
     async def backup(self, ctx: commands.Context) -> None:
         if ctx.invoked_subcommand is None:
             embed = disnake.Embed(
-                title="Backup commands",
-                color=0x43ADF3,
+                title="<:backup:1168599276520226826> Backup commands",
+                color=0x2F3136,
                 description=(
                     f"`{ctx.prefix}backup create` – Create/update backup\n"
                     f"`{ctx.prefix}backup delete` – Delete backup\n"
@@ -31,9 +31,7 @@ class Backup(commands.Cog):
             )
 
             if backups.check_backup(ctx.guild):
-                data = backups.get_items_in_cache({"id": ctx.guild.id, "info": True})
-                # bruh, get function is not found,
-                # TODO: use get_items_in_cache or create own function for backups
+                data = backups.get({"id": ctx.guild.id, "info": True})
                 embed.add_field(
                     name="Last Backup:",
                     value=f"<t:{data['info']['created']}:f> (<t:{data['info']['created']}:R>)",
@@ -42,11 +40,13 @@ class Backup(commands.Cog):
             await ctx.send(embed=embed)
 
     @backup.command()
+    @commands.cooldown(1, 5, commands.BucketType.guild)
+    @is_owner()
     async def create(self, ctx: commands.Context) -> None:
-        embed = disnake.Embed(color=0x43ADF3)
+        embed = disnake.Embed(color=0x2F3136)
         if ctx.author == ctx.guild.owner:
             try:
-                embed.title = "Please wait..."
+                embed.title = "<a:loading:1168599537682755584> Please wait..."
                 embed.description = "Creating a server backup..."
                 msg = await ctx.send(embed=embed)
 
@@ -122,28 +122,16 @@ class Backup(commands.Cog):
                         }
                         backup_data["roles"][str(index)] = role_data
 
-                # huh?
-                # if backups.check_backup(ctx.guild):
-                #     await backups.add_to_db(
-                #         {"id": ctx.guild.id, "backup_data": backup_data}
-                #     )
-                # else:
-                #     await backups.add_to_db(
-                #         {"id": ctx.guild.id, "backup_data": backup_data}
-                #     )
+                await backups.update_backups_info(ctx.guild.id, backup_data)
 
-                await backups.add_to_db(
-                    {"id": ctx.guild.id, "backup_data": backup_data}
-                )
-
-                embed.colour = 0x43ADF3
+                embed.colour = 0x2F3136
                 embed.title = "Finished"
                 embed.description = "Server backup has been successfully created"
                 await msg.edit(embed=embed)
 
             except (Exception, ExceptionGroup) as e:
                 logging.info(e)
-                embed.colour = 0x43ADF3
+                embed.colour = 0x2F3136
                 embed.title = "An error occurred"
                 embed.description = (
                     "An error occurred when trying to save the server. Roles/channels names can't "
@@ -152,26 +140,25 @@ class Backup(commands.Cog):
                 await ctx.send(embed=embed)
 
         else:
-            embed.colour = 0x43ADF3
+            embed.colour = 0x2F3136
             embed.title = "An error occurred"
             embed.description = "This command can only be used by the server owner"
             await ctx.send(embed=embed)
 
     @backup.command()
+    @commands.cooldown(1, 5, commands.BucketType.guild)
+    @is_owner()
+    @has_bot_permissions()
     async def load(self, ctx: commands.Context) -> None:
-        # TODO: Check if bot, and you have permissions to restore guild before restoring backup
 
-        embed = disnake.Embed(color=0x43ADF3)
+        embed = disnake.Embed(color=0x2F3136)
         embed.title = "Loading Backup"
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar)
 
         msg = await ctx.send(embed=embed)
 
-        # TODO: create function to check if ctx.author is guild owner (in utils/misc.py)
         if ctx.author == ctx.guild.owner:
             data = backups.get(ctx.guild.id, 0)
-            # Same: get function is not found,
-            # TODO: use get_items_in_cache or create own function for backups
 
             embed.description = "Stage 1 of 6\n> **Restoring the server name**"
             await msg.edit(embed=embed)
@@ -201,11 +188,9 @@ class Backup(commands.Cog):
             embed.description = "Stage 4 of 6\n> **Creating roles**"
             await msg.edit(embed=embed)
 
-            for k in range(
-                249, -1, -1
-            ):  # TODO: use "for x in range(all_roles + 1)" (or use iter)
+            roles = data["roles"]
+            for k in range(roles + 1):
                 try:
-                    # TODO: need refactor because see line 174
                     await ctx.guild.create_role(
                         name=data["roles"][str(k)]["name"],
                         colour=disnake.Colour(value=data["roles"][str(k)]["color"]),
@@ -216,19 +201,18 @@ class Backup(commands.Cog):
                         mentionable=data["roles"][str(k)]["mentionable"],
                     )
                 except (
-                    disnake.NotFound,
-                    disnake.Forbidden,
-                    disnake.HTTPException,
-                    TypeError,
+                        disnake.NotFound,
+                        disnake.Forbidden,
+                        disnake.HTTPException,
+                        TypeError,
                 ):
                     pass
 
             embed.description = "Stage 5 of 6\n> **Creating categories**"
             await msg.edit(embed=embed)
 
-            for i in range(
-                500
-            ):  # TODO: use "for x in range(all_categories + 1)" (or use iter)
+            categories = data["category"]
+            for i in range(categories + 1):
                 try:
                     overwrites = {}
                     # TODO: need refactor because see line 174
@@ -264,9 +248,8 @@ class Backup(commands.Cog):
             embed.description = "Stage 6 of 6\n> **Creating channels**"
             await msg.edit(embed=embed)
 
-            for i in range(
-                500
-            ):  # TODO: use "for x in range(all_text_channels + 1)" (or use iter)
+            text_channels = data["text"]
+            for i in range(text_channels + 1):
                 try:
                     overwrites = {}
                     # TODO: need refactor because see line 174
@@ -290,9 +273,7 @@ class Backup(commands.Cog):
                         except (Exception, ExceptionGroup):
                             pass
 
-                    # TODO: need refactor because see line 174
                     if data["text"][str(i)]["category"] is None:
-                        # TODO: need refactor because see line 174
                         await ctx.guild.create_text_channel(
                             name=data["text"][str(i)]["name"],
                             topic=data["text"][str(i)]["topic"],
@@ -302,14 +283,13 @@ class Backup(commands.Cog):
                             overwrites=overwrites,
                         )
                     else:
-                        # TODO: need refactor because see line 174
                         await ctx.guild.create_text_channel(
                             name=data["text"][str(i)]["name"],
                             topic=data["text"][str(i)]["topic"],
                             nsfw=data["text"][str(i)]["nsfw"],
                             slowmode_delay=data["text"][str(i)]["slowmode"],
                             position=data["text"][str(i)]["position"],
-                            category=get(
+                            category=backups.get(
                                 ctx.guild.categories,
                                 name=data["text"][str(i)]["category"],
                             ),
@@ -318,14 +298,11 @@ class Backup(commands.Cog):
                 except (disnake.Forbidden, disnake.HTTPException, TypeError):
                     pass
 
-            for i in range(
-                500
-            ):  # TODO: use "for x in range(all_text_channels + 1)" (or use iter)
+            voice_channels = data["voice"]
+            for i in range(voice_channels + 1):
                 try:
                     overwrites = {}
-                    raw_overwrites = data["voice"][str(i)][
-                        "perms"
-                    ]  # TODO: need refactor because see line 174
+                    raw_overwrites = data["voice"][str(i)]["perms"]
 
                     for old_role_permissions in ctx.guild.roles:
                         try:
@@ -345,9 +322,7 @@ class Backup(commands.Cog):
                         except (Exception, ExceptionGroup):
                             pass
 
-                    # TODO: need refactor because see line 174
                     if data["voice"][str(i)]["category"] is None:
-                        # TODO: need refactor because see line 174
                         await ctx.guild.create_voice_channel(
                             name=data["voice"][str(i)]["name"],
                             user_limit=data["voice"][str(i)]["limit"],
@@ -356,13 +331,12 @@ class Backup(commands.Cog):
                             overwrites=overwrites,
                         )
                     else:
-                        # TODO: need refactor because see line 174
                         await ctx.guild.create_voice_channel(
                             name=data["voice"][str(i)]["name"],
                             user_limit=data["voice"][str(i)]["limit"],
                             bitrate=data["voice"][str(i)]["bitrate"],
                             position=data["voice"][str(i)]["position"],
-                            category=get(
+                            category=backups.get(
                                 ctx.guild.categories,
                                 name=data["voice"][str(i)]["category"],
                             ),
@@ -372,12 +346,12 @@ class Backup(commands.Cog):
                     pass
 
             embed.title = "Finished"
-            embed.colour = 0x43ADF3
+            embed.colour = 0x2F3136
             embed.description = "Server backup has been successfully loaded"
 
             await msg.edit(embed=embed)
         else:
-            embed.colour = 0x43ADF3
+            embed.colour = 0x2F3136
             embed.title = "An error occurred"
             embed.description = "This command can only be used by the server owner"
 
@@ -403,7 +377,7 @@ class Backup(commands.Cog):
             backup["roles"] = data["roles"]
 
             with open(
-                str(ctx.guild.id) + ".json", "w"
+                    str(ctx.guild.id) + ".json", "w"
             ) as f:  # TODO: use ujson + f-string
                 json.dump(backup, f, indent=4)
 
@@ -413,7 +387,7 @@ class Backup(commands.Cog):
             os.remove(str(ctx.guild.id) + ".json")
         else:
             embed = disnake.Embed(
-                colour=0x43ADF3,
+                colour=0x2F3136,
                 title="An error occurred",
                 description="There isn't any backup created for this server",
             )
@@ -421,12 +395,12 @@ class Backup(commands.Cog):
             await ctx.send(embed=embed)
 
     @backup.command()
-    @commands.has_permissions(administrator=True)
+    @is_owner()
     async def delete(self, ctx: commands.Context) -> None:
-        embed = disnake.Embed(color=0x43ADF3)
+        embed = disnake.Embed(color=0x2F3136)
 
         if backups.check_backup(ctx.guild):
-            backups.delete({"_id": ctx.guild.id})
+            backups.remove_from_db({"_id": ctx.guild.id})
             embed.title = "Finished"
             embed.description = "Server backup has been successfully deleted"
             await ctx.send(embed=embed)
