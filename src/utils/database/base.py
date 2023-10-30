@@ -84,7 +84,8 @@ class BaseDatabase:
         # try to search in cache
         results = self.get_items_in_cache(value)
         if results:
-            return results[0] if return_first_result else results
+            if len(results[0].get(1, [])) >= 1:
+                return results[0].get(1, []) if return_first_result else results
 
         # if not found in cache, search in database
         results = await self.get_items_in_db(value, to_list=True)

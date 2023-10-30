@@ -3,9 +3,6 @@ from datetime import datetime
 import disnake
 from disnake.ext import commands
 from src.utils import logger
-from src.utils.misc import get_prefix
-from os import getenv
-import io
 
 
 class EventGuild(commands.Cog):
@@ -15,87 +12,7 @@ class EventGuild(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_guild_join(self, guild: disnake.Guild):
-        embed = disnake.Embed(title="Synth | Joined Guild", color=0x2F3136)
-        embed.add_field(
-            name="Guild", value=f"`{guild.name}` / `{guild.id}`", inline=False
-        )
-        embed.add_field(name="Members", value=f"`{guild.member_count}`", inline=False)
-        embed.add_field(
-            name="Joined at",
-            value=disnake.utils.format_dt(datetime.now(), style="f"),
-            inline=False,
-        )
-        embed.add_field(
-            name="Created at",
-            value=disnake.utils.format_dt(guild.created_at, style="f"),
-            inline=False,
-        )
-        embed.add_field(
-            name="Owner",
-            value=f"`@{guild.owner.name}` / `{guild.owner.id}`",
-            inline=False,
-        )
-
-        channel = await self.bot.fetch_channel(getenv("BOT_LOGS", "id"))
-        join_embed = (
-            disnake.Embed(
-                title="Synth | New Era",
-                description=f"""
-Hey :wave_tone1:. Thanks for adding our multi-functional bot, Synth.
-
-:rocket: Quick start:
-1. Bot prefix: `{await get_prefix(message=guild)}`
-2. To get more information about a command, type `{await get_prefix(message=guild)}help <command>`
-3. Join our support server — [click](https://discord.gg/7vT3H3tVYp)
-
-Finally, if you have any issues with the bot, you can take a look at the website. You can also join the [Synth Community](https://discord.gg/7vT3H3tVYp) and ask for help.
-            """,
-                color=0x2F3136,
-            )
-            .set_thumbnail(url=self.bot.user.avatar)
-            .set_image(
-                url="https://cdn.discordapp.com/attachments/1167873742240755843/1168533333010022410/"
-                "synthbanner.png?ex=65521c78&is=653fa778&hm=5481d9be9b4f7e39f60d6ac52677de9b44b2236ceaae8b94c5cfd35348f6167a&"
-            )
-        )
-
-        try:
-            await guild.text_channels[0].send(embed=join_embed)
-        except (disnake.HTTPException, disnake.Forbidden, TypeError, ValueError):
-            await guild.system_channel.send(embed=join_embed)
-        await channel.send(embed=embed)
-
-    @commands.Cog.listener()
-    async def on_guild_remove(self, guild: disnake.Guild):
-        embed = disnake.Embed(title="Synth | Removed Guild", color=0x2F3136)
-        embed.add_field(
-            name="Guild", value=f"`{guild.name}` / `{guild.id}`", inline=False
-        )
-        embed.add_field(name="Members", value=f"`{guild.member_count}`", inline=False)
-        embed.add_field(
-            name="Removed at",
-            value=disnake.utils.format_dt(datetime.now(), style="f"),
-            inline=False,
-        )
-        embed.add_field(
-            name="Owner",
-            value=f"`@{guild.owner.name}` / `{guild.owner.id}`",
-            inline=False,
-        )
-
-        channel = await self.bot.fetch_channel(getenv("BOT_LOGS", "id"))
-        await channel.send(embed=embed)
-
-    @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel: disnake.abc.GuildChannel) -> None:
-        logger_channel = await self.logger.get_loggers(
-            guild_id=channel.guild.id, to_return="guild"
-        )
-
-        if not logger_channel:
-            return
-
         embed = disnake.Embed(title="Deleted Channel", color=0x2F3136)
 
         match channel.type:
@@ -117,19 +34,14 @@ Finally, if you have any issues with the bot, you can take a look at the website
             inline=True,
         )
         embed.add_field(name="Channel", value=f"{channel.name}")
-
+        logger_channel = await self.logger.get_loggers(
+            guild_id=channel.guild.id, to_return="guild"
+        )
         channel = channel.guild.get_channel(int(logger_channel))
         await channel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_guild_channel_create(self, channel: disnake.abc.GuildChannel) -> None:
-        logger_channel = await self.logger.get_loggers(
-            guild_id=channel.guild.id, to_return="guild"
-        )
-
-        if not logger_channel:
-            return
-
         embed = disnake.Embed(title="Created Channel", color=0x2F3136)
 
         match channel.type:
@@ -151,7 +63,9 @@ Finally, if you have any issues with the bot, you can take a look at the website
             inline=True,
         )
         embed.add_field(name="Channel", value=f"{channel.mention} (ID: `{channel.id}`)")
-
+        logger_channel = await self.logger.get_loggers(
+            guild_id=channel.guild.id, to_return="guild"
+        )
         channel = channel.guild.get_channel(int(logger_channel))
         await channel.send(embed=embed)
 
@@ -161,13 +75,6 @@ Finally, if you have any issues with the bot, you can take a look at the website
         before: disnake.abc.GuildChannel,
         after: disnake.abc.GuildChannel,
     ) -> None:
-        logger_channel = await self.logger.get_loggers(
-            guild_id=before.guild.id, to_return="guild"
-        )
-
-        if not logger_channel:
-            return
-
         embed = disnake.Embed(title="Updated Channel", description=None, color=0x2F3136)
         embed.add_field(
             name="Additional information", value="Unknown error ❓", inline=False
@@ -225,6 +132,9 @@ Finally, if you have any issues with the bot, you can take a look at the website
             name="Additional information",
             value="\n".join(value),
             inline=False,
+        )
+        logger_channel = await self.logger.get_loggers(
+            guild_id=before.guild.id, to_return="guild"
         )
         channel = before.guild.get_channel(int(logger_channel))
         await channel.send(embed=embed)
