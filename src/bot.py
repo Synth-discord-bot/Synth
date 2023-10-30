@@ -4,7 +4,6 @@ import sys
 
 import disnake
 from disnake.ext import commands
-from datetime import datetime
 
 # from disnake.ext.ipc import Server
 
@@ -12,7 +11,6 @@ from src.cogs.TicketsCog import SetupTicketSettings
 from .utils import misc
 from .utils.help import CustomHelpCommand
 from .utils.misc import get_prefix, is_command_disabled
-
 
 
 class Bot(commands.Bot):
@@ -24,11 +22,6 @@ class Bot(commands.Bot):
             command_prefix=misc.bot_get_guild_prefix,
             intents=disnake.Intents.all(),
             reload=True,
-            owner_ids=[
-                419159175009009675,
-                999682446675161148,
-                1167458549132181668,
-            ],
         )
 
         # self.ipc = Server(self, secret_key=config.SECRET_IPC_KEY)  # well... need talk about config
@@ -105,10 +98,11 @@ class Bot(commands.Bot):
                 logging.info(f"{event} event is loaded!")
 
         await self.wait_until_ready()
+        logging.info("I'm ready")
         await self.change_presence(
             activity=disnake.Activity(
                 type=disnake.ActivityType.watching,
-                name=f"{len(self.guilds)} | >>help",
-                state="Release soon..."
+                name="Synth guild",
+                state="Release soon...",
             )
         )

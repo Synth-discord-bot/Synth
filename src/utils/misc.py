@@ -9,7 +9,6 @@ from disnake import (
     Forbidden,
 )
 from disnake.ext import commands
-import disnake
 
 from . import main_db
 
@@ -64,27 +63,3 @@ async def check_channel(
             )
         )
         return False
-
-
-def check_if_user_is_developer(bot: commands.Bot, user_id: int) -> bool:
-    return user_id in bot.owner_ids
-
-
-def is_owner():
-    async def predicate(ctx: commands.Context) -> bool:
-        result = ctx.author == ctx.guild.owner
-
-        if not result:
-            await ctx.send(
-                embed=Embed(
-                    title="<a:error:1168599839899144253> Error",
-                    description="This command can be only used by the server owner",
-                    colour=0xFF0000,
-                )
-            )
-            return False
-
-        return True
-
-    return commands.check(predicate)
-
