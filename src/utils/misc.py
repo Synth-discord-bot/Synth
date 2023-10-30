@@ -2,6 +2,7 @@ from typing import List, Union
 
 from disnake import (
     Message,
+    Guild,
     Embed,
     MessageCommandInteraction,
     TextChannel,
@@ -22,11 +23,13 @@ async def bot_get_guild_prefix(bot: commands.Bot, message: Message) -> List[str]
 
 
 # get prefix for commands, events etc..
-async def get_prefix(message: Message) -> Union[List[str], str]:
-    if not message.guild or await main_db.get_prefix(message.guild.id) is None:
+async def get_prefix(message: Union[Message, Guild]) -> Union[List[str], str]:
+    guild_id = message.guild.id if isinstance(message, Message) else message.id
+
+    if not guild_id or await main_db.get_prefix(guild_id=guild_id) is None:
         return "s."
 
-    prefix = await main_db.get_prefix(message.guild.id)
+    prefix = await main_db.get_prefix(guild_id=guild_id)
     return prefix
 
 

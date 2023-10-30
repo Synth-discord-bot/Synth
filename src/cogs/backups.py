@@ -22,7 +22,7 @@ class Backup(commands.Cog):
         if ctx.invoked_subcommand is None:
             embed = disnake.Embed(
                 title="Backup commands",
-                color=0x43ADF3,
+                color=0x2F3136,
                 description=(
                     f"`{ctx.prefix}backup create` – Create/update backup\n"
                     f"`{ctx.prefix}backup delete` – Delete backup\n"
@@ -43,7 +43,7 @@ class Backup(commands.Cog):
 
     @backup.command()
     async def create(self, ctx: commands.Context) -> None:
-        embed = disnake.Embed(color=0x43ADF3)
+        embed = disnake.Embed(color=0x2F3136)
         if ctx.author == ctx.guild.owner:
             try:
                 embed.title = "Please wait..."
@@ -136,14 +136,14 @@ class Backup(commands.Cog):
                     {"id": ctx.guild.id, "backup_data": backup_data}
                 )
 
-                embed.colour = 0x43ADF3
+                embed.colour = 0x2F3136
                 embed.title = "Finished"
                 embed.description = "Server backup has been successfully created"
                 await msg.edit(embed=embed)
 
             except (Exception, ExceptionGroup) as e:
                 logging.info(e)
-                embed.colour = 0x43ADF3
+                embed.colour = 0x2F3136
                 embed.title = "An error occurred"
                 embed.description = (
                     "An error occurred when trying to save the server. Roles/channels names can't "
@@ -152,7 +152,7 @@ class Backup(commands.Cog):
                 await ctx.send(embed=embed)
 
         else:
-            embed.colour = 0x43ADF3
+            embed.colour = 0x2F3136
             embed.title = "An error occurred"
             embed.description = "This command can only be used by the server owner"
             await ctx.send(embed=embed)
@@ -161,7 +161,7 @@ class Backup(commands.Cog):
     async def load(self, ctx: commands.Context) -> None:
         # TODO: Check if bot, and you have permissions to restore guild before restoring backup
 
-        embed = disnake.Embed(color=0x43ADF3)
+        embed = disnake.Embed(color=0x2F3136)
         embed.title = "Loading Backup"
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar)
 
@@ -372,12 +372,12 @@ class Backup(commands.Cog):
                     pass
 
             embed.title = "Finished"
-            embed.colour = 0x43ADF3
+            embed.colour = 0x2F3136
             embed.description = "Server backup has been successfully loaded"
 
             await msg.edit(embed=embed)
         else:
-            embed.colour = 0x43ADF3
+            embed.colour = 0x2F3136
             embed.title = "An error occurred"
             embed.description = "This command can only be used by the server owner"
 
@@ -413,7 +413,7 @@ class Backup(commands.Cog):
             os.remove(str(ctx.guild.id) + ".json")
         else:
             embed = disnake.Embed(
-                colour=0x43ADF3,
+                colour=0x2F3136,
                 title="An error occurred",
                 description="There isn't any backup created for this server",
             )
@@ -423,7 +423,7 @@ class Backup(commands.Cog):
     @backup.command()
     @commands.has_permissions(administrator=True)
     async def delete(self, ctx: commands.Context) -> None:
-        embed = disnake.Embed(color=0x43ADF3)
+        embed = disnake.Embed(color=0x2F3136)
 
         if backups.check_backup(ctx.guild):
             backups.delete({"_id": ctx.guild.id})

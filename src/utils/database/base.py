@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Mapping, Union, List
+from typing import Any, Dict, Mapping, Union, List
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCursor
 
@@ -9,7 +9,7 @@ class BaseDatabase:
         self._client = AsyncIOMotorClient("mongodb://127.0.0.1:27017")
         self._database = self._client["synth"]
         self.collection = self._database[database_name]
-        self.collection_cache = {}
+        self.collection_cache: List[Dict[str, Any]] = []
         self.name = database_name
 
     def _add_to_cache(self, param_filter: Mapping[str, Any]) -> Any:
@@ -21,12 +21,19 @@ class BaseDatabase:
 
         # Here's the dictionary that will be added in the database: {"id": 1, "test": True}
 
-        add_to_cache(1, {"id": 1, "test": True}) # 1 is the uid argument, {"id": 1, "test": True} is the param_filter
+        add_to_cache({"id": 1, "test": True}) # 1 is the uid argument, {"id": 1, "test": True} is the param_filter
         """
-        index = len(self.collection_cache) + 1
-        self.collection_cache[index] = param_filter
+        # index = len(self.collection_cache) + 1
+        self.collection_cache.append(param_filter)
         return param_filter
 
+    def _update_cache(self, old_value: Mapping[str, Any], new_value: Mapping[str, Any]) -> Any:
+        try:
+            index = self.collection_cache.index(old_value)
+            self.collection_cache[index].update(new_value)
+        except ValueError:
+            self.collection_cache.append(new_value)
+        
     async def get_items_in_db(
         self,
         find_dict: Mapping[str, Any],
@@ -49,10 +56,16 @@ class BaseDatabase:
         Returns:
             List[Any]: List of available items
         """
+        # return [
+        #     {key: value}
+        #     for key, value in self.collection_cache.items()
+        #     if all(k in value and value[k] == v for k, v in query.items())
+        # ]
         return [
             {key: value}
-            for key, value in self.collection_cache.items()
-            if all(k in value and value[k] == v for k, v in query.items())
+            for item in self.collection_cache
+            for key, value in item.items()
+            if all(k == value and value[k] == v for k, v in query.items())
         ]
 
     async def find_one_from_cache(self, value: Any) -> Any:
@@ -89,9 +102,11 @@ class BaseDatabase:
         results = await self.get_items_in_db({}, to_list=True)
         logging.info(f"[{self.name}]: Found {len(results)} items in database")
         for index, data in enumerate(results, start=1):
-            self.collection_cache[index] = data
+            self.collection_cache.append(data)
 
     async def update_db(
         self, data: Mapping[str, Any], new_value: Mapping[str, Any]
     ) -> None:
         await self.collection.update_one(data, {"$set": new_value}, upsert=True)
+        old_value = await self.find_one_from_db(data)
+        self._update_cache(old_value, new_value)
