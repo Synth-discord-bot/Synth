@@ -16,11 +16,13 @@ class EventInvites(commands.Cog):
         logger_channel = await self.logger.get_loggers(
             guild_id=invite.guild.id, to_return="invite"
         )
-        
+
         if not logger_channel:
             return
-        
-        embed = disnake.Embed(title="Synth | Created Invite", description=None, color=0x2F3136)
+
+        embed = disnake.Embed(
+            title="Synth | Created Invite", description=None, color=0x2F3136
+        )
         embed.add_field(
             name="Channel",
             value=f"{invite.channel.mention} (`ID: {invite.channel.id}`)",
@@ -36,28 +38,36 @@ class EventInvites(commands.Cog):
             name="Inviter",
             value=f"{invite.inviter.name} (`ID: {invite.inviter.id}`)",
         )
-        
-        age_format = disnake.utils.format_dt(datetime.now().timestamp() + invite.max_age, style = "f")
-        embed.add_field(name="Max age", value=(
-            "Infinite" 
-            if invite.max_age == 0 
-            else age_format
-            ), inline=False)
-        embed.add_field(name="Max uses", value="Infinite" if invite.max_uses == 0 else invite.max_uses, inline=False)
-        
+
+        age_format = disnake.utils.format_dt(
+            datetime.now().timestamp() + invite.max_age, style="f"
+        )
+        embed.add_field(
+            name="Max age",
+            value=("Infinite" if invite.max_age == 0 else age_format),
+            inline=False,
+        )
+        embed.add_field(
+            name="Max uses",
+            value="Infinite" if invite.max_uses == 0 else invite.max_uses,
+            inline=False,
+        )
+
         channel = invite.guild.get_channel(int(logger_channel))
         await channel.send(embed=embed)
-    
+
     @commands.Cog.listener()
     async def on_invite_delete(self, invite: disnake.Invite) -> None:
         logger_channel = await self.logger.get_loggers(
             guild_id=invite.guild.id, to_return="invite"
         )
-        
+
         if not logger_channel:
             return
-        
-        embed = disnake.Embed(title="Synth | Deleted Invite", description=None, color=0x2F3136)
+
+        embed = disnake.Embed(
+            title="Synth | Deleted Invite", description=None, color=0x2F3136
+        )
         embed.add_field(
             name="Channel",
             value=f"{invite.channel.mention} (`ID: {invite.channel.id}`)",
@@ -69,7 +79,7 @@ class EventInvites(commands.Cog):
             value=disnake.utils.format_dt(datetime.now(), style="f"),
             inline=True,
         )
-        
+
         channel = invite.guild.get_channel(int(logger_channel))
         await channel.send(embed=embed)
 

@@ -8,7 +8,11 @@ from src.utils import logger
 from src.utils.misc import check_channel
 
 
-class LogsCog(commands.Cog):
+class Logger(commands.Cog):
+    """Helper commands to setup logger."""
+
+    EMOJI = "🗒️"
+
     def __init__(self, bot) -> None:
         self.bot = bot
         self.logger = logger
@@ -134,4 +138,4 @@ class LogsCog(commands.Cog):
 
 
 def setup(bot: commands.Bot):
-    bot.add_cog(LogsCog(bot))
+    bot.add_cog(Logger(bot))
