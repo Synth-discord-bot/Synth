@@ -5,11 +5,11 @@ import disnake
 from .base import BaseDatabase
 
 
-class LoggerDatabase(BaseDatabase):
+class InviteTrackerDatabase(BaseDatabase):
     def __init__(self, database_name: str) -> None:
         super().__init__(database_name)
 
-    async def get_loggers(
+    async def get_invites(
         self,
         guild_id: Union[int, str, disnake.Guild],
         to_return: str = None,
@@ -24,51 +24,50 @@ class LoggerDatabase(BaseDatabase):
 
         result = (
             await self.find_one({"guild_id": guild_id}, return_first_result=True)
-        ).get("loggers", [])
-        if to_return and result:
-            return result[0].get(to_return, "")
+        )
+        print(result)
+        if result and to_return:
+            return result.get(to_return, "")
         return result[0] if result else None
 
-    async def update_logger_info(
+    async def update_invite_info(
         self,
         guild_id: Union[int, str, disnake.Guild],
-        logger_type: str = None,
-        logger_channel_id: str = None,
+        inviter: Union[disnake.Member, disnake.User] = None,
+        invited: Union[disnake.Member, disnake.User] = None,
+        
     ) -> Dict[str, str]:
         if await self.find_one_from_db({"guild_id": guild_id}) is None:
-            await self.add_to_db(
-                {
+            return await self.add_to_db({
                     "guild_id": guild_id,
-                    "loggers": [],
+                    "invited_id": inviter.id,
+                    "count": 0,
+                    "invites": [],
                 }
             )
 
-        if not logger_type and not logger_channel_id:
+        if not inviter and not invited:
             raise Exception(
-                "You must provide a logger type (string like message_edit) and/or a logger channel id"
+                "You must provide a inviter (string like message_edit) and/or a logger channel id"
             )
 
-        loggers = await self.get_loggers(guild_id=guild_id)
+        invites = await self.get_invites(guild_id=guild_id, to_return="invites")
 
-        # check if "key" exists in DB
-        if logger_type not in loggers:
-            loggers.append({logger_type: logger_channel_id})
-        else:
-            loggers.update({logger_type: logger_channel_id})
+        invites.append(invited)
+        count = await self.get_invites(guild_id=guild_id, to_return="count")
+        count += 1
 
         await self.update_db(
             {"guild_id": guild_id},
-            {"loggers": loggers},
+            {"invites": invites, "count": count},
         )
-        return {logger_type: logger_channel_id}
+        return {"guild_id": guild_id, "inviter_id": inviter.id, "invites": invites, "count": count}
 
-    async def create_logger(
+    async def create_tracker(
         self,
         guild_id: Union[int, str, disnake.Guild],
-        main_log_channel: disnake.TextChannel,
-        guild_log_channel: disnake.TextChannel = None,
-        invite_log_channel: disnake.TextChannel = None,
-        message_log_channel: disnake.TextChannel = None,
+        inviter_id: Union[disnake.Member, disnake.User],
+        invited_users: List[Union[disnake.Member, disnake.User]],
     ) -> None:
         guild_id = (
             guild_id.id
@@ -80,13 +79,8 @@ class LoggerDatabase(BaseDatabase):
         return await self.update_db(
             {"guild_id": guild_id},
             {
-                "loggers": [
-                    {
-                        "main": main_log_channel.id,
-                        "message": message_log_channel.id,
-                        "invite": invite_log_channel.id,
-                        "guild": guild_log_channel.id,
-                    },
+                "invites": [
+                    {"inviter_id": inviter_id.id, "invited_users": invited_users, "count": 0}
                 ]
             },
         )

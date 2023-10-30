@@ -13,6 +13,8 @@ class EventMember(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member: Member) -> None:
+        if member.bot:
+            return
         await self.economy.add_member(member=member)
         logging.info(f"Member joined: {member}")
 
