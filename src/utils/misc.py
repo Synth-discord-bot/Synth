@@ -63,6 +63,7 @@ async def check_channel(
             )
         )
         return False
-    
+
+
 def check_if_user_is_developer(bot: commands.Bot, user_id: int) -> bool:
     return user_id in bot.owner_ids

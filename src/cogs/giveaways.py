@@ -13,25 +13,38 @@ class GiveawayCog(commands.Cog):  # Need rewrite
     def __init__(self, bot) -> None:
         self.bot = bot
 
-    @commands.slash_command(name = Localized("giveaway", key = "GIVEAWAY_COMMAND_NAME"), description = Localized("Create a giveaway", key = "GIVEAWAY_COMMAND_DESC"))
+    @commands.slash_command(
+        name=Localized("giveaway", key="GIVEAWAY_COMMAND_NAME"),
+        description=Localized("Create a giveaway", key="GIVEAWAY_COMMAND_DESC"),
+    )
     async def giveaway(self, interaction):
         pass
 
-    @giveaway.sub_command(description= Localized("Create a giveaway", key = "GIVEAWAY_CREATE_COMMAND_DESC"), name = Localized("create", key = "GIVEAWAY_CREATE_COMMAND_NAME"))
+    @giveaway.sub_command(
+        description=Localized("Create a giveaway", key="GIVEAWAY_CREATE_COMMAND_DESC"),
+        name=Localized("create", key="GIVEAWAY_CREATE_COMMAND_NAME"),
+    )
     async def create(
         self,
         interaction,
         prize: str = commands.Param(
-            description=Localized("Choice prize", key = "GIVEAWAY_CREATE_COMMAND_PRIZE_DESC"),
-            name=Localized("prize", key = "GIVEAWAY_CREATE_COMMAND_PRIZE_NAME"),
+            description=Localized(
+                "Choice prize", key="GIVEAWAY_CREATE_COMMAND_PRIZE_DESC"
+            ),
+            name=Localized("prize", key="GIVEAWAY_CREATE_COMMAND_PRIZE_NAME"),
         ),
         winners: int = commands.Param(
-            description=Localized("Winners", key = "GIVEAWAY_CREATE_COMMAND_WINNERS_DESC"),
-            name= Localized("winners", key = "GIVEAWAY_CREATE_COMMAND_WINNERS_NAME"),
+            description=Localized(
+                "Winners", key="GIVEAWAY_CREATE_COMMAND_WINNERS_DESC"
+            ),
+            name=Localized("winners", key="GIVEAWAY_CREATE_COMMAND_WINNERS_NAME"),
         ),
         duration: str = commands.Param(
-            description=Localized("Example: 1d1h1m1s (1 day, 1 hour, 1 minute, 1 second)", key = "GIVEAWAY_CREATE_COMMAND_DURATION_DESC"),
-            name=Localized("duration", key = "GIVEAWAY_CREATE_COMMAND_DURATION_NAME"),
+            description=Localized(
+                "Example: 1d1h1m1s (1 day, 1 hour, 1 minute, 1 second)",
+                key="GIVEAWAY_CREATE_COMMAND_DURATION_DESC",
+            ),
+            name=Localized("duration", key="GIVEAWAY_CREATE_COMMAND_DURATION_NAME"),
         ),
     ):
         duration_regex = r"(\d+)([dhms])"
@@ -45,7 +58,7 @@ class GiveawayCog(commands.Cog):  # Need rewrite
                 duration_delta += datetime.timedelta(**{time_unit: int(value)})
 
         end_time = datetime.datetime.now() + duration_delta
-        embed = disnake.Embed(title="Giveaway", description=None, color=0x2b2d31)
+        embed = disnake.Embed(title="Giveaway", description=None, color=0x2B2D31)
         embed.add_field(name=f"Prize", value=f"```\n{prize}\n```", inline=True)
         embed.add_field(name=f"Winners", value=f"```\n{winners}\n```", inline=True)
         embed.add_field(
@@ -95,16 +108,28 @@ class GiveawayCog(commands.Cog):  # Need rewrite
             content=f"Congratulations {winners_mention}! You won **{prize}**!"
         )
 
-    @giveaway.sub_command(description=Localized("Reroll giveaway", key = "GIVEAWAY_REROLL_COMMAND_DESC"), name = Localized("reroll", key = "GIVEAWAY_REROLL_COMMAND_NAME"))
-    async def reroll(self, interaction, message_id = commands.Param(
-            description=Localized("Message ID", key="GIVEAWAY_REROLL_COMMAND_MESSAGEID_DESC"),
-            name=Localized("message_id", key="GIVEAWAY_REROLL_COMMAND_MESSAGEID_NAME")
-        ), 
+    @giveaway.sub_command(
+        description=Localized("Reroll giveaway", key="GIVEAWAY_REROLL_COMMAND_DESC"),
+        name=Localized("reroll", key="GIVEAWAY_REROLL_COMMAND_NAME"),
+    )
+    async def reroll(
+        self,
+        interaction,
+        message_id=commands.Param(
+            description=Localized(
+                "Message ID", key="GIVEAWAY_REROLL_COMMAND_MESSAGEID_DESC"
+            ),
+            name=Localized("message_id", key="GIVEAWAY_REROLL_COMMAND_MESSAGEID_NAME"),
+        ),
         winners: int = commands.Param(
-            description=Localized("Choice winners (default: 1)", key="GIVEAWAY_REROLL_COMMAND_WINNERS_DESC"),
+            description=Localized(
+                "Choice winners (default: 1)",
+                key="GIVEAWAY_REROLL_COMMAND_WINNERS_DESC",
+            ),
             name=Localized("winners", key="GIVEAWAY_REROLL_COMMAND_WINNERS_NAME"),
-            default = 1
-        )):
+            default=1,
+        ),
+    ):
         try:
             giveaway_msg = await interaction.channel.fetch_message(message_id)
         except disnake.NotFound:
