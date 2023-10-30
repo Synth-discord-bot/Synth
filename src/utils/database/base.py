@@ -27,26 +27,6 @@ class BaseDatabase:
         self.collection_cache[index] = param_filter
         return param_filter
 
-    def _update_cache(
-        self, old_value: Mapping[str, Any], new_value: Mapping[str, Any]
-    ) -> None:
-        """
-        Update an item in the cache based on the old and new values.
-
-        :param old_value: Filter criteria for finding the item to update.
-        :param new_value: New values to update the item in the cache.
-        """
-        item_to_update = None
-        for index, item in self.collection_cache.items():
-            if all(item.get(key) == value for key, value in old_value.items()):
-                item_to_update = item
-                break
-
-        if item_to_update:
-            # Update the item in the cache with the new values
-            item_to_update.update(new_value)
-            # It's not necessary to pop and re-insert. The update() method will update the existing item
-
     def _remove_from_cache(self, param_filter: Mapping[str, Any]) -> Any:
         """
         Remove an item from the cache based on the provided filter.
@@ -128,10 +108,6 @@ class BaseDatabase:
         self, data: Mapping[str, Any], new_value: Mapping[str, Any]
     ) -> None:
         await self.collection.update_one(data, {"$set": new_value}, upsert=True)
-        old_data = await self.find_one_from_db(data)
-        result = self._update_cache(old_value=old_data, new_value=new_value)
-        if result is None:
-            self._add_to_cache(param_filter=new_value)
 
     async def remove_from_db(self, data: Mapping[str, Any]) -> None:
         await self.collection.delete_one(data)
