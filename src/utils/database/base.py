@@ -27,6 +27,24 @@ class BaseDatabase:
         self.collection_cache[index] = param_filter
         return param_filter
 
+    def _update_cache(self, old_value: Mapping[str, Any], new_value: Mapping[str, Any]) -> None:
+        """
+        Update an item in the cache based on the old and new values.
+
+        :param old_value: Filter criteria for finding the item to update.
+        :param new_value: New values to update the item in the cache.
+        """
+        item_to_update = None
+        for index, item in self.collection_cache.items():
+            if all(item.get(key) == value for key, value in old_value.items()):
+                item_to_update = item
+                break
+
+        if item_to_update:
+            # Update the item in the cache with the new values
+            item_to_update.update(new_value)
+            # It's not necessary to pop and re-insert. The update() method will update the existing item
+
     def _remove_from_cache(self, param_filter: Mapping[str, Any]) -> Any:
         """
         Remove an item from the cache based on the provided filter.
@@ -41,10 +59,10 @@ class BaseDatabase:
         return None
 
     async def get_items_in_db(
-        self,
-        find_dict: Mapping[str, Any],
-        to_list: bool = True,
-        count: Union[int, None] = None,
+            self,
+            find_dict: Mapping[str, Any],
+            to_list: bool = True,
+            count: Union[int, None] = None,
     ) -> Union[List[Mapping[str, Any]], AsyncIOMotorCursor]:
         result = self.collection.find(filter=find_dict)
         if to_list:
@@ -73,13 +91,13 @@ class BaseDatabase:
         return results[0] if results else None
 
     async def find_one_from_db(
-        self, param_filter: Mapping[str, Any]
+            self, param_filter: Mapping[str, Any]
     ) -> Mapping[str, Any]:
         results = await self.get_items_in_db(find_dict=param_filter, to_list=True)
         return results[0] if len(results) >= 1 else None
 
     async def find_one(
-        self, value: Union[Mapping[str, Any], Any], return_first_result: bool = False
+            self, value: Union[Mapping[str, Any], Any], return_first_result: bool = False
     ) -> Any:
         # try to search in cache
         results = self.get_items_in_cache(value)
@@ -105,9 +123,13 @@ class BaseDatabase:
             self.collection_cache[index] = data
 
     async def update_db(
-        self, data: Mapping[str, Any], new_value: Mapping[str, Any]
+            self, data: Mapping[str, Any], new_value: Mapping[str, Any]
     ) -> None:
         await self.collection.update_one(data, {"$set": new_value}, upsert=True)
+        old_data = await self.find_one_from_db(data)
+        result = self._update_cache(old_value=old_data, new_value=new_value)
+        if result is None:
+            self._add_to_cache(param_filter=new_value)
 
     async def remove_from_db(self, data: Mapping[str, Any]) -> None:
         await self.collection.delete_one(data)
