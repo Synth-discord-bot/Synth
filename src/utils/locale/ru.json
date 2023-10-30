@@ -1,3 +1,93 @@
 {
-    "test": "тест"
+    "USER_COMMAND_NAME": "юзер",
+    "USER_COMMAND_DESC": "Показывает информацию о пользователе.",
+    "USER_COMMAND_USER_NAME": "пользователь",
+    "USER_COMMAND_USER_DESC": "Выбрать пользователя",
+    
+    "SERVER_COMMAND_NAME": "сервер",
+    "SERVER_COMMAND_DESC": "Показывает информацию о сервере.",
+
+
+    "BANK_COMMAND_NAME": "банк",
+    "BANK_COMMAND_DESC": "Перевод денег в банк",
+
+
+    "PAY_COMMAND_NAME": "перевод",
+    "PAY_COMMAND_DESC": "Сделать перевод денег участнику",
+
+
+    "FORMS_COMMAND_NAME": "формы",
+    "FORMS_COMMAND_DESC": "Установка формы",
+    "FORMS_CREATE_COMMAND_NAME": "создать",
+    "FORMS_CREATE_COMMAND_DESC": "Создать форму",
+    "FORMS_EDIT_COMMAND_NAME": "редактировать",
+    "FORMS_EDIT_COMMAND_DESC": "Редактировать форму",
+    "FORMS_DELETE_COMMAND_NAME": "удалить",
+    "FORMS_DELETE_COMMAND_DESC": "Удалить форму",
+    "FORMS_DELETE_COMMAND_FORM_NAME": "форма",
+    "FORMS_DELETE_COMMAND_FORM_DESC": "Выберите форму",
+
+    "ROLL_COMMAND_NAME": "кости",
+    "ROLL_COMMAND_DESC": "Сделать бросок кубика",
+    "ROLL_COMMAND_NUMBER": "Обычно: 6",
+    "ROLL_COMMAND_NUMBER_NAME": "количество",
+
+
+    "COIN_COMMAND_NAME": "монетка",
+    "COIN_COMMAND_DESC": "Подкинуть монетку",
+
+
+    "8BALL_COMMAND_NAME": "шар",
+    "8BALL_COMMAND_DESC": "Задать вопрос магическому шару",
+    "8BALL_COMMAND_QUESTION_NAME": "вопрос",
+    "8BALL_COMMAND_QUESTION_DESC": "Задайте вопрос",
+
+
+
+    "BEN_COMMAND_NAME": "бен",
+    "BEN_COMMAND_DESC": "Задать вопрос бену",
+    "BEN_COMMAND_QUESTION_NAME": "вопрос",
+    "BEN_COMMAND_QUESTION_DESC": "Задайте вопрос",
+    
+
+    "GIVEAWAY_COMMAND_NAME": "розыгрыш",
+    "GIVEAWAY_COMMAND_DESC": "Сделать розыгрыш",
+    "GIVEAWAY_CREATE_COMMAND_NAME": "создать",
+    "GIVEAWAY_CREATE_COMMAND_DESC": "Создать розыгрыш",
+    "GIVEAWAY_CREATE_COMMAND_PRIZE_NAME": "приз",
+    "GIVEAWAY_CREATE_COMMAND_PRIZE_DESC": "Выберите приз",
+    "GIVEAWAY_CREATE_COMMAND_WINNERS_NAME": "победителей",
+    "GIVEAWAY_CREATE_COMMAND_WINNERS_DESC": "Выберите число победителей",
+    "GIVEAWAY_CREATE_COMMAND_DURATION_NAME": "продолжительность",
+    "GIVEAWAY_CREATE_COMMAND_DURATION_DESC": "Пример: 1d1h1m1s (1 день, 1 час, 1 минута, 1 секунда)",
+    "GIVEAWAY_REROLL_COMMAND_NAME": "реролл",
+    "GIVEAWAY_REROLL_COMMAND_DESC": "Реролл розыгрыша",
+    "GIVEAWAY_REROLL_COMMAND_MESSAGEID_NAME": "айди_сообщения",
+    "GIVEAWAY_REROLL_COMMAND_MESSAGEID_DESC": "ID сообщение розыгрыша",
+    "GIVEAWAY_REROLL_COMMAND_WINNERS_NAME": "победителей",
+    "GIVEAWAY_REROLL_COMMAND_WINNERS_DESC": "Выберите число победителей",
+
+
+    "INVITE_TRACKER_COMMAND_NAME": "трекер_приглашений",
+    "INVITE_TRACKER_COMMAND_DESC": "Установка трекера приглашений",
+    "INVITE_TRACKER_SET_CHANNEL_NAME": "канал",
+    "INVITE_TRACKER_SET_CHANNEL_DESC": "Выберите канал",
+
+
+    "LOGGER_COMMAND_NAME": "логгер",
+    "LOGGER_COMMAND_DESC": "Установка логгера",
+    "LOGGER_SET_CHANNEL_COMMAND_NAME": "каналы",
+    "LOGGER_SET_CHANNEL_COMMAND_DESC": "Выберите каналы",
+    "LOGGER_SET_CHANNEL_MAIN_LOG_CHANNEL_NAME": "основной",
+    "LOGGER_SET_CHANNEL_MAIN_LOG_CHANNEL_DESC": "Выберите основной канал",
+    "LOGGER_SET_CHANNEL_GUILD_LOG_CHANNEL_NAME": "сервер",
+    "LOGGER_SET_CHANNEL_GUILD_LOG_CHANNEL_DESC": "Выберите канал с информацией про сервер",
+    "LOGGER_SET_CHANNEL_INVITE_LOG_CHANNEL_NAME": "приглашения",
+    "LOGGER_SET_CHANNEL_INVITE_LOG_CHANNEL_DESC": "Выберите канал с информацией про приглашения",
+    "LOGGER_SET_CHANNEL_MESSAGE_LOG_CHANNEL_NAME": "сообщения",
+    "LOGGER_SET_CHANNEL_MESSAGE_LOG_CHANNEL_DESC": "Выберите канал с информацией про сообщения",
+
+
+    "HELP_COMMAND_NAME": "хелп",
+    "HELP_COMMAND_DESC": "Показать команды"
 }

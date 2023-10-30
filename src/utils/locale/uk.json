@@ -1,0 +1,7 @@
+{
+    "USER_COMMAND_NAME": "користувач",
+    "USER_COMMAND_DESC": "Відображає інформацію о користувачі.",
+
+    "SERVER_COMMAND_NAME": "server",
+    "SERVER_COMMAND_DESC": "Відображає інформацію о сервері."
+}
