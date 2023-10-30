@@ -22,9 +22,7 @@ class InviteTrackerDatabase(BaseDatabase):
         ):
             return []
 
-        result = (
-            await self.find_one({"guild_id": guild_id}, return_first_result=True)
-        )
+        result = await self.find_one({"guild_id": guild_id}, return_first_result=True)
         print(result)
         if result and to_return:
             return result.get(to_return, "")
@@ -35,10 +33,10 @@ class InviteTrackerDatabase(BaseDatabase):
         guild_id: Union[int, str, disnake.Guild],
         inviter: Union[disnake.Member, disnake.User] = None,
         invited: Union[disnake.Member, disnake.User] = None,
-        
     ) -> Optional[Dict[str, str]]:
         if await self.find_one_from_db({"guild_id": guild_id}) is None:
-            return await self.add_to_db({
+            return await self.add_to_db(
+                {
                     "guild_id": guild_id,
                     "invited_id": inviter.id,
                     "count": 0,
@@ -61,7 +59,12 @@ class InviteTrackerDatabase(BaseDatabase):
             {"guild_id": guild_id},
             {"invites": invites, "count": count},
         )
-        return {"guild_id": guild_id, "inviter_id": inviter.id, "invites": invites, "count": count}
+        return {
+            "guild_id": guild_id,
+            "inviter_id": inviter.id,
+            "invites": invites,
+            "count": count,
+        }
 
     async def create_tracker(
         self,
@@ -82,9 +85,5 @@ class InviteTrackerDatabase(BaseDatabase):
 
         return await self.update_db(
             {"guild_id": guild_id},
-            {
-                "invited_id": inviter_id.id,
-                "count": count + 1,
-                "invites": invites
-            },
+            {"invited_id": inviter_id.id, "count": count + 1, "invites": invites},
         )

@@ -27,13 +27,15 @@ class BaseDatabase:
         self.collection_cache.append(param_filter)
         return param_filter
 
-    def _update_cache(self, old_value: Mapping[str, Any], new_value: Mapping[str, Any]) -> Any:
+    def _update_cache(
+        self, old_value: Mapping[str, Any], new_value: Mapping[str, Any]
+    ) -> Any:
         try:
             index = self.collection_cache.index(old_value)
             self.collection_cache[index].update(new_value)
         except ValueError:
             self.collection_cache.append(new_value)
-        
+
     async def get_items_in_db(
         self,
         find_dict: Mapping[str, Any],
