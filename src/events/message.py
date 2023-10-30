@@ -17,22 +17,13 @@ class EventMessages(commands.Cog):
         if message.author == message.guild.me:
             return
 
-        logger_channel = await self.logger.get_loggers(
-            guild_id=message.guild.id, to_return="message"
-        )
-
-        if not logger_channel:
-            return
-
         message.content = (
             message.content[:1900] + "..."
             if len(message.content) > 1900
             else message.content
         )  # TODO: send message to text file if message.content > 1900
         embeds = []
-        embed = disnake.Embed(
-            color=0x2F3136, title="Synth | Deleted Message", description=None
-        )
+        embed = disnake.Embed(color=0x2F3136, title="Deleted Message", description=None)
         embed.add_field(name="Additional information", value="No")
         field_dop_index = next(
             index
@@ -77,7 +68,9 @@ class EventMessages(commands.Cog):
             value=f"{message.channel.mention} (`ID: {message.channel.id}`)",
         )
         embed.set_thumbnail(url=message.author.avatar)
-
+        logger_channel = await self.logger.get_loggers(
+            guild_id=message.guild.id, to_return="message"
+        )
         channel = message.guild.get_channel(int(logger_channel))
         await channel.send(embeds=embeds, files=files)
 
@@ -87,13 +80,6 @@ class EventMessages(commands.Cog):
             return
 
         if before.content == after.content:
-            return
-
-        logger_channel = await self.logger.get_loggers(
-            guild_id=before.guild.id, to_return="message"
-        )
-
-        if not logger_channel:
             return
 
         before.content = (
@@ -107,7 +93,7 @@ class EventMessages(commands.Cog):
         if before.content == after.content:
             return
         embed = disnake.Embed(
-            title="Synth | Edited Message",
+            title="Edited Message",
             description=f"Before: {before.content}\nAfter: {after.content}",
             color=0x2F3136,
         )
@@ -124,6 +110,9 @@ class EventMessages(commands.Cog):
         embed.add_field(
             name="Channel",
             value=f"{before.channel.mention} (`ID: {before.channel.id}`)",
+        )
+        logger_channel = await self.logger.get_loggers(
+            guild_id=before.guild.id, to_return="message"
         )
         channel = before.guild.get_channel(int(logger_channel))
         await channel.send(embed=embed)
