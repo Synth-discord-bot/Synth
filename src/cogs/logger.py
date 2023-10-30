@@ -5,11 +5,7 @@ from src.utils import logger
 from src.utils.misc import check_channel
 
 
-class Logger(commands.Cog):
-    """Helper commands to setup logger."""
-
-    EMOJI = "🗒️"
-
+class LogsCog(commands.Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
         self.logger = logger
@@ -128,11 +124,11 @@ class Logger(commands.Cog):
         #     form_channel_id=channel_id,
         #     form_type=form_type,
         # )
-        # embed = disnake.Embed(title=name, description=description, color=0x2F3136)
+        # embed = disnake.Embed(title=name, description=description, color=0x43ADF3)
         # await channel.send(embed=embed)
         # return await msg.edit("Form has been created", delete_after=10)
         # await check_channel(channel=channel, interaction=interaction)
 
 
 def setup(bot: commands.Bot):
-    bot.add_cog(Logger(bot))
+    bot.add_cog(LogsCog(bot))
