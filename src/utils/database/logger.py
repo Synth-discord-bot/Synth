@@ -1,4 +1,4 @@
-from typing import Any, List, Mapping, Union, Dict
+from typing import Any, List, Mapping, Optional, Union, Dict
 
 import disnake
 
@@ -13,7 +13,7 @@ class LoggerDatabase(BaseDatabase):
         self,
         guild_id: Union[int, str, disnake.Guild],
         to_return: str = None,
-    ) -> Union[List[Mapping[Any, Any]], int, Dict[str, str]]:
+    ) -> Optional[Union[List[Mapping[Any, Any]], int, Dict[str, str]]]:
         guild_id = int(guild_id) if isinstance(guild_id, (str, int)) else guild_id.id
 
         if (
@@ -27,7 +27,7 @@ class LoggerDatabase(BaseDatabase):
         ).get("loggers", [])
         if to_return and result:
             return result[0].get(to_return, "")
-        return result[0]
+        return result[0] if result else None
 
     async def update_logger_info(
         self,
