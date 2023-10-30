@@ -65,16 +65,18 @@ class BaseDatabase:
         results = await self.get_items_in_db(find_dict=param_filter, to_list=True)
         return results[0] if len(results) >= 1 else None
 
-    async def find_one(self, value: Union[Mapping[str, Any], Any]) -> Any:
+    async def find_one(
+        self, value: Union[Mapping[str, Any], Any], return_first_result: bool = False
+    ) -> Any:
         # try to search in cache
         results = self.get_items_in_cache(value)
         if results:
-            return results[0]
+            return results[0] if return_first_result else results
 
         # if not found in cache, search in database
-        results = await self.get_items_in_db(value)
+        results = await self.get_items_in_db(value, to_list=True)
         if results:
-            return results[0]
+            return results[0] if return_first_result else results
 
         return None  # None if not found
 

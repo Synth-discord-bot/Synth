@@ -1,11 +1,11 @@
 from disnake.ext import commands
 from disnake.ext.commands import TextChannelConverter, BadArgument
 import disnake
-from src.utils import forms
+from src.utils import forms, FormsDatabase
 
 
 class ButtonOrSelect(disnake.ui.Select):
-    def __init__(self, bot: commands.Bot, forms: forms):
+    def __init__(self, bot: commands.Bot, forms_db: FormsDatabase):
         super().__init__(
             placeholder="Choose a category",
             min_values=1,
@@ -26,7 +26,7 @@ class ButtonOrSelect(disnake.ui.Select):
             ],
         )
         self.bot = bot
-        self.forms = forms
+        self.forms = forms_db
 
     async def callback(self, interaction: disnake.MessageInteraction) -> None:
         form_type = None
@@ -68,27 +68,31 @@ class ButtonOrSelect(disnake.ui.Select):
         # convert string to channel
         try:
             channel = await TextChannelConverter().convert(
-                ctx=interaction, argument=channel_id
+                ctx=interaction, argument=channel_id  # type: ignore
             )
         except BadArgument:
-            await msg.edit("This channel does not exist.", delete_after=10)
+            return await msg.edit("This channel does not exist.", delete_after=10)
 
         try:
             await channel.send(".", delete_after=0.05)
             channel_id = channel.id
-        except (disnake.HTTPException, disnake.Forbidden):
-            await msg.edit("This channel does not have permissions to send messages.")
+        except (disnake.HTTPException, disnake.Forbidden, TypeError):
+            return await msg.edit(
+                "This channel does not have permissions to send messages."
+            )
 
+        # TODO: Добавить возможность изменять цвет формы (или кнопки/dropdown menu??).
+        #  Изменять текст в кпопке или dropdown menu
         await self.forms.update_form_info(
             guild_id=interaction.guild.id,
             form_name=name,
             form_description=description,
             form_channel_id=channel_id,
-            form_type=form_type,  # Надо будет добавить чтобы цвет менялся по желанию пользователя + надо сделать чтобы текст в кнопке/селекте менялся, Короче БАБАХ
+            form_type=form_type,
         )
         embed = disnake.Embed(title=name, description=description, color=0x43ADF3)
         await channel.send(embed=embed)
-        await msg.edit("Form has been created", delete_after=10)
+        return await msg.edit("Form has been created", delete_after=10)
 
 
 class FormsView(disnake.ui.View):
@@ -98,18 +102,18 @@ class FormsView(disnake.ui.View):
 
     @disnake.ui.button(label="Create", style=disnake.ButtonStyle.green)
     async def create_form(
-        self, _: disnake.ui.Button, interaction: disnake.Interaction, name: str
+        self, _: disnake.ui.Button, __: disnake.Interaction, ___: str
     ) -> None:
-        FormEmbed = disnake.Embed(colour=0x43ADF3)
-        FormEmbed.title = "Creating Form"
-        FormEmbed.description = (
-            "To create a form, please choose one of the options below:"
+        form_embed = disnake.Embed(
+            title="Creating Form",
+            colour=0x43ADF3,
+            description="To create a form, please choose one of the options below:",
         )
 
-        modal = disnake.ui.Modal(
-            title="Form",
-            components=[disnake.ui.TextInput(custom_id="form_name", label="")],
-        )
+        # modal = disnake.ui.Modal(
+        #     title="Form",
+        #     components=[disnake.ui.TextInput(custom_id="form_name", label="")],
+        # )
 
     @disnake.ui.button(label="Edit", style=disnake.ButtonStyle.gray)
     async def edit_form(
@@ -129,15 +133,17 @@ class FormsView(disnake.ui.View):
 
 
 class EditFormView(disnake.ui.View):
-    def __init__(self, bot: commands.Bot, forms: forms):
+    def __init__(self, bot: commands.Bot, forms_db: FormsDatabase) -> None:
         super().__init__(timeout=None)
         self.bot = bot
-        self.forms = forms
+        self.forms = forms_db
 
     @disnake.ui.button(
         label="Title", custom_id="title_button", style=disnake.ButtonStyle.gray
     )
-    async def title_button(self, _: disnake.ui.Button, interaction):
+    async def title_button(
+        self, _: disnake.ui.Button, interaction: disnake.MessageCommandInteraction
+    ) -> None:
         await interaction.send("Write new title:")
         msg = await self.bot.wait_for(
             "message", check=lambda x: x.author == interaction.author, timeout=15
@@ -160,19 +166,17 @@ class FormsCog(commands.Cog):
         pass
 
     @form.sub_command()
-    async def create(
-        self, interaction: disnake.MessageCommandInteraction, name: str
-    ) -> None:
+    async def create(self, interaction: disnake.MessageCommandInteraction) -> None:
         setup_form_embed = disnake.Embed(title="Title", description="Description")
         button_or_select = disnake.ui.Button(
             label="Button/Select", style=disnake.ButtonStyle.gray, disabled=True
         )
 
         select = disnake.ui.View()
-        select.add_item(ButtonOrSelect(self.bot, forms=self.forms))
+        select.add_item(ButtonOrSelect(self.bot, forms_db=self.forms))
 
         await interaction.send(
-            f"Create a {name} form. Please choose one of the options below. Setup form:",
+            f"Create a form. Please choose one of the options below. Setup form:",
             view=select,
         )
         await interaction.channel.send(
