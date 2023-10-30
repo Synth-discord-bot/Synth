@@ -1,3 +1,9 @@
+0.3:
+Updated base database, logger
+
+0.2.7:
+...
+
 0.2.3:
 Rewritten check if command is disabled in this guild (also fixed bug with invoking help command)
 Rewritten help command (with Dropdowns!!!)

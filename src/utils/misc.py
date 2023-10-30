@@ -1,6 +1,15 @@
-from typing import List, Optional, Mapping, Union
-from disnake import Message, Embed
+from typing import List, Union
+
+from disnake import (
+    Message,
+    Embed,
+    MessageCommandInteraction,
+    TextChannel,
+    HTTPException,
+    Forbidden,
+)
 from disnake.ext import commands
+
 from . import main_db
 
 
@@ -31,6 +40,26 @@ async def is_command_disabled(message: Message, command: str) -> bool:
                 title="Error",
                 description="This command is disabled in this guild.",
                 colour=0xFF0000,
+            )
+        )
+        return False
+
+
+async def check_channel(
+    channel: TextChannel,
+    interaction: Union[MessageCommandInteraction, commands.Context],
+) -> bool:
+    await interaction.send(
+        f"Checking access to channel {channel.mention}...", ephemeral=True
+    )
+    try:
+        await channel.send(".", delete_after=0.05)
+        return True
+    except (HTTPException, Forbidden):
+        await interaction.edit_original_message(
+            content=(
+                f"I can't check access to {channel.mention} channel, "
+                f"because i don't have permissions to send messages."
             )
         )
         return False

@@ -1,13 +1,17 @@
 import datetime
 import logging
+import os
 
 import src.bot
 
 startup = datetime.datetime.now()
 logger = logging.getLogger()
 logger.setLevel(level=logging.INFO)
+
+if not os.path.exists("logs"):
+    os.mkdir("logs")
 handler = logging.FileHandler(
-    filename=f"logs\\synth-{startup.timestamp()}.log", encoding="utf-8", mode="w"
+    filename=f"logs/synth-{startup.timestamp()}.log", encoding="utf-8", mode="w"
 )
 handler.setFormatter(
     logging.Formatter("[%(asctime)s] %(levelname)s:%(name)s: %(message)s")
