@@ -1,11 +1,11 @@
 {
     "USER_COMMAND_NAME": "юзер",
-    "USER_COMMAND_DESC": "Показывает информацию о пользователе",
+    "USER_COMMAND_DESC": "Показывает информацию о пользователе.",
     "USER_COMMAND_USER_NAME": "пользователь",
     "USER_COMMAND_USER_DESC": "Выбрать пользователя",
     
     "SERVER_COMMAND_NAME": "сервер",
-    "SERVER_COMMAND_DESC": "Показывает информацию о сервере",
+    "SERVER_COMMAND_DESC": "Показывает информацию о сервере.",
 
 
     "BANK_COMMAND_NAME": "банк",
@@ -13,7 +13,7 @@
 
 
     "PAY_COMMAND_NAME": "перевод",
-    "PAY_COMMAND_DESC": "Сделать перевод денег другому пользователю",
+    "PAY_COMMAND_DESC": "Сделать перевод денег участнику",
 
 
     "FORMS_COMMAND_NAME": "формы",
@@ -61,7 +61,7 @@
     "GIVEAWAY_CREATE_COMMAND_DURATION_NAME": "продолжительность",
     "GIVEAWAY_CREATE_COMMAND_DURATION_DESC": "Пример: 1d1h1m1s (1 день, 1 час, 1 минута, 1 секунда)",
     "GIVEAWAY_REROLL_COMMAND_NAME": "реролл",
-    "GIVEAWAY_REROLL_COMMAND_DESC": "Заново выбрать победителя в розыгрыше",
+    "GIVEAWAY_REROLL_COMMAND_DESC": "Реролл розыгрыша",
     "GIVEAWAY_REROLL_COMMAND_MESSAGEID_NAME": "айди_сообщения",
     "GIVEAWAY_REROLL_COMMAND_MESSAGEID_DESC": "ID сообщение розыгрыша",
     "GIVEAWAY_REROLL_COMMAND_WINNERS_NAME": "победителей",
@@ -81,13 +81,13 @@
     "LOGGER_SET_CHANNEL_MAIN_LOG_CHANNEL_NAME": "основной",
     "LOGGER_SET_CHANNEL_MAIN_LOG_CHANNEL_DESC": "Выберите основной канал",
     "LOGGER_SET_CHANNEL_GUILD_LOG_CHANNEL_NAME": "сервер",
-    "LOGGER_SET_CHANNEL_GUILD_LOG_CHANNEL_DESC": "Выберите канал, в котором будет отправляться информация о данном сервере",
+    "LOGGER_SET_CHANNEL_GUILD_LOG_CHANNEL_DESC": "Выберите канал с информацией про сервер",
     "LOGGER_SET_CHANNEL_INVITE_LOG_CHANNEL_NAME": "приглашения",
-    "LOGGER_SET_CHANNEL_INVITE_LOG_CHANNEL_DESC": "Выберите канал, в котором будет отправляться информация о приглашениях",
+    "LOGGER_SET_CHANNEL_INVITE_LOG_CHANNEL_DESC": "Выберите канал с информацией про приглашения",
     "LOGGER_SET_CHANNEL_MESSAGE_LOG_CHANNEL_NAME": "сообщения",
-    "LOGGER_SET_CHANNEL_MESSAGE_LOG_CHANNEL_DESC": "Выберите канал, в котором будет отправляться информация о сообщениях",
+    "LOGGER_SET_CHANNEL_MESSAGE_LOG_CHANNEL_DESC": "Выберите канал с информацией про сообщения",
 
 
     "HELP_COMMAND_NAME": "хелп",
-    "HELP_COMMAND_DESC": "Показать информацию о командах"
+    "HELP_COMMAND_DESC": "Показать команды"
 }
