@@ -19,7 +19,10 @@ class EventMember(commands.Cog):
             return
 
         await self.economy.add_member(member=member)
-        # await self.invites.update_invite_info(guild_id=member.guild.id)
+        await self.invites.update_invite_info(
+            guild_id=member.guild.id,
+            # inviter=
+        )
         logging.info(f"Member joined: {member}")
 
 
