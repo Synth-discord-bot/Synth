@@ -103,11 +103,10 @@ class Bot(commands.Bot):
                 logging.info(f"{event} event is loaded!")
 
         await self.wait_until_ready()
-        logging.info("I'm ready")
         await self.change_presence(
             activity=disnake.Activity(
-                type=disnake.ActivityType.watching,
-                name="Synth guild",
+                type=disnake.ActivityType.streaming,
+                name="New multi-functional bot, Synth",
                 state="Release soon...",
             )
         )

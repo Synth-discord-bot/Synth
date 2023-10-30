@@ -90,7 +90,7 @@ class ButtonOrSelect(disnake.ui.Select):
             form_channel_id=channel_id,
             form_type=form_type,
         )
-        embed = disnake.Embed(title=name, description=description, color=0x43ADF3)
+        embed = disnake.Embed(title=name, description=description, color=0x2F3136)
         await channel.send(embed=embed)
         return await msg.edit("Form has been created", delete_after=10)
 
@@ -106,7 +106,7 @@ class FormsView(disnake.ui.View):
     ) -> None:
         form_embed = disnake.Embed(
             title="Creating Form",
-            colour=0x43ADF3,
+            colour=0x2F3136,
             description="To create a form, please choose one of the options below:",
         )
 
