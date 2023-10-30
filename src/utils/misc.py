@@ -1,15 +1,6 @@
-from typing import List, Union
-
-from disnake import (
-    Message,
-    Embed,
-    MessageCommandInteraction,
-    TextChannel,
-    HTTPException,
-    Forbidden,
-)
+from typing import List, Optional, Mapping, Union
+from disnake import Message, Embed
 from disnake.ext import commands
-
 from . import main_db
 
 
@@ -45,25 +36,39 @@ async def is_command_disabled(message: Message, command: str) -> bool:
         return False
 
 
-async def check_channel(
-    channel: TextChannel,
-    interaction: Union[MessageCommandInteraction, commands.Context],
-) -> bool:
-    await interaction.send(
-        f"Checking access to channel {channel.mention}...", ephemeral=True
-    )
-    try:
-        await channel.send(".", delete_after=0.05)
-        return True
-    except (HTTPException, Forbidden):
-        await interaction.edit_original_message(
-            content=(
-                f"I can't check access to {channel.mention} channel, "
-                f"because i don't have permissions to send messages."
+def is_owner():
+    async def predicate(ctx: commands.Context) -> bool:
+        result = ctx.author == ctx.guild.owner
+
+        if not result:
+            await ctx.send(
+                embed=Embed(
+                    title="<a:error:1168599839899144253> Error",
+                    description="This command can be only used by the server owner",
+                    colour=0xFF0000,
+                )
             )
-        )
-        return False
+            return False
+
+        return True
+
+    return commands.check(predicate)
 
 
-def check_if_user_is_developer(bot: commands.Bot, user_id: int) -> bool:
-    return user_id in bot.owner_ids
+def has_bot_permissions():
+    async def predicate(ctx: commands.Context) -> bool:
+        bot_member = ctx.guild.get_member(ctx.bot.user.id)
+        print(bot_member.guild_permissions.administrator)
+        if not bot_member.guild_permissions.administrator:
+            await ctx.send(
+                embed=Embed(
+                    title="<<a:error:1168599839899144253> Error",
+                    description="Bot hasn't got enough permissions to do this.",
+                    colour=0xFF0000,
+                )
+            )
+            return False
+
+        return True
+
+    return commands.check(predicate)
