@@ -68,7 +68,7 @@
     "GIVEAWAY_REROLL_COMMAND_WINNERS_DESC": "Выберите число победителей",
 
 
-    "INVITE_TRACKER_COMMAND_NAME": "трекер_приглашений",
+    "INVITE_TRACKER_COMMAND_NAME": "инвайт-трекер",
     "INVITE_TRACKER_COMMAND_DESC": "Установка трекера приглашений",
     "INVITE_TRACKER_SET_CHANNEL_NAME": "канал",
     "INVITE_TRACKER_SET_CHANNEL_DESC": "Выберите канал",

@@ -9,6 +9,7 @@ from disnake import (
     Forbidden,
 )
 from disnake.ext import commands
+import disnake
 
 from . import main_db
 
@@ -87,20 +88,3 @@ def is_owner():
 
     return commands.check(predicate)
 
-
-def has_bot_permissions():
-    async def predicate(ctx: commands.Context) -> bool:
-        bot_member = ctx.guild.get_member(ctx.bot.user.id)
-        if not bot_member.guild_permissions.administrator:
-            await ctx.send(
-                embed=Embed(
-                    title="<<a:error:1168599839899144253> Error",
-                    description="Bot hasn't got enough permissions to do this.",
-                    colour=0xFF0000,
-                )
-            )
-            return False
-
-        return True
-
-    return commands.check(predicate)

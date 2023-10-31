@@ -4,6 +4,7 @@ import sys
 
 import disnake
 from disnake.ext import commands
+from datetime import datetime
 
 # from disnake.ext.ipc import Server
 
@@ -11,6 +12,7 @@ from src.cogs.TicketsCog import SetupTicketSettings
 from .utils import misc
 from .utils.help import CustomHelpCommand
 from .utils.misc import get_prefix, is_command_disabled
+
 
 
 class Bot(commands.Bot):
@@ -105,8 +107,8 @@ class Bot(commands.Bot):
         await self.wait_until_ready()
         await self.change_presence(
             activity=disnake.Activity(
-                type=disnake.ActivityType.streaming,
-                name="New multi-functional bot, Synth",
-                state="Release soon...",
+                type=disnake.ActivityType.watching,
+                name=f"{len(self.guilds)} | >>help",
+                state="Release soon..."
             )
         )
