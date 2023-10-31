@@ -1,12 +1,13 @@
 import json
-import logging
 import os
-import time
 
 import disnake
 from disnake.ext import commands
 
 from src.utils import backups
+from src.utils.backup import (
+    Backup as BackupDB,
+)
 from src.utils.misc import is_owner, has_bot_permissions
 
 
@@ -14,6 +15,18 @@ class Backup(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         super(Backup, self).__init__()
         self.bot = bot
+        self.backups = backups
+        self.CHANNEL_TYPES = {
+            "0": disnake.ChannelType.text,
+            "2": disnake.ChannelType.voice,
+            "4": disnake.ChannelType.category,
+            "5": disnake.ChannelType.news,
+            "13": disnake.ChannelType.stage_voice,
+            "15": disnake.ChannelType.forum,
+        }
+
+    async def cog_load(self) -> None:
+        await self.backups.fetch_and_cache_all()
 
     @commands.group(invoke_without_command=True)
     @commands.has_permissions(administrator=True)
@@ -31,7 +44,8 @@ class Backup(commands.Cog):
             )
 
             if backups.check_backup(ctx.guild):
-                data = backups.get({"id": ctx.guild.id, "info": True})
+                data = await backups.get(guild_id=ctx.guild.id)
+                data = data["backup_data"]
                 embed.add_field(
                     name="Last Backup:",
                     value=f"<t:{data['info']['created']}:f> (<t:{data['info']['created']}:R>)",
@@ -43,114 +57,137 @@ class Backup(commands.Cog):
     @commands.cooldown(1, 5, commands.BucketType.guild)
     @is_owner()
     async def create(self, ctx: commands.Context) -> None:
-        embed = disnake.Embed(color=0x2F3136)
-        if ctx.author == ctx.guild.owner:
-            try:
-                embed.title = "<a:loading:1168599537682755584> Please wait..."
-                embed.description = "Creating a server backup..."
-                msg = await ctx.send(embed=embed)
+        guild_backup = (await BackupDB.create(guild=ctx.guild)).to_json()
+        print(guild_backup)
 
-                backup_data = {
-                    "info": {
-                        "nextsave": 2147483647,
-                        "interval": 0,
-                        "created": int(time.time()),
-                    },
-                    "guild": {"name": ctx.guild.name},
-                    "text": {},
-                    "voice": {},
-                    "category": {},
-                    "roles": {},
-                }
+        guild_id = guild_backup.get("guild_id", ctx.guild.id)
+        guild_backup.pop("guild_id")
+        await self.backups.update_backups_info(
+            guild_id=guild_id, backup_data=guild_backup
+        )
 
-                for index, text_channel in enumerate(ctx.guild.text_channels):
-                    text_channel_data = {
-                        "name": text_channel.name,
-                        "topic": (
-                            text_channel.topic.replace(".", "")
-                            if text_channel.topic
-                            else None
-                        ),
-                        "slowmode": text_channel.slowmode_delay,
-                        "nsfw": text_channel.nsfw,
-                        "position": text_channel.position,
-                        "perms": {
-                            role.name: {"a": ovw[0].value, "d": ovw[1].value}
-                            for role, ovw in text_channel.overwrites.items()
-                        },
-                    }
+        backup_data = await self.backups.get(
+            guild_id=ctx.guild.id, to_return="backup_data"
+        )
+        print(backup_data)
 
-                    if text_channel.category is not None:
-                        text_channel_data["category"] = text_channel.category.name
-
-                    backup_data["text"][str(index)] = text_channel_data
-
-                for index, voice_channel in enumerate(ctx.guild.voice_channels):
-                    voice_channel_data = {
-                        "name": voice_channel.name.replace(".", " "),
-                        "limit": voice_channel.user_limit,
-                        "bitrate": voice_channel.bitrate,
-                        "position": voice_channel.position,
-                        "perms": {
-                            role.name: {"a": ovw[0].value, "d": ovw[1].value}
-                            for role, ovw in voice_channel.overwrites.items()
-                        },
-                    }
-                    if voice_channel.category is not None:
-                        voice_channel_data["category"] = voice_channel.category.name
-                    backup_data["voice"][str(index)] = voice_channel_data
-
-                for index, category in enumerate(ctx.guild.categories):
-                    category_data = {
-                        "name": category.name.replace(".", ""),
-                        "position": category.position,
-                        "perms": {
-                            role.name: {"a": ovw[0].value, "d": ovw[1].value}
-                            for role, ovw in category.overwrites.items()
-                        },
-                    }
-                    backup_data["category"][str(index)] = category_data
-
-                for index, role in enumerate(ctx.guild.roles):
-                    if not role.managed and role != ctx.guild.default_role:
-                        role_data = {
-                            "name": role.name.replace(".", ""),
-                            "perms": role.permissions.value,
-                            "color": role.colour.value,
-                            "hoist": role.hoist,
-                            "mentionable": role.mentionable,
-                        }
-                        backup_data["roles"][str(index)] = role_data
-
-                await backups.update_backups_info(ctx.guild.id, backup_data)
-
-                embed.colour = 0x2F3136
-                embed.title = "Finished"
-                embed.description = "Server backup has been successfully created"
-                await msg.edit(embed=embed)
-
-            except (Exception, ExceptionGroup) as e:
-                logging.info(e)
-                embed.colour = 0x2F3136
-                embed.title = "An error occurred"
-                embed.description = (
-                    "An error occurred when trying to save the server. Roles/channels names can't "
-                    "contain the `$` symbol."
-                )
-                await ctx.send(embed=embed)
-
-        else:
-            embed.colour = 0x2F3136
-            embed.title = "An error occurred"
-            embed.description = "This command can only be used by the server owner"
-            await ctx.send(embed=embed)
+        print("OK")
+        # embed = disnake.Embed(color=0x2F3136)
+        # if ctx.author == ctx.guild.owner:
+        #     try:
+        #         embed.title = "<a:loading:1168599537682755584> Please wait..."
+        #         embed.description = "Creating a server backup..."
+        #         msg = await ctx.send(embed=embed)
+        #
+        #         backup_data = {
+        #             "info": {
+        #                 "nextsave": 2147483647,
+        #                 "interval": 0,
+        #                 "created": int(time.time()),
+        #             },
+        #             "guild": {"name": ctx.guild.name},
+        #             "text": {},
+        #             "voice": {},
+        #             "category": {},
+        #             "roles": {},
+        #         }
+        #
+        #         for index, category in enumerate(ctx.guild.categories):
+        #             category_data = {
+        #                 "name": category.name,
+        #                 "position": category.position,
+        #                 "perms": {
+        #                     role.name: {"a": ovw.pair()[0].value, "d": ovw.pair()[1].value}
+        #                     for role, ovw in category.overwrites.items()
+        #                 },
+        #             }
+        #             backup_data["category"][str(index)] = category_data
+        #
+        #         for index, text_channel in enumerate(ctx.guild.text_channels):
+        #             text_channel_data = {
+        #                 "name": text_channel.name,
+        #                 "position": text_channel.position,
+        #                 "category": None if text_channel.category is None else str(text_channel.category.id),
+        #                 "topic": (
+        #                     text_channel.topic
+        #                     if text_channel.topic
+        #                     else None
+        #                 ),
+        #                 "slowmode": text_channel.slowmode_delay,
+        #                 "nsfw": text_channel.nsfw,
+        #                 "perms": {
+        #                     role.name: {"a": ovw.pair()[0].value, "d": ovw.pair()[1].value}
+        #                     for role, ovw in text_channel.overwrites.items()
+        #                 },
+        #             }
+        #
+        #             backup_data["text"][str(index)] = text_channel_data
+        #
+        #         for index, voice_channel in enumerate(ctx.guild.voice_channels):
+        #             voice_channel_data = {
+        #                 "name": voice_channel.name.replace(".", " "),
+        #                 "limit": voice_channel.user_limit,
+        #                 "category": None if voice_channel.category is None else str(voice_channel.category.id),
+        #                 "bitrate": voice_channel.bitrate,
+        #                 "position": voice_channel.position,
+        #                 "perms": {
+        #                     role.name: {"a": ovw.pair()[0].value, "d": ovw.pair()[1].value}
+        #                     for role, ovw in voice_channel.overwrites.items()
+        #                 },
+        #             }
+        #
+        #             backup_data["voice"][str(index)] = voice_channel_data
+        #
+        #         for index, role in enumerate(ctx.guild.roles):
+        #             if not role.managed and role != ctx.guild.default_role:
+        #                 role_data = {
+        #                     "name": role.name.replace(".", ""),
+        #                     "perms": role.permissions.value,
+        #                     "color": role.colour.value,
+        #                     "hoist": role.hoist,
+        #                     "mentionable": role.mentionable,
+        #                 }
+        #                 backup_data["roles"][str(index)] = role_data
+        #
+        #         await self.backups.update_backups_info(ctx.guild.id, backup_data)
+        #
+        #         embed.colour = 0x2F3136
+        #         embed.title = "Finished"
+        #         embed.description = "Server backup has been successfully created"
+        #         await msg.edit(embed=embed)
+        #
+        #     except (Exception, ExceptionGroup) as e:
+        #         raise e
+        #         exc_type = e.__class__.__name__
+        #         exc_line = sys.exc_info()[2].tb_lineno
+        #         logging.error(
+        #             f"[log]! {exc_type}: {str(e)}, line {exc_line}"
+        #         )
+        #         embed.colour = 0x2F3136
+        #         embed.title = "An error occurred"
+        #         embed.description = (
+        #             "An error occurred when trying to save the server. Roles/channels names can't "
+        #             "contain the `$` symbol."
+        #         )
+        #         await ctx.send(embed=embed)
+        #
+        # else:
+        #     embed.colour = 0x2F3136
+        #     embed.title = "An error occurred"
+        #     embed.description = "This command can only be used by the server owner"
+        #     await ctx.send(embed=embed)
 
     @backup.command()
     @commands.cooldown(1, 5, commands.BucketType.guild)
     @is_owner()
     @has_bot_permissions()
     async def load(self, ctx: commands.Context) -> None:
+        guild_backup = await self.backups.get(
+            guild_id=ctx.guild.id, to_return="backup_data"
+        )
+        print(guild_backup)
 
+        # FIXME: Refactor
         embed = disnake.Embed(color=0x2F3136)
         embed.title = "Loading Backup"
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar)
@@ -158,7 +195,7 @@ class Backup(commands.Cog):
         msg = await ctx.send(embed=embed)
 
         if ctx.author == ctx.guild.owner:
-            data = backups.get(ctx.guild.id, 0)
+            data = await self.backups.get(ctx.guild.id, to_return="backup_data")
 
             embed.description = "Stage 1 of 6\n> **Restoring the server name**"
             await msg.edit(embed=embed)
@@ -188,7 +225,7 @@ class Backup(commands.Cog):
             embed.description = "Stage 4 of 6\n> **Creating roles**"
             await msg.edit(embed=embed)
 
-            roles = data["roles"]
+            roles = len(data["roles"])
             for k in range(roles + 1):
                 try:
                     await ctx.guild.create_role(
@@ -201,17 +238,18 @@ class Backup(commands.Cog):
                         mentionable=data["roles"][str(k)]["mentionable"],
                     )
                 except (
-                        disnake.NotFound,
-                        disnake.Forbidden,
-                        disnake.HTTPException,
-                        TypeError,
+                    disnake.NotFound,
+                    disnake.Forbidden,
+                    disnake.HTTPException,
+                    TypeError,
+                    KeyError,
                 ):
                     pass
 
             embed.description = "Stage 5 of 6\n> **Creating categories**"
             await msg.edit(embed=embed)
 
-            categories = data["category"]
+            categories = len(data["category"])
             for i in range(categories + 1):
                 try:
                     overwrites = {}
@@ -236,19 +274,18 @@ class Backup(commands.Cog):
                         except (Exception, ExceptionGroup):
                             pass
 
-                    # TODO: need refactor because see line 174
                     await ctx.guild.create_category(
                         name=data["category"][str(i)]["name"],
                         position=data["category"][str(i)]["position"],
                         overwrites=overwrites,
                     )
-                except (disnake.Forbidden, disnake.HTTPException, TypeError):
+                except (disnake.Forbidden, disnake.HTTPException, TypeError, KeyError):
                     pass
 
             embed.description = "Stage 6 of 6\n> **Creating channels**"
             await msg.edit(embed=embed)
 
-            text_channels = data["text"]
+            text_channels = len(data["text"])
             for i in range(text_channels + 1):
                 try:
                     overwrites = {}
@@ -283,22 +320,25 @@ class Backup(commands.Cog):
                             overwrites=overwrites,
                         )
                     else:
+                        category = (
+                            await self.backups.get(  # TODO: FIX
+                                ctx.guild.id, to_return="backup_data"
+                            ),
+                        )
+
                         await ctx.guild.create_text_channel(
                             name=data["text"][str(i)]["name"],
                             topic=data["text"][str(i)]["topic"],
                             nsfw=data["text"][str(i)]["nsfw"],
                             slowmode_delay=data["text"][str(i)]["slowmode"],
                             position=data["text"][str(i)]["position"],
-                            category=backups.get(
-                                ctx.guild.categories,
-                                name=data["text"][str(i)]["category"],
-                            ),
+                            category=category["text"][str(i)]["category"],
                             overwrites=overwrites,
                         )
-                except (disnake.Forbidden, disnake.HTTPException, TypeError):
+                except (disnake.Forbidden, disnake.HTTPException, TypeError, KeyError):
                     pass
 
-            voice_channels = data["voice"]
+            voice_channels = len(data["voice"])
             for i in range(voice_channels + 1):
                 try:
                     overwrites = {}
@@ -319,7 +359,7 @@ class Backup(commands.Cog):
                                 ),
                             )
                             overwrites[old_role_permissions] = ovw
-                        except (Exception, ExceptionGroup):
+                        except (Exception, ExceptionGroup, KeyError):
                             pass
 
                     if data["voice"][str(i)]["category"] is None:
@@ -331,18 +371,21 @@ class Backup(commands.Cog):
                             overwrites=overwrites,
                         )
                     else:
+                        category = (
+                            await self.backups.get(  # TODO: FIX
+                                ctx.guild.id, to_return="backup_data"
+                            ),
+                        )
+
                         await ctx.guild.create_voice_channel(
                             name=data["voice"][str(i)]["name"],
                             user_limit=data["voice"][str(i)]["limit"],
                             bitrate=data["voice"][str(i)]["bitrate"],
                             position=data["voice"][str(i)]["position"],
-                            category=backups.get(
-                                ctx.guild.categories,
-                                name=data["voice"][str(i)]["category"],
-                            ),
+                            category=category["voice"][str(i)]["category"],
                             overwrites=overwrites,
                         )
-                except (disnake.Forbidden, disnake.HTTPException, TypeError):
+                except (disnake.Forbidden, disnake.HTTPException, TypeError, KeyError):
                     pass
 
             embed.title = "Finished"
@@ -369,7 +412,7 @@ class Backup(commands.Cog):
                 "categories": {},
                 "roles": {},
             }
-            data = backups.get(ctx.guild.id)  # TODO: need refactor because see line 174
+            data = await self.backups.get(ctx.guild.id, to_return="backup_data")
             backup["guild"]["name"] = data["guild"]["name"]
             backup["text_channels"] = data["text"]
             backup["voice_channels"] = data["voice"]
@@ -377,7 +420,7 @@ class Backup(commands.Cog):
             backup["roles"] = data["roles"]
 
             with open(
-                    str(ctx.guild.id) + ".json", "w"
+                str(ctx.guild.id) + ".json", "w"
             ) as f:  # TODO: use ujson + f-string
                 json.dump(backup, f, indent=4)
 
@@ -400,7 +443,7 @@ class Backup(commands.Cog):
         embed = disnake.Embed(color=0x2F3136)
 
         if backups.check_backup(ctx.guild):
-            backups.remove_from_db({"_id": ctx.guild.id})
+            await self.backups.remove_from_db({"_id": ctx.guild.id})
             embed.title = "Finished"
             embed.description = "Server backup has been successfully deleted"
             await ctx.send(embed=embed)
