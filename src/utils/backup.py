@@ -282,17 +282,18 @@ def extract_attributes_from_class(
 
 
 def convert_guild_channel_to_json(guild_channel: disnake.abc.GuildChannel) -> Dict:
-    return extract_attributes_from_class(
-        attributes=CHANNEL_ATTRIBUTE_NAMES,
-        _class=guild_channel,
-        convert={
-            "type": lambda type_value: type_value[1],
-            "overwrites": lambda overwrites: convert_permission_overwrite_to_list(
-                overwrites
-            ),
-            "video_quality_mode": lambda video_quality_mode: video_quality_mode[1],
-        },
-    )
+    if guild_channel.type != disnake.ChannelType.category:
+        return extract_attributes_from_class(
+            attributes=CHANNEL_ATTRIBUTE_NAMES,
+            _class=guild_channel,
+            convert={
+                "type": lambda type_value: type_value[1],
+                "overwrites": lambda overwrites: convert_permission_overwrite_to_list(
+                    overwrites
+                ),
+                "video_quality_mode": lambda video_quality_mode: video_quality_mode[1],
+            },
+        )
 
 
 async def convert_guild_role_to_json(guild_role: disnake.Role) -> Dict:
