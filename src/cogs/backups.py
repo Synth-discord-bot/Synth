@@ -37,7 +37,7 @@ class Backup(commands.Cog):
 
             if backups.check_backup(ctx.guild):
                 data = await backups.get(guild_id=ctx.guild.id)
-                data = data['backup_data']
+                data = data["backup_data"]
                 embed.add_field(
                     name="Last Backup:",
                     value=f"<t:{data['info']['created']}:f> (<t:{data['info']['created']}:R>)",
@@ -81,7 +81,10 @@ class Backup(commands.Cog):
                         "nsfw": text_channel.nsfw,
                         "position": text_channel.position,
                         "perms": {
-                            role.name: {"a": ovw.pair()[0].value, "d": ovw.pair()[1].value}
+                            role.name: {
+                                "a": ovw.pair()[0].value,
+                                "d": ovw.pair()[1].value,
+                            }
                             for role, ovw in text_channel.overwrites.items()
                         },
                     }
@@ -98,7 +101,10 @@ class Backup(commands.Cog):
                         "bitrate": voice_channel.bitrate,
                         "position": voice_channel.position,
                         "perms": {
-                            role.name: {"a": ovw.pair()[0].value, "d": ovw.pair()[1].value}
+                            role.name: {
+                                "a": ovw.pair()[0].value,
+                                "d": ovw.pair()[1].value,
+                            }
                             for role, ovw in voice_channel.overwrites.items()
                         },
                     }
@@ -111,7 +117,10 @@ class Backup(commands.Cog):
                         "name": category.name.replace(".", ""),
                         "position": category.position,
                         "perms": {
-                            role.name: {"a": ovw.pair()[0].value, "d": ovw.pair()[1].value}
+                            role.name: {
+                                "a": ovw.pair()[0].value,
+                                "d": ovw.pair()[1].value,
+                            }
                             for role, ovw in category.overwrites.items()
                         },
                     }
@@ -139,9 +148,7 @@ class Backup(commands.Cog):
                 raise e
                 exc_type = e.__class__.__name__
                 exc_line = sys.exc_info()[2].tb_lineno
-                logging.error(
-                    f"[log]! {exc_type}: {str(e)}, line {exc_line}"
-                )
+                logging.error(f"[log]! {exc_type}: {str(e)}, line {exc_line}")
                 embed.colour = 0x2F3136
                 embed.title = "An error occurred"
                 embed.description = (
@@ -161,7 +168,6 @@ class Backup(commands.Cog):
     @is_owner()
     @has_bot_permissions()
     async def load(self, ctx: commands.Context) -> None:
-
         embed = disnake.Embed(color=0x2F3136)
         embed.title = "Loading Backup"
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar)
@@ -212,10 +218,10 @@ class Backup(commands.Cog):
                         mentionable=data["roles"][str(k)]["mentionable"],
                     )
                 except (
-                        disnake.NotFound,
-                        disnake.Forbidden,
-                        disnake.HTTPException,
-                        TypeError,
+                    disnake.NotFound,
+                    disnake.Forbidden,
+                    disnake.HTTPException,
+                    TypeError,
                 ):
                     pass
 
@@ -380,7 +386,9 @@ class Backup(commands.Cog):
                 "categories": {},
                 "roles": {},
             }
-            data = await self.backups.get(ctx.guild.id)  # TODO: need refactor because see line 174
+            data = await self.backups.get(
+                ctx.guild.id
+            )  # TODO: need refactor because see line 174
             backup["guild"]["name"] = data["guild"]["name"]
             backup["text_channels"] = data["text"]
             backup["voice_channels"] = data["voice"]
@@ -388,7 +396,7 @@ class Backup(commands.Cog):
             backup["roles"] = data["roles"]
 
             with open(
-                    str(ctx.guild.id) + ".json", "w"
+                str(ctx.guild.id) + ".json", "w"
             ) as f:  # TODO: use ujson + f-string
                 json.dump(backup, f, indent=4)
 
