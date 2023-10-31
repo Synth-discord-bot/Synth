@@ -69,18 +69,14 @@ class Backup:
     """
 
     def __init__(
-            self,
-            _id: Optional[str] = None,
-            channels: Optional[List[Dict]] = None,
-            guild_info: Optional[Dict] = None,
-            categories: Optional[Dict] = None,
-            rules_channel: Optional[int] = None,
-            public_updates_channel: Optional[int] = None,
-            roles: Optional[List[Dict]] = None,
+        self,
+        _id: Optional[str] = None,
+        channels: Optional[List[Dict]] = None,
+        rules_channel: Optional[int] = None,
+        public_updates_channel: Optional[int] = None,
+        roles: Optional[List[Dict]] = None,
     ) -> None:
         self.guild_id: str = _id
-        self.guild_info = guild_info
-        self.categories: Optional[Dict] = categories
         self.channels: Optional[List[Dict]] = channels
         self.rules_channel: Optional[int] = rules_channel
         self.public_updates_channel: Optional[int] = public_updates_channel
@@ -104,28 +100,6 @@ class Backup:
         Backup
             The backup
         """
-        category_info = {}
-        for index, category in enumerate(guild.categories):
-            category_data = {
-                "name": category.name.replace(".", ""),
-                "position": category.position,
-                "perms": {
-                    role.name: {
-                        "a": ovw.pair()[0].value,
-                        "d": ovw.pair()[1].value,
-                    }
-                    for role, ovw in category.overwrites.items()
-                },
-            }
-            category_info[str(index)] = category_data
-
-        guild_info = {
-            "name": guild.name, "rules_channel": guild.rules_channel,
-            "public_updates_channel": guild.public_updates_channel,
-            "afk_channel": guild.afk_channel, "afk_timeout": guild.afk_timeout,
-            "description": guild.description,
-        }
-
         roles = [
             await convert_guild_role_to_json(role)
             for role in guild.roles
@@ -137,8 +111,6 @@ class Backup:
 
         return cls(
             _id=str(guild.id),
-            guild_info=guild_info,
-            categories=category_info,
             channels=[
                 convert_guild_channel_to_json(channel) for channel in guild.channels
             ],
@@ -213,9 +185,9 @@ class BackupChannel:
 
 
 def convert_permission_overwrite_to_list(
-        overwrites: Dict[
-            Union[disnake.Role, disnake.Member, disnake.Object], disnake.PermissionOverwrite
-        ],
+    overwrites: Dict[
+        Union[disnake.Role, disnake.Member, disnake.Object], disnake.PermissionOverwrite
+    ],
 ) -> List[Dict]:
     """Converts a discord.PermissionOverwrite object to a list
 
@@ -240,7 +212,7 @@ def convert_permission_overwrite_to_list(
 
 
 def extract_attributes_from_class(
-        attributes: List[str], _class: Any, convert: Optional[Dict[str, Callable]] = None
+    attributes: List[str], _class: Any, convert: Optional[Dict[str, Callable]] = None
 ) -> Dict:
     """Extracts the values of the attributes given in `attributes` from the `_class` object
 
@@ -282,18 +254,17 @@ def extract_attributes_from_class(
 
 
 def convert_guild_channel_to_json(guild_channel: disnake.abc.GuildChannel) -> Dict:
-    if guild_channel.type != disnake.ChannelType.category:
-        return extract_attributes_from_class(
-            attributes=CHANNEL_ATTRIBUTE_NAMES,
-            _class=guild_channel,
-            convert={
-                "type": lambda type_value: type_value[1],
-                "overwrites": lambda overwrites: convert_permission_overwrite_to_list(
-                    overwrites
-                ),
-                "video_quality_mode": lambda video_quality_mode: video_quality_mode[1],
-            },
-        )
+    return extract_attributes_from_class(
+        attributes=CHANNEL_ATTRIBUTE_NAMES,
+        _class=guild_channel,
+        convert={
+            "type": lambda type_value: type_value[1],
+            "overwrites": lambda overwrites: convert_permission_overwrite_to_list(
+                overwrites
+            ),
+            "video_quality_mode": lambda video_quality_mode: video_quality_mode[1],
+        },
+    )
 
 
 async def convert_guild_role_to_json(guild_role: disnake.Role) -> Dict:
