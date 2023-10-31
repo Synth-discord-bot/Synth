@@ -38,7 +38,7 @@ class BackupsDatabase(BaseDatabase):
                     "backup_data": backup_data,
                 }
             )
-        backups = await self.get(guild_id=guild_id, to_return="backups")
+        backups = await self.get(guild_id=guild_id, to_return="backup_data")
         backups.update(
             {
                 "backup_data": backup_data,
