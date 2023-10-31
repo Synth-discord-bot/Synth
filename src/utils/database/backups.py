@@ -1,6 +1,6 @@
 from .base import BaseDatabase
 
-from typing import Any, List, Mapping, Union
+from typing import Any, List, Mapping, Union, Dict
 import disnake
 
 
@@ -9,28 +9,24 @@ class BackupsDatabase(BaseDatabase):
         super().__init__(database_name)
 
     def check_backup(self, guild):
-        return self.collection_cache.get(guild.id, 0) != 0
+        return len(self.collection_cache[1]) != 0
 
     async def get(
-            self,
-            guild_id: Union[int, str, disnake.Guild],
-            return_first: bool = False,
-    ) -> List[Mapping[Any, Any]]:
+        self,
+        guild_id: Union[int, str, disnake.Guild],
+    ) -> Union[Union[Dict[str, Any], Mapping[str, Any]], List[Any]]:
         guild_id = int(guild_id) if isinstance(guild_id, (str, int)) else guild_id.id
 
         if await self.find_one_from_db({"guild_id": guild_id}) is None:
             return []
-        result = (await self.find_one_from_db({"guild_id": guild_id})).get(
-            "loggers", []
-        )
-        if return_first and result:
-            return result[0]
-        return result
+        result = await self.find_one_from_db({"guild_id": guild_id})
+        if result:
+            return result
 
     async def update_backups_info(
-            self,
-            guild_id: Union[int, str, disnake.Guild],
-            backup_data: Union[dict],
+        self,
+        guild_id: Union[int, str, disnake.Guild],
+        backup_data: Union[dict],
     ) -> None:
         if await self.find_one_from_db({"guild_id": guild_id}) is None:
             await self.add_to_db(
@@ -40,7 +36,7 @@ class BackupsDatabase(BaseDatabase):
                 }
             )
         backups = await self.get(guild_id=guild_id)
-        backups.append(
+        backups.update(
             {
                 "backup_data": backup_data,
             }
