@@ -1,7 +1,8 @@
-import json
-import logging
+import asyncio
+import base64
+import ujson
 import os
-import sys
+from io import BytesIO
 
 import disnake
 from disnake.ext import commands
@@ -13,6 +14,9 @@ from src.utils.misc import is_owner, has_bot_permissions
 
 
 class Backup(commands.Cog):
+    """Backup commands"""
+    EMOJI = "📅"
+
     def __init__(self, bot: commands.Bot) -> None:
         super(Backup, self).__init__()
         self.bot = bot
@@ -32,7 +36,8 @@ class Backup(commands.Cog):
                 description=(
                     f"`{ctx.prefix}backup create` – Create/update backup\n"
                     f"`{ctx.prefix}backup delete` – Delete backup\n"
-                    f"`{ctx.prefix}backup load` – Load backup"
+                    f"`{ctx.prefix}backup load` – Load backup\n"
+                    f"`{ctx.prefix}backup file` – JSON file of server backup"
                 ),
             )
 
@@ -50,40 +55,33 @@ class Backup(commands.Cog):
     @commands.cooldown(1, 5, commands.BucketType.guild)
     @is_owner()
     async def create(self, ctx: commands.Context) -> None:
+        global msg
         embed = disnake.Embed(color=0x2F3136)
-        if ctx.author == ctx.guild.owner:
-            try:
-                embed.title = "<a:loading:1168599537682755584> Please wait..."
-                embed.description = "Creating a server backup..."
-                msg = await ctx.send(embed=embed)
+        try:
+            embed.title = "<a:loading:1168599537682755584> Please wait..."
+            embed.description = "Creating a server backup..."
+            msg = await ctx.send(embed=embed)
 
-                backup_data = await BackupGuild(ctx.guild).create()
+            backup_data = await BackupGuild(ctx.guild).create()
 
-                await self.backups.update_backups_info(ctx.guild.id, backup_data)
+            await self.backups.update_backups_info(ctx.guild.id, backup_data)
 
-                embed.colour = 0x2F3136
-                embed.title = "Finished"
-                embed.description = "Server backup has been successfully created"
-                await msg.edit(embed=embed)
+            embed.colour = 0x2F3136
+            embed.title = "Finished"
+            embed.description = "Server backup has been successfully created"
+            await msg.edit(embed=embed)
 
-            except (Exception, ExceptionGroup) as e:
-                raise e
-                exc_type = e.__class__.__name__
-                exc_line = sys.exc_info()[2].tb_lineno
-                logging.error(f"[log]! {exc_type}: {str(e)}, line {exc_line}")
-                embed.colour = 0x2F3136
-                embed.title = "An error occurred"
-                embed.description = (
-                    "An error occurred when trying to save the server. Roles/channels names can't "
-                    "contain the `$` symbol."
-                )
-                await ctx.send(embed=embed)
-
-        else:
+        except (Exception, ExceptionGroup) as e:
+            # raise e
+            # exc_type = e.__class__.__name__
+            # exc_line = sys.exc_info()[2].tb_lineno
+            # logging.error(f"[log]! {exc_type}: {str(e)}, line {exc_line}")
             embed.colour = 0x2F3136
             embed.title = "An error occurred"
-            embed.description = "This command can only be used by the server owner"
-            await ctx.send(embed=embed)
+            embed.description = (
+                "An error occurred when trying to save the server."
+            )
+            await msg.edit(embed=embed)
 
     @backup.command()
     @commands.cooldown(1, 5, commands.BucketType.guild)
@@ -99,48 +97,12 @@ class Backup(commands.Cog):
             await ctx.send(embed=embed)
             return
 
-        embed.title = "Loading Backup"
+        embed.title = "<a:loading:1168599537682755584> Loading Backup"
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar)
 
         msg = await ctx.send(embed=embed)
-        embed.description = "Stage 1 of 6\n> **Restoring the server name**"
-        await msg.edit(embed=embed)
 
-        # TODO:
-        #  1. Restore the server icons, banner (if exists)
-        #  2. Update rules_channel and public_updates_channel IDs (if exists) in guild after creating channels
-        """
-         "guild": {
-                "name": self.guild.name,
-                "rules_channel": self.guild.rules_channel.name
-                if self.guild.rules_channel
-                else None,
-                "public_updates_channel": self.guild.public_updates_channel.name
-                if self.guild.public_updates_channel
-                else None,
-                "afk_channel": self.guild.afk_channel.name
-                if self.guild.afk_channel
-                else None,
-                "afk_timeout": self.guild.afk_timeout if self.guild.afk_timeout else 0,
-                "description": self.guild.description,
-            },
-        """
-        await ctx.guild.edit(
-            name=data["guild"]["name"],
-            afk_timeout=data["guild"]["afk_timeout"],
-            description=data["guild"]["description"],
-        )
-
-        embed.description = "Stage 2 of 6\n> **Deleting roles**"
-        await msg.edit(embed=embed)
-
-        for role in ctx.guild.roles:
-            try:
-                await role.delete()
-            except (disnake.Forbidden, disnake.HTTPException):
-                continue
-
-        embed.description = "Stage 3 of 6\n> **Deleting channels**"
+        embed.description = "<:information:1168237956591530065> Stage 1 of 6\n> **Deleting channels**"
         await msg.edit(embed=embed)
 
         for channel in ctx.guild.channels:
@@ -150,13 +112,21 @@ class Backup(commands.Cog):
             except (disnake.Forbidden, disnake.NotFound, disnake.HTTPException):
                 continue
 
-        embed.description = "Stage 4 of 6\n> **Creating roles**"
+        embed.description = "<:information:1168237956591530065> Stage 2 of 6\n> **Deleting roles**"
+        await msg.edit(embed=embed)
+
+        for role in ctx.guild.roles:
+            try:
+                await role.delete()
+            except (disnake.Forbidden, disnake.HTTPException):
+                continue
+
+        embed.description = "<:information:1168237956591530065> Stage 3 of 6\n> **Creating roles**"
         await msg.edit(embed=embed)
 
         roles = data["roles"]
         for k in range(len(roles) + 1):
             try:
-                print(data["roles"][str(k)]["name"])
                 await ctx.guild.create_role(
                     name=data["roles"][str(k)]["name"],
                     colour=disnake.Colour(value=data["roles"][str(k)]["color"]),
@@ -167,15 +137,15 @@ class Backup(commands.Cog):
                     mentionable=data["roles"][str(k)]["mentionable"],
                 )
             except (
-                disnake.NotFound,
-                disnake.Forbidden,
-                disnake.HTTPException,
-                TypeError,
-                KeyError,
+                    disnake.NotFound,
+                    disnake.Forbidden,
+                    disnake.HTTPException,
+                    TypeError,
+                    KeyError,
             ):
                 continue
 
-        embed.description = "Stage 5 of 6\n> **Creating categories**"
+        embed.description = "<:information:1168237956591530065> Stage 4 of 6\n> **Creating categories**"
         await msg.edit(embed=embed)
 
         categories = data["category"]
@@ -211,7 +181,7 @@ class Backup(commands.Cog):
             except (disnake.Forbidden, disnake.HTTPException, TypeError):
                 continue
 
-        embed.description = "Stage 6 of 6\n> **Creating channels**"
+        embed.description = "<:information:1168237956591530065> Stage 5 of 6\n> **Creating channels**"
         await msg.edit(embed=embed)
 
         text_channels = data["text"]
@@ -239,28 +209,32 @@ class Backup(commands.Cog):
                         except (Exception, ExceptionGroup):
                             continue
 
-                    if data["text"][str(i)].get("category", None) is None:
-                        await ctx.guild.create_text_channel(
-                            name=data["text"][str(i)]["name"],
-                            topic=data["text"][str(i)]["topic"],
-                            nsfw=data["text"][str(i)]["nsfw"],
-                            slowmode_delay=data["text"][str(i)]["slowmode"],
-                            position=data["text"][str(i)]["position"],
-                            overwrites=overwrites,
-                        )
-                    else:
-                        await ctx.guild.create_text_channel(
-                            name=data["text"][str(i)]["name"],
-                            topic=data["text"][str(i)]["topic"],
-                            nsfw=data["text"][str(i)]["nsfw"],
-                            slowmode_delay=data["text"][str(i)]["slowmode"],
-                            position=data["text"][str(i)]["position"],
-                            category=get(  # TODO: FIX
-                                ctx.guild.categories,
-                                name=data["text"][str(i)]["category"],
-                            ),
-                            overwrites=overwrites,
-                        )
+                    new_channel_name = data["text"][str(i)]["name"]
+                    current_channel_name = ctx.channel.name
+
+                    if new_channel_name != current_channel_name:
+                        if data["text"][str(i)].get("category", None) is None:
+                            await ctx.guild.create_text_channel(
+                                name=new_channel_name,
+                                topic=data["text"][str(i)]["topic"],
+                                nsfw=data["text"][str(i)]["nsfw"],
+                                slowmode_delay=data["text"][str(i)]["slowmode"],
+                                position=data["text"][str(i)]["position"],
+                                overwrites=overwrites,
+                            )
+                        else:
+                            await ctx.guild.create_text_channel(
+                                name=new_channel_name,
+                                topic=data["text"][str(i)]["topic"],
+                                nsfw=data["text"][str(i)]["nsfw"],
+                                slowmode_delay=data["text"][str(i)]["slowmode"],
+                                position=data["text"][str(i)]["position"],
+                                category=get(
+                                    ctx.guild.categories,
+                                    name=data["text"][str(i)]["category"],
+                                ),
+                                overwrites=overwrites,
+                            )
             except (disnake.Forbidden, disnake.HTTPException, TypeError):
                 continue
 
@@ -312,16 +286,76 @@ class Backup(commands.Cog):
             except (disnake.Forbidden, disnake.HTTPException, TypeError):
                 continue
 
-        embed.title = "Finished"
+        embed.description = "<:information:1168237956591530065> Stage 6 of 6\n> **Restoring the server main information**"
+        await msg.edit(embed=embed)
+
+        """
+         "guild": {
+                "name": self.guild.name,
+                "rules_channel": self.guild.rules_channel.name
+                if self.guild.rules_channel
+                else None,
+                "public_updates_channel": self.guild.public_updates_channel.name
+                if self.guild.public_updates_channel
+                else None,
+                "afk_channel": self.guild.afk_channel.name
+                if self.guild.afk_channel
+                else None,
+                "afk_timeout": self.guild.afk_timeout if self.guild.afk_timeout else 0,
+                "description": self.guild.description,
+            },
+        """
+
+        icon_data = None
+        if data["guild"]["icon"]:
+            icon_data = BytesIO(base64.b64decode(data["guild"]["icon"]))
+
+        banner_data = None
+        if data["guild"]["banner"]:
+            banner_data = BytesIO(base64.b64decode(data["guild"]["banner"]))
+
+        verification_level_mapping = {
+            "none": disnake.VerificationLevel.none,
+            "low": disnake.VerificationLevel.low,
+            "medium": disnake.VerificationLevel.medium,
+            "high": disnake.VerificationLevel.high,
+            "highest": disnake.VerificationLevel.highest,
+        }
+
+        # Get the verification level from MongoDB and convert it
+        ver_level_mongo = data["guild"]["verification_level"][0]
+        # Assuming the first element in the list represents the verification level
+        ver_level = verification_level_mapping.get(ver_level_mongo, disnake.VerificationLevel.none)
+
+        afk_channel = disnake.utils.get(ctx.guild.voice_channels, name=data["guild"]["afk_channel"])
+        system_channel = disnake.utils.get(ctx.guild.text_channels, name=data["guild"]["system_channel"])
+
+        await ctx.guild.edit(
+            name=data["guild"]["name"],
+            afk_timeout=data["guild"]["afk_timeout"],
+            description=data["guild"]["description"],
+            rules_channel=data["guild"]["rules_channel"] or None,
+            public_updates_channel=data["guild"]["public_updates_channel"] or None,
+            premium_progress_bar_enabled=data["guild"]["premium_progress_bar_enabled"],
+            system_channel=system_channel,
+            afk_channel=afk_channel,
+            verification_level=ver_level,
+            icon=icon_data.read() if icon_data is not None else None,
+            banner=banner_data.read() if banner_data is not None else None,
+        )
+
+        await asyncio.sleep(3)
+
+        embed.title = "<a:success:1168599845192339577> Success"
         embed.colour = 0x2F3136
-        embed.description = "Server backup has been successfully loaded"
+        embed.description = "Server backup has been successfully loaded."
 
         await msg.edit(embed=embed)
 
-    @backup.command(aliases=["file"])
+    @backup.command()
     @commands.cooldown(1, 50, commands.BucketType.guild)
     @commands.has_permissions(administrator=True)
-    async def _file(self, ctx: commands.Context) -> None:
+    async def file(self, ctx: commands.Context) -> None:
         if backups.check_backup(ctx.guild):
             backup = {
                 "guild": {},
@@ -330,24 +364,23 @@ class Backup(commands.Cog):
                 "categories": {},
                 "roles": {},
             }
-            data = await self.backups.get(
-                ctx.guild.id
-            )  # TODO: need refactor because see line 174
+            data = await self.backups.get(ctx.guild.id, to_return="backup_data")
+
             backup["guild"]["name"] = data["guild"]["name"]
+            backup["guild"]["afk_timeout"] = data["guild"]["afk_timeout"]
+            backup["guild"]["description"] = data["guild"]["description"]
             backup["text_channels"] = data["text"]
             backup["voice_channels"] = data["voice"]
             backup["categories"] = data["category"]
             backup["roles"] = data["roles"]
 
-            with open(
-                str(ctx.guild.id) + ".json", "w"
-            ) as f:  # TODO: use ujson + f-string
-                json.dump(backup, f, indent=4)
+            with open(f"{str(ctx.guild.id)}.json", "w") as f:
+                ujson.dump(backup, f, indent=4)
 
             await ctx.send(
-                file=disnake.File(str(ctx.guild.id) + ".json")
-            )  # TODO: use f-string
-            os.remove(str(ctx.guild.id) + ".json")
+                file=disnake.File(f"{str(ctx.guild.id)}.json")
+            )
+            os.remove(f"{str(ctx.guild.id)}.json")
         else:
             embed = disnake.Embed(
                 colour=0x2F3136,

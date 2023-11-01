@@ -3,6 +3,11 @@ from typing import Dict, Any, Union
 
 import disnake
 
+import base64
+from PIL import Image
+from io import BytesIO
+import aiohttp
+
 
 class Backup:
     def __init__(
@@ -23,6 +28,24 @@ class BackupCreator:
     async def create_backup(
         self,
     ) -> Dict[str, Union[Dict[Any, Any], Dict[str, str], Dict[str, int]]]:
+        icon_data = None  # Default to None
+        banner_data = None  # Default to None
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(self.guild.icon.url) as icon_response:
+                    if icon_response.status == 200:
+                        icon_data = base64.b64encode(await icon_response.read()).decode('utf-8')
+        except (Exception, disnake.Forbidden):
+            pass
+
+        try:
+            async with session.get(self.guild.banner.url) as banner_response:
+                if banner_response.status == 200:
+                    banner_data = base64.b64encode(await banner_response.read()).decode('utf-8')
+        except (Exception, disnake.Forbidden):
+            pass
+
         backup_data = {
             "info": {
                 "nextsave": 2147483647,
@@ -35,13 +58,26 @@ class BackupCreator:
                 if self.guild.rules_channel
                 else None,
                 "public_updates_channel": self.guild.public_updates_channel.name
-                if self.guild.public_updates_channel
+                if self.guild.public_updates_channel is not None
                 else None,
                 "afk_channel": self.guild.afk_channel.name
                 if self.guild.afk_channel
                 else None,
                 "afk_timeout": self.guild.afk_timeout if self.guild.afk_timeout else 0,
+                "premium_progress_bar_enabled": self.guild.premium_progress_bar_enabled,
+                "verification_level": self.guild.verification_level
+                if self.guild.verification_level
+                else disnake.VerificationLevel.none,
+                "system_channel": self.guild.system_channel.name
+                if self.guild.system_channel is not None
+                else None,
                 "description": self.guild.description,
+                "icon": icon_data
+                if self.guild.icon is not None
+                else None,
+                "banner": banner_data
+                if self.guild.banner is not None
+                else None,
             },
             "text": {},
             "voice": {},
