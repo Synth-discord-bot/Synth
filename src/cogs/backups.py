@@ -107,6 +107,8 @@ class Backup(commands.Cog):
         await msg.edit(embed=embed)
 
         # TODO:
+        #  1. Restore the server icons, banner (if exists)
+        #  2. Update rules_channel and public_updates_channel IDs (if exists) in guild after creating channels
         """
          "guild": {
                 "name": self.guild.name,
@@ -165,11 +167,11 @@ class Backup(commands.Cog):
                     mentionable=data["roles"][str(k)]["mentionable"],
                 )
             except (
-                disnake.NotFound,
-                disnake.Forbidden,
-                disnake.HTTPException,
-                TypeError,
-                KeyError,
+                    disnake.NotFound,
+                    disnake.Forbidden,
+                    disnake.HTTPException,
+                    TypeError,
+                    KeyError,
             ):
                 continue
 
@@ -338,7 +340,7 @@ class Backup(commands.Cog):
             backup["roles"] = data["roles"]
 
             with open(
-                str(ctx.guild.id) + ".json", "w"
+                    str(ctx.guild.id) + ".json", "w"
             ) as f:  # TODO: use ujson + f-string
                 json.dump(backup, f, indent=4)
 
