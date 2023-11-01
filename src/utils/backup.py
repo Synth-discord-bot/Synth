@@ -78,7 +78,7 @@ class Backup:
         embed.description = (
             "<:information:1168237956591530065> Stage 4 of 6\n> **Creating categories**"
         )
-        await msg.edit(embed=embed)
+        await message.edit(embed=embed)
 
         categories = data["category"]
         for i in range(len(categories) + 1):
@@ -164,7 +164,7 @@ class Backup:
                                 slowmode_delay=data["text"][str(i)]["slowmode"],
                                 position=data["text"][str(i)]["position"],
                                 category=get(
-                                    ctx.guild.categories,
+                                    self.guild.categories,
                                     name=data["text"][str(i)]["category"],
                                 ),
                                 overwrites=overwrites,
