@@ -26,6 +26,8 @@ class BackupsDatabase(BaseDatabase):
             return result.get(to_return, None)
         if result:
             return result
+        else:
+            return []
 
     async def update_backups_info(
         self,

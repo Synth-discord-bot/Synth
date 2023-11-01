@@ -1,3 +1,7 @@
+0.3.1:
+[Database]: fixed bug in BackupsDatabase. Re-implement base class
+[Backups]: some changes, backups now work
+
 0.3:
 Updated base database, logger
 
