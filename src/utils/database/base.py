@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Mapping, Union, List
+from typing import Any, List, Union, Dict, Mapping
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCursor
 
@@ -9,60 +9,80 @@ class BaseDatabase:
         self._client = AsyncIOMotorClient("mongodb://127.0.0.1:27017")
         self._database = self._client["synth"]
         self.collection = self._database[database_name]
-        self.collection_cache = {}
+        self.collection_cache: Dict[Any, Any] = {}
         self.name = database_name
 
-    def _add_to_cache(self, param_filter: Mapping[str, Any]) -> Any:
+    def _add_to_cache(self, param_filter: Dict[str, Any]) -> Any:
         """
         :param param_filter: dictionary to add
         :return: added item
-
-        Example code to search in cache:
-
-        # Here's the dictionary that will be added in the database: {"id": 1, "test": True}
-
-        add_to_cache(1, {"id": 1, "test": True}) # 1 is the uid argument, {"id": 1, "test": True} is the param_filter
         """
-        index = len(self.collection_cache) + 1
-        self.collection_cache[index] = param_filter
+        if _id := param_filter.get("_id", None):
+            param_filter.pop("_id")
+        elif _id := param_filter.get("guild_id", None):
+            param_filter.pop("guild_id")
+        elif _id := param_filter.get("id", None):
+            param_filter.pop("id")
+
+        self.collection_cache[_id] = param_filter
         return param_filter
 
     def _update_cache(
-        self, old_value: Mapping[str, Any], new_value: Mapping[str, Any]
+        self, _id: Union[Dict[str, Any], int], new_value: Dict[str, Any]
     ) -> None:
         """
         Update an item in the cache based on the old and new values.
 
-        :param old_value: Filter criteria for finding the item to update.
+        :param _id: _Id of the item to update
         :param new_value: New values to update the item in the cache.
         """
-        item_to_update = None
-        for index, item in self.collection_cache.items():
-            if all(item.get(key) == value for key, value in old_value.items()):
-                item_to_update = item
-                break
 
-        if item_to_update:
-            # Update the item in the cache with the new values
-            item_to_update.update(new_value)
-            # It's not necessary to pop and re-insert. The update() method will update the existing item
+        global id_to_update
 
-    def _remove_from_cache(self, param_filter: Mapping[str, Any]) -> Any:
+        if isinstance(_id, dict):
+            if _ := _id.get("_id", None):
+                id_to_update = "_id"
+                _id.pop("_id")
+            elif _ := _id.get("guild_id", None):
+                id_to_update = "guild_id"
+                _id.pop("guild_id")
+            elif _ := _id.get("id", None):
+                id_to_update = "id"
+                _id.pop("id")
+        else:
+            id_to_update = _id
+
+        self.collection_cache.setdefault(id_to_update, {}).update(new_value)
+        return
+
+    def _remove_from_cache(self, _id: Union[Dict[str, Any], int]) -> Any:
         """
         Remove an item from the cache based on the provided filter.
 
         :param param_filter: Filter criteria for finding the item to remove from the cache.
         :return: The removed item, or None if not found.
         """
-        for index, item in self.collection_cache.items():
-            if all(item.get(key) == value for key, value in param_filter.items()):
-                removed_item = self.collection_cache.pop(index, None)
-                return removed_item
-        return None
+        global id_to_delete
+
+        if isinstance(_id, dict):
+            if _ := _id.get("_id", None):
+                id_to_delete = "_id"
+                _id.pop("_id")
+            elif _ := _id.get("guild_id", None):
+                id_to_delete = "guild_id"
+                _id.pop("guild_id")
+            elif _ := _id.get("id", None):
+                id_to_delete = "id"
+                _id.pop("id")
+        else:
+            id_to_delete = _id
+
+        del self.collection_cache[id_to_delete]
+        return
 
     async def get_items_in_db(
         self,
-        find_dict: Mapping[str, Any],
+        find_dict: Dict[str, Any],
         to_list: bool = True,
         count: Union[int, None] = None,
     ) -> Union[List[Mapping[str, Any]], AsyncIOMotorCursor]:
@@ -72,34 +92,49 @@ class BaseDatabase:
 
         return result
 
-    def get_items_in_cache(self, query: Any) -> List[Any]:
+    def get_items_in_cache(
+        self, query: Union[Dict[Any, Any], int, str]
+    ) -> List[Dict[int, Dict[str, Any]]]:
         """
-        Get items from cache by Mongo DB algorithm
+        Get items from cache by search query
 
         Args:
-            query (Any): Query to search
+            query (Dict[int, Any]): Query to search
 
         Returns:
-            List[Any]: List of available items
+            List[Dict[int, Dict[str, Any]]]: List of available items
         """
-        return [
-            {key: value}
-            for key, value in self.collection_cache.items()
-            if all(k in value and value[k] == v for k, v in query.items())
-        ]
+        result = []
+
+        for key, value in self.collection_cache.items():
+            if isinstance(query, (str, int)):
+                if query in value.values() or query in value.keys():
+                    result.append({key: value})
+            else:
+                for inner_query in query.values():
+                    if isinstance(inner_query, dict) and all(
+                        k in value and value[k] == v for k, v in inner_query.items()
+                    ):
+                        result.append({key: value})
+                        break
+                    elif inner_query in value.values() or inner_query in value.keys():
+                        result.append({key: value})
+                        break
+
+        return result
 
     async def find_one_from_cache(self, value: Any) -> Any:
         results = self.get_items_in_cache(value)
         return results[0] if results else None
 
     async def find_one_from_db(
-        self, param_filter: Mapping[str, Any]
-    ) -> Mapping[str, Any]:
+        self, param_filter: Dict[str, Any]
+    ) -> Mapping[str, Any] | None:
         results = await self.get_items_in_db(find_dict=param_filter, to_list=True)
         return results[0] if len(results) >= 1 else None
 
     async def find_one(
-        self, value: Union[Mapping[str, Any], Any], return_first_result: bool = False
+        self, value: Union[Dict[str, Any], Any], return_first_result: bool = False
     ) -> Any:
         # try to search in cache
         results = self.get_items_in_cache(value)
@@ -114,25 +149,28 @@ class BaseDatabase:
 
         return None  # None if not found
 
-    async def add_to_db(self, data: Mapping[str, Any]) -> None:
+    async def add_to_db(self, data: Dict[str, Any]) -> None:
         await self.collection.insert_one(data)
         self._add_to_cache(data)
 
     async def fetch_and_cache_all(self) -> None:
         results = await self.get_items_in_db({}, to_list=True)
         logging.info(f"[{self.name}]: Found {len(results)} items in database")
-        for index, data in enumerate(results, start=1):
-            self.collection_cache[index] = data
+        for data in results:
+            _id = (
+                data.get("_id", None)
+                or data.get("guild_id", None)
+                or data.get("id", None)
+            )
+            self.collection_cache[_id] = data
 
-    async def update_db(
-        self, data: Mapping[str, Any], new_value: Mapping[str, Any]
-    ) -> None:
+    async def update_db(self, data: Dict[str, Any], new_value: Dict[str, Any]) -> None:
         await self.collection.update_one(data, {"$set": new_value}, upsert=True)
         old_data = await self.find_one_from_db(data)
-        result = self._update_cache(old_value=old_data, new_value=new_value)
-        if result is None:
-            self._add_to_cache(param_filter=new_value)
+        self._update_cache(_id=old_data, new_value=new_value)  # type: ignore
+        # if result is None:
+        #     self._add_to_cache(param_filter=new_value)
 
-    async def remove_from_db(self, data: Mapping[str, Any]) -> None:
+    async def remove_from_db(self, data: Dict[str, Any]) -> None:
         await self.collection.delete_one(data)
         self._remove_from_cache(data)
