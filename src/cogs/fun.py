@@ -18,13 +18,13 @@ class Fun(commands.Cog):
         description=Localized("Roll a dice", key="ROLL_COMMAND_DESC"),
     )
     async def roll(
-            self,
-            interaction: disnake.MessageCommandInteraction,
-            number: int = commands.Param(
-                description=Localized("Default: 6", key="ROLL_COMMAND_NUMBER"),
-                default=6,
-                name=Localized("number", key="ROLL_COMMAND_NUMBER_NAME"),
-            ),
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        number: int = commands.Param(
+            description=Localized("Default: 6", key="ROLL_COMMAND_NUMBER"),
+            default=6,
+            name=Localized("number", key="ROLL_COMMAND_NUMBER_NAME"),
+        ),
     ):
         roll = random.randint(1, number)
         embed = disnake.Embed(
@@ -51,12 +51,12 @@ class Fun(commands.Cog):
         name="8ball", description=Localized("Ask a question", key="8BALL_COMMAND_DESC")
     )
     async def eight_ball(
-            self,
-            interaction: disnake.MessageCommandInteraction,
-            question: str = commands.Param(
-                description=Localized("Ask a question", key="8BALL_COMMAND_QUESTION"),
-                name=Localized("question", key="8BALL_COMMAND_QUESTION_NAME"),
-            ),
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        question: str = commands.Param(
+            description=Localized("Ask a question", key="8BALL_COMMAND_QUESTION"),
+            name=Localized("question", key="8BALL_COMMAND_QUESTION_NAME"),
+        ),
     ):
         good_responses = [
             "It is certain.",
@@ -65,7 +65,7 @@ class Fun(commands.Cog):
             "Yes - definitely.",
             "You may rely on it.",
             "As I see it, yes.",
-            "Yes."
+            "Yes.",
         ]
         medium_responses = [
             "Most likely.",
@@ -75,7 +75,7 @@ class Fun(commands.Cog):
             "Ask again later.",
             "Better not tell you now.",
             "Cannot predict now.",
-            "Concentrate and ask again."
+            "Concentrate and ask again.",
         ]
         bad_responses = [
             "Don't count on it.",
@@ -102,9 +102,11 @@ class Fun(commands.Cog):
             color=color,
             description=f"Question: `{question}`\nAnswer: `{response}`",
         )
-        embed.set_image(url="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.tapscape.com%2Fwp"
-                            "-content%2Fuploads%2F2018%2F06%2FMagic-8-Ball.jpg&f=1&nofb=1&ipt"
-                            "=a3fd2b53113d3242cd34d2cd8df87ca0071c68bebf442a1c66ccf94438a76b34&ipo=images")
+        embed.set_image(
+            url="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.tapscape.com%2Fwp"
+            "-content%2Fuploads%2F2018%2F06%2FMagic-8-Ball.jpg&f=1&nofb=1&ipt"
+            "=a3fd2b53113d3242cd34d2cd8df87ca0071c68bebf442a1c66ccf94438a76b34&ipo=images"
+        )
         embed.set_footer(text="Synth © 2023 | All Rights Reserved")
 
         await interaction.send(embed=embed)
@@ -114,14 +116,14 @@ class Fun(commands.Cog):
         description=Localized("Ask a question", key="BEN_COMMAND_DESC"),
     )
     async def ben(
-            self,
-            interaction: disnake.MessageCommandInteraction,
-            question: str = commands.Param(
-                description=Localized("Ask a question", key="BEN_COMMAND_QUESTION_DESC"),
-                max_length=128,
-                min_length=1,
-                name=Localized("question", key="BEN_COMMAND_QUESTION_NAME"),
-            ),
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        question: str = commands.Param(
+            description=Localized("Ask a question", key="BEN_COMMAND_QUESTION_DESC"),
+            max_length=128,
+            min_length=1,
+            name=Localized("question", key="BEN_COMMAND_QUESTION_NAME"),
+        ),
     ):
         chance = random.randint(1, 5)
         if chance == 1:

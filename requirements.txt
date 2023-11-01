@@ -5,3 +5,4 @@ motor-types
 datetime~=5.2
 ujson~=5.8.0
 aiohttp~=3.8.4
+memory_profiler

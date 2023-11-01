@@ -49,13 +49,13 @@ class BasicUtility(commands.Cog):
         ),
     )
     async def user(
-            self,
-            interaction: disnake.MessageCommandInteraction,
-            user: Union[disnake.User, disnake.Member] = commands.Param(
-                description=Localized("Choice user", key="USER_COMMAND_USER_DESC"),
-                name=Localized("user", key="USER_COMMAND_USER_NAME"),
-                default=None,
-            ),
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        user: Union[disnake.User, disnake.Member] = commands.Param(
+            description=Localized("Choice user", key="USER_COMMAND_USER_DESC"),
+            name=Localized("user", key="USER_COMMAND_USER_NAME"),
+            default=None,
+        ),
     ):
         if user is None:
             user = interaction.user
@@ -126,33 +126,33 @@ class BasicUtility(commands.Cog):
         embed.add_field(
             name="<:gear:1168228790183415868> Main Information",
             value=f"**Emojis:** `{emoji_count}`\n"
-                  f"**Members:** `{len(interaction.guild.members)}`\n"
-                  f"**Owner:** `{interaction.guild.owner}`\n"
-                  f"**Roles:** `{len(interaction.guild.roles)}`\n"
-                  f"**Created at:** {format_dt(interaction.guild.created_at, style='f')}\n"
-                  f"**Icon:** [click]({interaction.guild.icon})\n"
-                  f"**Boost:** `{interaction.guild.premium_subscription_count}`\n",
+            f"**Members:** `{len(interaction.guild.members)}`\n"
+            f"**Owner:** `{interaction.guild.owner}`\n"
+            f"**Roles:** `{len(interaction.guild.roles)}`\n"
+            f"**Created at:** {format_dt(interaction.guild.created_at, style='f')}\n"
+            f"**Icon:** [click]({interaction.guild.icon})\n"
+            f"**Boost:** `{interaction.guild.premium_subscription_count}`\n",
             inline=True,
         )
 
         embed.add_field(
             name="<:link:1168250171524649060> Server Channels",
             value=f"**Channels:** `{len(interaction.guild.channels)}`\n"
-                  f"**Text Channels:** `{len(interaction.guild.text_channels)}`\n"
-                  f"**Voice Channels:** `{len(interaction.guild.voice_channels)}`\n"
-                  f"**Categories:** `{len(interaction.guild.categories)}`\n"
-                  f"**Threads:** `{len(interaction.guild.threads)}`\n",
+            f"**Text Channels:** `{len(interaction.guild.text_channels)}`\n"
+            f"**Voice Channels:** `{len(interaction.guild.voice_channels)}`\n"
+            f"**Categories:** `{len(interaction.guild.categories)}`\n"
+            f"**Threads:** `{len(interaction.guild.threads)}`\n",
             inline=True,
         )
 
         embed.add_field(
             name="<:settings:1168250174611660971> Server Members",
             value=f"**All Members:** `{len(interaction.guild.members)}`\n"
-                  f"**Humans:** `{list_of_users}`\n"
-                  f"**Bots:** `{list_of_bots}`\n"
-                  f"**Administrators:** `{len([r for r in interaction.guild.roles if r.permissions.administrator])}`\n"
-                  f"**Moderators:** `{len([r for r in interaction.guild.roles if r.permissions.kick_members])}`\n"
-                  f"**Joined at:** {format_dt(interaction.user.joined_at, style='f')}",
+            f"**Humans:** `{list_of_users}`\n"
+            f"**Bots:** `{list_of_bots}`\n"
+            f"**Administrators:** `{len([r for r in interaction.guild.roles if r.permissions.administrator])}`\n"
+            f"**Moderators:** `{len([r for r in interaction.guild.roles if r.permissions.kick_members])}`\n"
+            f"**Joined at:** {format_dt(interaction.user.joined_at, style='f')}",
             inline=False,
         )
 
@@ -160,55 +160,69 @@ class BasicUtility(commands.Cog):
         embed.set_image(url=interaction.guild.banner)
         await interaction.send(embed=embed)
 
-    @commands.slash_command(
-        name="clear",
-        description="Clear messages from chat"
-    )
+    @commands.slash_command(name="clear", description="Clear messages from chat")
     async def clear(
-            self, interaction: disnake.MessageCommandInteraction,
-            amount: int,
-            channel: disnake.TextChannel = commands.Param(
-                name="channel",
-                description="The channel to clear messages from",
-                default=None,
-            )
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        amount: int,
+        channel: disnake.TextChannel = commands.Param(
+            name="channel",
+            description="The channel to clear messages from",
+            default=None,
+        ),
     ):
         if channel is None:
             channel = interaction.channel
 
         if amount > 100:
-            await interaction.send(embed=disnake.Embed(
-                title="Sorry, the maximum amount of messages to delete is 100",
-                color=disnake.Color.red()).set_footer(text=f"Synth © 2023 | All Rights Reserved",
-                                                      icon_url=self.bot.user.avatar),
-                                   delete_after=10)
+            await interaction.send(
+                embed=disnake.Embed(
+                    title="Sorry, the maximum amount of messages to delete is 100",
+                    color=disnake.Color.red(),
+                ).set_footer(
+                    text=f"Synth © 2023 | All Rights Reserved",
+                    icon_url=self.bot.user.avatar,
+                ),
+                delete_after=10,
+            )
             return
         try:
             deleted = await channel.purge(limit=amount)
         except disnake.Forbidden:
-            await interaction.send(embed=disnake.Embed(
-                title="Sorry, the bot doesn't have enough permissions to delete messages",
-                color=disnake.Color.red()).set_footer(text=f"Synth © 2023 | All Rights Reserved",
-                                                      icon_url=self.bot.user.avatar),
-                                   delete_after=10)
+            await interaction.send(
+                embed=disnake.Embed(
+                    title="Sorry, the bot doesn't have enough permissions to delete messages",
+                    color=disnake.Color.red(),
+                ).set_footer(
+                    text=f"Synth © 2023 | All Rights Reserved",
+                    icon_url=self.bot.user.avatar,
+                ),
+                delete_after=10,
+            )
             return
         except disnake.HTTPException:
-            await interaction.send(embed=disnake.Embed(
-                title="Sorry, the bot doesn't have enough permissions to delete messages",
-                color=disnake.Color.red()).set_footer(text=f"Synth © 2023 | All Rights Reserved",
-                                                      icon_url=self.bot.user.avatar),
-                                   delete_after=10)
+            await interaction.send(
+                embed=disnake.Embed(
+                    title="Sorry, the bot doesn't have enough permissions to delete messages",
+                    color=disnake.Color.red(),
+                ).set_footer(
+                    text=f"Synth © 2023 | All Rights Reserved",
+                    icon_url=self.bot.user.avatar,
+                ),
+                delete_after=10,
+            )
             return
 
         embed = disnake.Embed(color=0x2F3236)
         embed.title = "<a:loading:1168599537682755584> Cleaning messages..."
         embed.description = f"Deleted **{len(deleted)}** messages"
-        embed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
+        embed.set_footer(
+            text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
+        )
         await interaction.channel.send(embed=embed, delete_after=10)
 
     @commands.slash_command(
-        name="botinfo",
-        description="Display information about the bot."
+        name="botinfo", description="Display information about the bot."
     )
     async def botinfo(self, interaction: disnake.MessageCommandInteraction):
         ch = []
@@ -218,46 +232,45 @@ class BasicUtility(commands.Cog):
         embed = disnake.Embed(
             title="Information about Synth",
             description="**Synth** - is a multi-functional Discord bot.",
-            color=0x2F3236
+            color=0x2F3236,
         ).set_thumbnail(url=self.bot.user.avatar)
         embed.add_field(
             name="Main",
             value=f"<:ping:1168968111920255086> Ping: **{round(self.bot.latency * 1000)} ms\n**"
-                  f"<:ram:1168969950275321927> RAM: **{round(memory_usage()[0], 2)} mb**\n"
-                  f"<:uptime:1168968110154457088> Uptime: {format_dt(startup, style='F')}\n",
-            inline=False
+            f"<:ram:1168969950275321927> RAM: **{round(memory_usage()[0], 2)} mb**\n"
+            f"<:uptime:1168968110154457088> Uptime: {format_dt(startup, style='F')}\n",
+            inline=False,
         )
         embed.add_field(
             name="Popularity",
             value=f"<:gear:1168228790183415868> Servers: **{len(self.bot.guilds)}**\n"
-                  f"<:moderator:1168622624629334136> Big servers (1000+): **{len([g for g in self.bot.guilds if g.member_count >= 1000])}**\n"
-                  f"<:users:1168968100637589607> Users: **{len(set(self.bot.get_all_members()))}**\n"
-                  f"<:channel:1168968099194744912> Channels: **{len(ch)}**\n",
-            inline=False
+            f"<:moderator:1168622624629334136> Big servers (1000+): **{len([g for g in self.bot.guilds if g.member_count >= 1000])}**\n"
+            f"<:users:1168968100637589607> Users: **{len(set(self.bot.get_all_members()))}**\n"
+            f"<:channel:1168968099194744912> Channels: **{len(ch)}**\n",
+            inline=False,
         )
         embed.add_field(
             name="Other Information",
             value=f"<:staff:1168622635228344403> Created at: **31/10/2023**\n"
-                  f"<:information:1168237956591530065> Bot version: **v1.0.0.**\n"
-                  f"<:python:1168970645980315658> Python version: **3.11.6**\n"
-                  f"<:crown:1168970928970023042> Owners: [Snaky](https://discord.com/users/999682446675161148), "
-                  f"[Weever](https://discord.com/users/419159175009009675), "
-                  f"[LazyDev](https://discord.com/users/1167458549132181668)",
-            inline=False
+            f"<:information:1168237956591530065> Bot version: **v1.0.0.**\n"
+            f"<:python:1168970645980315658> Python version: **3.11.6**\n"
+            f"<:crown:1168970928970023042> Owners: [Snaky](https://discord.com/users/999682446675161148), "
+            f"[Weever](https://discord.com/users/419159175009009675), "
+            f"[LazyDev](https://discord.com/users/1167458549132181668)",
+            inline=False,
         )
-        embed.set_footer(text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-        support = 'Support server'
-        website = 'Website'
+        embed.set_footer(
+            text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
+        )
+        support = "Support server"
+        website = "Website"
 
-        support = disnake.ui.Button(label=support, url='https://discord.gg/7vT3H3tVYp')
-        website = disnake.ui.Button(label=website, url='https://synth.xyz/')
+        support = disnake.ui.Button(label=support, url="https://discord.gg/7vT3H3tVYp")
+        website = disnake.ui.Button(label=website, url="https://synth.xyz/")
 
         await interaction.send(embed=embed, components=[support, website])
 
-    @commands.slash_command(
-        name="avatar",
-        description="View user avatar"
-    )
+    @commands.slash_command(name="avatar", description="View user avatar")
     async def avatar(
         self,
         interaction: disnake.MessageCommandInteraction,
@@ -265,17 +278,21 @@ class BasicUtility(commands.Cog):
             name="user",
             description="The user you want to view the avatar",
             default=None,
-        )
+        ),
     ):
         user = user or interaction.author
         embed = disnake.Embed(color=0x2F3236)
         embed.set_author(name=user, icon_url=str(user.display_avatar))
         if user.avatar is not None:
-            embed.description = f"{emoji('users')} [JPG]({user.display_avatar.with_format('jpeg')}) | " \
-                                f"[PNG]({user.display_avatar.with_format('png')}) |  " \
-                                f"[WEBP]({user.display_avatar})"
+            embed.description = (
+                f"{emoji('users')} [JPG]({user.display_avatar.with_format('jpeg')}) | "
+                f"[PNG]({user.display_avatar.with_format('png')}) |  "
+                f"[WEBP]({user.display_avatar})"
+            )
             if user.display_avatar.is_animated():
-                embed.description += f" | [GIF]({user.display_avatar.with_format('gif')})"
+                embed.description += (
+                    f" | [GIF]({user.display_avatar.with_format('gif')})"
+                )
         else:
             embed.description = f"<:q_members:1031115958191931452> [PNG]({user.display_avatar.with_format('png')})"
         embed.set_image(url=str(user.display_avatar))
@@ -380,38 +397,46 @@ class BasicUtility(commands.Cog):
     #         ))
 
     @commands.slash_command(
-        name="lock",
-        description="Lock the current channel for everyone"
+        name="lock", description="Lock the current channel for everyone"
     )
-    async def lock(self,
-                   interaction: disnake.MessageCommandInteraction,
-                   channel: disnake.TextChannel = commands.Param(
-                       name="channel",
-                       description="The channel to lock",
-                       default=None,
-                   )
+    async def lock(
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        channel: disnake.TextChannel = commands.Param(
+            name="channel",
+            description="The channel to lock",
+            default=None,
+        ),
     ):
         channel = channel or interaction.channel
 
-        await channel.set_permissions(interaction.guild.default_role, send_messages=False)
-        await interaction.send(f"{emoji('success')} | Channel is locked", ephemeral=True)
+        await channel.set_permissions(
+            interaction.guild.default_role, send_messages=False
+        )
+        await interaction.send(
+            f"{emoji('success')} | Channel is locked", ephemeral=True
+        )
 
     @commands.slash_command(
-        name="unlock",
-        description="Unlock the current channel for everyone"
+        name="unlock", description="Unlock the current channel for everyone"
     )
-    async def lock(self,
-                   interaction: disnake.MessageCommandInteraction,
-                   channel: disnake.TextChannel = commands.Param(
-                       name="channel",
-                       description="The channel to unlock",
-                       default=None,
-                   )
-                   ):
+    async def lock(
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        channel: disnake.TextChannel = commands.Param(
+            name="channel",
+            description="The channel to unlock",
+            default=None,
+        ),
+    ):
         channel = channel or interaction.channel
 
-        await channel.set_permissions(interaction.guild.default_role, send_messages=True)
-        await interaction.send(f"{emoji('success')} | Channel is unlocked", ephemeral=True)
+        await channel.set_permissions(
+            interaction.guild.default_role, send_messages=True
+        )
+        await interaction.send(
+            f"{emoji('success')} | Channel is unlocked", ephemeral=True
+        )
 
 
 def setup(bot: commands.Bot):

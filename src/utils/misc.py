@@ -1,6 +1,9 @@
+import io
+from io import BytesIO
 from typing import List, Union, Literal
 
 from disnake import (
+    Attachment,
     Message,
     Embed,
     MessageCommandInteraction,
@@ -46,8 +49,8 @@ async def is_command_disabled(message: Message, command: str) -> bool:
 
 
 async def check_channel(
-        channel: TextChannel,
-        interaction: Union[MessageCommandInteraction, commands.Context],
+    channel: TextChannel,
+    interaction: Union[MessageCommandInteraction, commands.Context],
 ) -> bool:
     await interaction.send(
         f"Checking access to channel {channel.mention}...", ephemeral=True
@@ -110,7 +113,14 @@ def emoji(name: Literal["loading", "success", "error", "users"]):
         "loading": "<a:loading:1168599537682755584>",
         "success": "<a:success:1168599845192339577>",
         "error": "<a:error:1168599839899144253>",
-        "users": "<:users:1168968100637589607>"
+        "users": "<:users:1168968100637589607>",
     }
 
     return layers[name]
+
+
+async def save_file_to_memory(file: Attachment) -> BytesIO:
+    with io.BytesIO() as temp_file:
+        await file.save(fp=temp_file)
+        temp_file.seek(0)
+        return temp_file
