@@ -167,11 +167,11 @@ class Backup(commands.Cog):
                     mentionable=data["roles"][str(k)]["mentionable"],
                 )
             except (
-                    disnake.NotFound,
-                    disnake.Forbidden,
-                    disnake.HTTPException,
-                    TypeError,
-                    KeyError,
+                disnake.NotFound,
+                disnake.Forbidden,
+                disnake.HTTPException,
+                TypeError,
+                KeyError,
             ):
                 continue
 
@@ -340,7 +340,7 @@ class Backup(commands.Cog):
             backup["roles"] = data["roles"]
 
             with open(
-                    str(ctx.guild.id) + ".json", "w"
+                str(ctx.guild.id) + ".json", "w"
             ) as f:  # TODO: use ujson + f-string
                 json.dump(backup, f, indent=4)
 
