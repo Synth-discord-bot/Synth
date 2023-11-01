@@ -3,7 +3,6 @@ from typing import Union
 import disnake
 from disnake import (
     Embed,
-    Message,
     Localized,
     CommandInteraction,
     ui,
@@ -11,6 +10,7 @@ from disnake import (
     MessageInteraction,
     Color,
     Member,
+    MessageCommandInteraction,
 )
 from disnake.ext import commands
 from disnake.ext.commands import MemberConverter
@@ -21,7 +21,7 @@ from src.utils import economy, Economy as EcoDB
 class Buttons(ui.View):
     def __init__(
         self,
-        ctx: commands.Context,
+        ctx: MessageCommandInteraction,
         bot: commands.Bot,
         receiver: Member,
         money: int,
@@ -118,10 +118,15 @@ class Economy(commands.Cog):
             ephemeral=True,
         )
 
-    @commands.slash_command(name = Localized("bank", key="BANK_COMMAND_NAME"), description=Localized("bank", key="BANK_COMMAND_DESC"))
+    @commands.slash_command(
+        name=Localized("bank", key="BANK_COMMAND_NAME"),
+        description=Localized("bank", key="BANK_COMMAND_DESC"),
+    )
     async def bank(
-        self, interaction: disnake.MessageCommandInteraction, money: Union[int, str] = "all"
-    ) -> Message:
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        money: Union[int, str] = "all",
+    ) -> None:
         """Send money to the bank
 
         Arguments: number or "all"
@@ -129,7 +134,9 @@ class Economy(commands.Cog):
 
         # Check if user has an existing economy record, if not, add one
         if await self.economy.find_one({"id": interaction.author.id}) is None:
-            await self.economy.add_to_db({"id": interaction.author.id, "balance": 0, "bank": 0})
+            await self.economy.add_to_db(
+                {"id": interaction.author.id, "balance": 0, "bank": 0}
+            )
 
         # Get the current balance
         current_money = await self.economy.get_balance(interaction.author)
@@ -146,7 +153,9 @@ class Economy(commands.Cog):
 
         # Check if money is positive
         if money <= 0:
-            return await interaction.send("You can't send negative or zero 🪙 to your bank!")
+            return await interaction.send(
+                "You can't send negative or zero 🪙 to your bank!"
+            )
 
         # Check if user has enough money
         if current_money < money:
@@ -174,7 +183,10 @@ class Economy(commands.Cog):
             )
         )
 
-    @commands.slash_command(name = Localized("pay", key="PAY_COMMAND_NAME"), description = Localized("", key="PAY_COMMAND_DESC"))
+    @commands.slash_command(
+        name=Localized("pay", key="PAY_COMMAND_NAME"),
+        description=Localized("", key="PAY_COMMAND_DESC"),
+    )
     async def pay(
         self,
         interaction: disnake.MessageCommandInteraction,
@@ -189,7 +201,7 @@ class Economy(commands.Cog):
 
         elif await self.economy.get_balance(user_id=interaction.author.id) < money:
             return await interaction.send(
-                "Not enough to transfer the money to the user", mention_author=False
+                "Not enough to transfer the money to the user"
             )
         elif money > 9223372036854775807:
             await interaction.send(
@@ -198,7 +210,6 @@ class Economy(commands.Cog):
                     description="You want to transfer too much money!",
                     color=Color.red(),
                 ),
-                mention_author=False,
             )
         elif money < 1:
             return await interaction.send(
@@ -207,7 +218,6 @@ class Economy(commands.Cog):
                     description="You can't transfer less than 1 🪙",
                     color=Color.red(),
                 ).set_footer(text=f"Command executed by {interaction.author}"),
-                mention_author=False,
             )  #
         else:
             if isinstance(user, Member):

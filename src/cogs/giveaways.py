@@ -2,9 +2,10 @@ import asyncio
 import datetime
 import random
 import re
+
 import disnake
-from disnake.ext import commands
 from disnake import Localized
+from disnake.ext import commands
 
 time_units = {"d": "days", "h": "hours", "m": "minutes", "s": "seconds"}
 
@@ -59,7 +60,7 @@ class Giveaway(commands.Cog):  # Need rewrite
         )
         embed.add_field(
             name=f"End",
-            value=f"{disnake.utils.format_dt(end_time, style = 'R')} ({disnake.utils.format_dt(end_time, style = 'f')})",
+            value=f"{disnake.utils.format_dt(end_time, style='R')} ({disnake.utils.format_dt(end_time, style='f')})",
             inline=False,
         )
         await interaction.send("Creating..", ephemeral=True)

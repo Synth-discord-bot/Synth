@@ -5,12 +5,13 @@ import sys
 import disnake
 from disnake.ext import commands
 
-# from disnake.ext.ipc import Server
-
 from src.cogs.TicketsCog import SetupTicketSettings
 from .utils import misc
 from .utils.help import CustomHelpCommand
 from .utils.misc import get_prefix, is_command_disabled
+
+
+# from disnake.ext.ipc import Server
 
 
 class Bot(commands.Bot):

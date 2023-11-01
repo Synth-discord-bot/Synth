@@ -1,7 +1,8 @@
-from disnake.ext import commands
-import disnake
 import random
+
+import disnake
 from disnake import Localized
+from disnake.ext import commands
 
 
 class Fun(commands.Cog):

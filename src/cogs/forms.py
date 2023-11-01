@@ -1,6 +1,7 @@
+import disnake
 from disnake.ext import commands
 from disnake.ext.commands import TextChannelConverter, BadArgument
-import disnake
+
 from src.utils import forms, FormsDatabase
 
 

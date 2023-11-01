@@ -1,11 +1,11 @@
 from datetime import datetime
+from os import getenv
 
 import disnake
 from disnake.ext import commands
+
 from src.utils import logger
 from src.utils.misc import get_prefix
-from os import getenv
-import io
 
 
 class EventGuild(commands.Cog):

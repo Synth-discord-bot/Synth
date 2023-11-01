@@ -1,8 +1,6 @@
 {
-    "USER_COMMAND_NAME": "benutzer",
-    "USER_COMMAND_DESC": "Zeigt Informationen über den Benutzer an.",
-
-
-    "SERVER_COMMAND_NAME": "server",
-    "SERVER_COMMAND_DESC": "Zeigt Informationen über den Server an."
+  "USER_COMMAND_NAME": "benutzer",
+  "USER_COMMAND_DESC": "Zeigt Informationen über den Benutzer an.",
+  "SERVER_COMMAND_NAME": "server",
+  "SERVER_COMMAND_DESC": "Zeigt Informationen über den Server an."
 }
