@@ -106,8 +106,28 @@ class Backup(commands.Cog):
         embed.description = "Stage 1 of 6\n> **Restoring the server name**"
         await msg.edit(embed=embed)
 
-        # TODO: need refactor because see line 174
-        await ctx.guild.edit(name=data["guild"]["name"])
+        # TODO:
+        """
+         "guild": {
+                "name": self.guild.name,
+                "rules_channel": self.guild.rules_channel.name
+                if self.guild.rules_channel
+                else None,
+                "public_updates_channel": self.guild.public_updates_channel.name
+                if self.guild.public_updates_channel
+                else None,
+                "afk_channel": self.guild.afk_channel.name
+                if self.guild.afk_channel
+                else None,
+                "afk_timeout": self.guild.afk_timeout if self.guild.afk_timeout else 0,
+                "description": self.guild.description,
+            },
+        """
+        await ctx.guild.edit(
+            name=data["guild"]["name"],
+            afk_timeout=data["guild"]["afk_timeout"],
+            description=data["guild"]["description"],
+        )
 
         embed.description = "Stage 2 of 6\n> **Deleting roles**"
         await msg.edit(embed=embed)
