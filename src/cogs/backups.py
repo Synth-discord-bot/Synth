@@ -329,12 +329,13 @@ class Backup(commands.Cog):
 
         afk_channel = disnake.utils.get(ctx.guild.voice_channels, name=data["guild"]["afk_channel"])
         system_channel = disnake.utils.get(ctx.guild.text_channels, name=data["guild"]["system_channel"])
+        rules_channel = disnake.utils.get(ctx.guild.text_channels, name=data["guild"]["rules_channel"])
 
         await ctx.guild.edit(
             name=data["guild"]["name"],
             afk_timeout=data["guild"]["afk_timeout"],
             description=data["guild"]["description"],
-            rules_channel=data["guild"]["rules_channel"] or None,
+            rules_channel=rules_channel or None,
             public_updates_channel=data["guild"]["public_updates_channel"] or None,
             premium_progress_bar_enabled=data["guild"]["premium_progress_bar_enabled"],
             system_channel=system_channel,

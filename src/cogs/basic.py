@@ -7,7 +7,7 @@ from disnake.ext import commands
 from disnake.utils import format_dt
 from memory_profiler import memory_usage
 
-from src.utils.misc import check_if_user_is_developer
+from src.utils.misc import check_if_user_is_developer, emoji
 
 startup = datetime.datetime.now()
 
@@ -37,6 +37,10 @@ class BasicUtility(commands.Cog):
             1048576: "⚠️",
             133172312: "<:synth_dev:1168623393717899314>",
         }
+
+    # @commands.command()
+    # async def test(self, ctx: commands.Context):
+    #     await ctx.send(f"Test emoji: ")
 
     @commands.slash_command(
         name=Localized("user", key="USER_COMMAND_NAME"),
@@ -196,7 +200,7 @@ class BasicUtility(commands.Cog):
                                    delete_after=10)
             return
 
-        embed = disnake.Embed(color=0x2F3136)
+        embed = disnake.Embed(color=0x2F3236)
         embed.title = "<a:loading:1168599537682755584> Cleaning messages..."
         embed.description = f"Deleted **{len(deleted)}** messages"
         embed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
@@ -214,7 +218,7 @@ class BasicUtility(commands.Cog):
         embed = disnake.Embed(
             title="Information about Synth",
             description="**Synth** - is a multi-functional Discord bot.",
-            color=0x2F3136
+            color=0x2F3236
         ).set_thumbnail(url=self.bot.user.avatar)
         embed.add_field(
             name="Main",
@@ -250,6 +254,33 @@ class BasicUtility(commands.Cog):
 
         await interaction.send(embed=embed, components=[support, website])
 
+    @commands.slash_command(
+        name="avatar",
+        description="View user avatar"
+    )
+    async def avatar(
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        user: disnake.User = commands.Param(
+            name="user",
+            description="The user you want to view the avatar",
+            default=None,
+        )
+    ):
+        user = user or interaction.author
+        embed = disnake.Embed(color=0x2F3236)
+        embed.set_author(name=user, icon_url=str(user.display_avatar))
+        if user.avatar is not None:
+            embed.description = f"{emoji('users')} [JPG]({user.display_avatar.with_format('jpeg')}) | " \
+                                f"[PNG]({user.display_avatar.with_format('png')}) |  " \
+                                f"[WEBP]({user.display_avatar})"
+            if user.display_avatar.is_animated():
+                embed.description += f" | [GIF]({user.display_avatar.with_format('gif')})"
+        else:
+            embed.description = f"<:q_members:1031115958191931452> [PNG]({user.display_avatar.with_format('png')})"
+        embed.set_image(url=str(user.display_avatar))
+        await interaction.send(embed=embed)
+
     # TODO: REWRITE THIS
 
     # @commands.slash_command(
@@ -272,7 +303,7 @@ class BasicUtility(commands.Cog):
     #             title=f"<a:loading:1168599537682755584> Please wait...",
     #             description=f"Adding {role.mention} to **{total_members}** members.\n"
     #                         f"Please do not delete this message, until the proccess is done.",
-    #             color=0x2F3136
+    #             color=0x2F3236
     #         ).set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
     #
     #         for member in interaction.guild.members:
@@ -286,12 +317,12 @@ class BasicUtility(commands.Cog):
     #             await msg.edit(embed=disnake.Embed(
     #                 description=f"Successfully added role to **{total_members - failed_count}/{total_members}** members. "
     #                             f"Failed to add role to **{failed_count}** members.",
-    #                 color=0x2F3136
+    #                 color=0x2F3236
     #             ).set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
     #         else:
     #             await msg.edit(embed=disnake.Embed(
     #                 description=f"Successfully added role to all **{total_members}** members.",
-    #                 color=0x2F3136
+    #                 color=0x2F3236
     #             ).set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
     #     else:
     #         await interaction.send(embed=disnake.Embed(
@@ -320,7 +351,7 @@ class BasicUtility(commands.Cog):
     #             title=f"<a:loading:1168599537682755584> Please wait...",
     #             description=f"Removing {role.mention} from **{total_members}** members.\n"
     #                         f"Please do not delete this message, until the proccess is done.",
-    #             color=0x2F3136
+    #             color=0x2F3236
     #         ).set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
     #
     #         for member in interaction.guild.members:
@@ -334,12 +365,12 @@ class BasicUtility(commands.Cog):
     #             await msg.edit(embed=disnake.Embed(
     #                 description=f"Successfully removed role from **{total_members - failed_count}/{total_members}** members. "
     #                             f"Failed to remove role from **{failed_count}** members.",
-    #                 color=0x2F3136
+    #                 color=0x2F3236
     #             ).set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
     #         else:
     #             await msg.edit(embed=disnake.Embed(
     #                 description=f"Successfully removed role from all **{total_members}** members.",
-    #                 color=0x2F3136
+    #                 color=0x2F3236
     #             ).set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
     #     else:
     #         await interaction.send(embed=disnake.Embed(
@@ -347,6 +378,40 @@ class BasicUtility(commands.Cog):
     #                         f"so I can't remove it from all members",
     #             color=0xFF0000
     #         ))
+
+    @commands.slash_command(
+        name="lock",
+        description="Lock the current channel for everyone"
+    )
+    async def lock(self,
+                   interaction: disnake.MessageCommandInteraction,
+                   channel: disnake.TextChannel = commands.Param(
+                       name="channel",
+                       description="The channel to lock",
+                       default=None,
+                   )
+    ):
+        channel = channel or interaction.channel
+
+        await channel.set_permissions(interaction.guild.default_role, send_messages=False)
+        await interaction.send(f"{emoji('success')} | Channel is locked", ephemeral=True)
+
+    @commands.slash_command(
+        name="unlock",
+        description="Unlock the current channel for everyone"
+    )
+    async def lock(self,
+                   interaction: disnake.MessageCommandInteraction,
+                   channel: disnake.TextChannel = commands.Param(
+                       name="channel",
+                       description="The channel to unlock",
+                       default=None,
+                   )
+                   ):
+        channel = channel or interaction.channel
+
+        await channel.set_permissions(interaction.guild.default_role, send_messages=True)
+        await interaction.send(f"{emoji('success')} | Channel is unlocked", ephemeral=True)
 
 
 def setup(bot: commands.Bot):

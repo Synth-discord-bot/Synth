@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Literal
 
 from disnake import (
     Message,
@@ -46,8 +46,8 @@ async def is_command_disabled(message: Message, command: str) -> bool:
 
 
 async def check_channel(
-    channel: TextChannel,
-    interaction: Union[MessageCommandInteraction, commands.Context],
+        channel: TextChannel,
+        interaction: Union[MessageCommandInteraction, commands.Context],
 ) -> bool:
     await interaction.send(
         f"Checking access to channel {channel.mention}...", ephemeral=True
@@ -103,3 +103,14 @@ def has_bot_permissions():
         return True
 
     return commands.check(predicate)
+
+
+def emoji(name: Literal["loading", "success", "error", "users"]):
+    layers = {
+        "loading": "<a:loading:1168599537682755584>",
+        "success": "<a:success:1168599845192339577>",
+        "error": "<a:error:1168599839899144253>",
+        "users": "<:users:1168968100637589607>"
+    }
+
+    return layers[name]
