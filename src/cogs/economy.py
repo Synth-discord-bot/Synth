@@ -3,7 +3,6 @@ from typing import Union
 import disnake
 from disnake import (
     Embed,
-    Message,
     Localized,
     CommandInteraction,
     ui,
@@ -11,7 +10,7 @@ from disnake import (
     MessageInteraction,
     Color,
     Member,
-    InteractionResponse,
+    MessageCommandInteraction,
 )
 from disnake.ext import commands
 from disnake.ext.commands import MemberConverter
@@ -22,7 +21,7 @@ from src.utils import economy, Economy as EcoDB
 class Buttons(ui.View):
     def __init__(
         self,
-        ctx: commands.Context,
+        ctx: MessageCommandInteraction,
         bot: commands.Bot,
         receiver: Member,
         money: int,
@@ -119,21 +118,28 @@ class Economy(commands.Cog):
             ephemeral=True,
         )
 
-    @commands.command()
+    @commands.slash_command(
+        name=Localized("bank", key="BANK_COMMAND_NAME"),
+        description=Localized("bank", key="BANK_COMMAND_DESC"),
+    )
     async def bank(
-        self, ctx: commands.Context, money: Union[int, str] = "all"
-    ) -> Message:
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        money: Union[int, str] = "all",
+    ) -> None:
         """Send money to the bank
 
         Arguments: number or "all"
         """
 
         # Check if user has an existing economy record, if not, add one
-        if await self.economy.find_one({"id": ctx.author.id}) is None:
-            await self.economy.add_to_db({"id": ctx.author.id, "balance": 0, "bank": 0})
+        if await self.economy.find_one({"id": interaction.author.id}) is None:
+            await self.economy.add_to_db(
+                {"id": interaction.author.id, "balance": 0, "bank": 0}
+            )
 
         # Get the current balance
-        current_money = await self.economy.get_balance(ctx.author)
+        current_money = await self.economy.get_balance(interaction.author)
 
         # If money value is "all", set it to current balance
         if isinstance(money, str) and money == "all":
@@ -141,21 +147,23 @@ class Economy(commands.Cog):
 
         # Check if money is a valid number
         if not isinstance(money, int):
-            return await ctx.reply(
+            return await interaction.send(
                 'Please enter a valid number or "all" argument to send 🪙 to bank!'
             )
 
         # Check if money is positive
         if money <= 0:
-            return await ctx.reply("You can't send negative or zero 🪙 to your bank!")
+            return await interaction.send(
+                "You can't send negative or zero 🪙 to your bank!"
+            )
 
         # Check if user has enough money
         if current_money < money:
-            return await ctx.reply("You don't have enough 🪙!")
+            return await interaction.send("You don't have enough 🪙!")
 
         # Update the database with new bank and balance values
         await self.economy.update_db(
-            {"id": ctx.author.id},
+            {"id": interaction.author.id},
             {
                 "bank": current_money if money == current_money else money,
                 "balance": 0 if money == current_money else current_money - money,
@@ -163,62 +171,63 @@ class Economy(commands.Cog):
         )
 
         # Calculate bank, cash, and total values
-        bank = await self.economy.get_bank(ctx.author)
+        bank = await self.economy.get_bank(interaction.author)
         cash = current_money - money
         total = cash + bank
 
         # Reply with balance information
-        await ctx.reply(
+        await interaction.send(
             embed=Embed(
                 title="Balance",
-                description=f"{ctx.author.name}, your balance now:\n**Cash:** {cash} 🪙\n**Bank:** {bank}🪙\n**Total:** {total}🪙",
+                description=f"{interaction.author.name}, your balance now:\n**Cash:** {cash} 🪙\n**Bank:** {bank}🪙\n**Total:** {total}🪙",
             )
         )
 
-    @commands.command()
+    @commands.slash_command(
+        name=Localized("pay", key="PAY_COMMAND_NAME"),
+        description=Localized("", key="PAY_COMMAND_DESC"),
+    )
     async def pay(
         self,
-        ctx: commands.Context,
+        interaction: disnake.MessageCommandInteraction,
         money: int = 0,
         user: Union[int, str, Member] = None,
     ):
         if user is None:
-            return await ctx.send("Please specify the user (mention or id)")
+            return await interaction.send("Please specify the user (mention or id)")
 
         if money == 0:
-            return await ctx.send("Please specify money to transfer")
+            return await interaction.send("Please specify money to transfer")
 
-        elif await self.economy.get_balance(user_id=ctx.author.id) < money:
-            return await ctx.reply(
-                "Not enough to transfer the money to the user", mention_author=False
+        elif await self.economy.get_balance(user_id=interaction.author.id) < money:
+            return await interaction.send(
+                "Not enough to transfer the money to the user"
             )
         elif money > 9223372036854775807:
-            await ctx.reply(
+            await interaction.send(
                 embed=Embed(
                     title="🚫 | Transfer error",
                     description="You want to transfer too much money!",
                     color=Color.red(),
                 ),
-                mention_author=False,
             )
         elif money < 1:
-            return await ctx.reply(
+            return await interaction.send(
                 embed=Embed(
                     title="🚫 | Transfer error",
                     description="You can't transfer less than 1 🪙",
                     color=Color.red(),
-                ).set_footer(text=f"Command executed by {ctx.author}"),
-                mention_author=False,
+                ).set_footer(text=f"Command executed by {interaction.author}"),
             )  #
         else:
             if isinstance(user, Member):
                 res = user.id
             else:
-                res = await MemberConverter().convert(ctx, user)
-            await ctx.reply(
+                res = await MemberConverter().convert(interaction, user)
+            await interaction.send(
                 f"Are you sure you want transfer {money} 🪙 to {res.mention}?",
                 view=Buttons(
-                    ctx=ctx,
+                    ctx=interaction,
                     bot=self.bot,
                     receiver=res,
                     money=money,

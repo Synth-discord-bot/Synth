@@ -1,11 +1,10 @@
-from typing import Dict
-
 from disnake import Message, Embed
 from disnake.ext import commands
 
-# from disnake.ext.ipc import Server, ClientPayload
-
 from src.utils import main_db
+
+
+# from disnake.ext.ipc import Server, ClientPayload
 
 
 class Settings(commands.Cog):

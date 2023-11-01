@@ -4,12 +4,14 @@ import sys
 
 import disnake
 from disnake.ext import commands
-from disnake.ext.ipc import Server
 
 from src.cogs.TicketsCog import SetupTicketSettings
 from .utils import misc
 from .utils.help import CustomHelpCommand
 from .utils.misc import get_prefix, is_command_disabled
+
+
+# from disnake.ext.ipc import Server
 
 
 class Bot(commands.Bot):
@@ -21,6 +23,11 @@ class Bot(commands.Bot):
             command_prefix=misc.bot_get_guild_prefix,
             intents=disnake.Intents.all(),
             reload=True,
+            owner_ids=[
+                419159175009009675,
+                999682446675161148,
+                1167458549132181668,
+            ],
         )
 
         # self.ipc = Server(self, secret_key=config.SECRET_IPC_KEY)  # well... need talk about config
@@ -55,7 +62,7 @@ class Bot(commands.Bot):
             f"{self.user.id}&permissions=980937982&scope=bot%20applications.commands"
         )
         logging.debug(f"Connected to {self.user}")
-        for extension in os.listdir("src/cogs"):
+        for extension in os.listdir("src\\cogs"):
             if extension.endswith(".py"):
                 try:
                     event_name = extension[:-3]
@@ -75,7 +82,7 @@ class Bot(commands.Bot):
                 finally:
                     logging.info(f"{extension} is loaded!")
 
-        for event in os.listdir("src/events"):
+        for event in os.listdir("src\\events"):
             if not event.endswith(".py"):
                 continue
 
@@ -95,3 +102,12 @@ class Bot(commands.Bot):
                 continue
             finally:
                 logging.info(f"{event} event is loaded!")
+
+        await self.wait_until_ready()
+        await self.change_presence(
+            activity=disnake.Activity(
+                type=disnake.ActivityType.streaming,
+                name="New multi-functional bot, Synth",
+                state="Release soon...",
+            )
+        )
