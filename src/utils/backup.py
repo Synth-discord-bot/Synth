@@ -1,18 +1,15 @@
+import base64
 from datetime import datetime
 from typing import Dict, Any, Union
 
-import disnake
-
-import base64
-from PIL import Image
-from io import BytesIO
 import aiohttp
+import disnake
 
 
 class Backup:
     def __init__(
-        self,
-        guild: disnake.Guild,
+            self,
+            guild: disnake.Guild,
     ) -> None:
         self.guild: disnake.Guild = guild
 
@@ -26,7 +23,7 @@ class BackupCreator:
         self.guild: disnake.Guild = guild
 
     async def create_backup(
-        self,
+            self,
     ) -> Dict[str, Union[Dict[Any, Any], Dict[str, str], Dict[str, int]]]:
         icon_data = None  # Default to None
         banner_data = None  # Default to None
