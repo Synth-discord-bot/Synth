@@ -76,7 +76,7 @@ class BackupsView(disnake.ui.View):
             i.id == interaction.id,
             timeout=60.0
         )
-        return interaction.data.custom_id or None
+        return interaction.data.get("custom_id", None) or None
 
     @disnake.ui.button(label="Save", style=disnake.ButtonStyle.green)
     async def create_backup(
@@ -135,7 +135,7 @@ class BackupsView(disnake.ui.View):
 
     @disnake.ui.button(label="Delete", style=disnake.ButtonStyle.red)
     async def delete_backup(
-            self, _: disnake.ui.Button, interaction: disnake.InteractionMessage
+            self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ) -> None:
 
         ConfirmEmbed = disnake.Embed(
@@ -143,11 +143,11 @@ class BackupsView(disnake.ui.View):
             description="Are you sure you want to **delete** the current server backup?",
             color=0x2F3136
         )
-        print(await self.confirm(interaction=interaction, embed=ConfirmEmbed))
+        print(await self.confirm(interaction=interaction, embed=ConfirmEmbed)) #тут еррор блять
         if await self.confirm(interaction=interaction, embed=ConfirmEmbed) == "confirm_yes":
-            await interaction.send("yes")
+            await interaction.edit_original_response(content="yes")
         else:
-            await interaction.send("no")
+            await interaction.edit_original_response(content="no")
 
     @disnake.ui.button(label="File", style=disnake.ButtonStyle.gray)
     async def backup_file(
