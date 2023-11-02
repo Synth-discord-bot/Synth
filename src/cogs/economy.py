@@ -125,7 +125,7 @@ class Economy(commands.Cog):
     async def bank(
         self,
         interaction: disnake.MessageCommandInteraction,
-        money: Union[int, str] = "all",
+        money: int | str = "all",
     ) -> None:
         """Send money to the bank
 

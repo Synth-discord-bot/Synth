@@ -35,7 +35,7 @@ class BasicUtility(commands.Cog):
             131072: "<:developer:1168622649967116378>",
             262144: "<:shield:1168250173089140956>",
             1048576: "⚠️",
-            133172312: "<:synth_dev:1168623393717899314>",
+            133172312: "<:synthdev:1169689479452311582>",
         }
 
     # @commands.command()
@@ -49,24 +49,24 @@ class BasicUtility(commands.Cog):
         ),
     )
     async def user(
-        self,
-        interaction: disnake.MessageCommandInteraction,
-        user: Union[disnake.User, disnake.Member] = commands.Param(
-            description=Localized("Choice user", key="USER_COMMAND_USER_DESC"),
-            name=Localized("user", key="USER_COMMAND_USER_NAME"),
-            default=None,
-        ),
+            self,
+            interaction: disnake.MessageCommandInteraction,
+            user: Union[disnake.User, disnake.Member] = commands.Param(
+                description=Localized("Choice user", key="USER_COMMAND_USER_DESC"),
+                name=Localized("user", key="USER_COMMAND_USER_NAME"),
+                default=None,
+            ),
     ):
         if user is None:
             user = interaction.user
 
         embed = disnake.Embed(
-            title=f"@{user.name} / {user.id} {'' if not check_if_user_is_developer(bot=self.bot, user_id=user.id) else ' <:synth_dev:1168623393717899314>'}",
+            title=f"@{user.name} / {user.id} {'' if not check_if_user_is_developer(bot=self.bot, user_id=user.id) else ' <:synthdev:1169689479452311582>'}",
             color=0x2B2D31,
             description=f"[Link to DM](discord://discord.com/users/{user.id})",
         )
         embed.add_field(
-            name="Created at", value=format_dt(user.created_at, style="f"), inline=False
+            name="<:created_at:1169684592006017034> Created at", value=format_dt(user.created_at, style="f"), inline=False
         )
 
         embed.set_thumbnail(url=user.display_avatar.url)
@@ -75,16 +75,16 @@ class BasicUtility(commands.Cog):
 
         if isinstance(user, disnake.Member):
             embed.add_field(
-                name="Joined at",
+                name="<:info:1169685342077583480> Joined at",
                 value=format_dt(user.joined_at, style="f"),
                 inline=False,
             )
-            embed.add_field(name="Status", value=user.status, inline=False)
+            embed.add_field(name="<:activities:1169690504393404456> Status", value=user.status, inline=False)
             embed.add_field(
-                name="Is on mobile?", value=user.is_on_mobile(), inline=False
+                name="<:globe:1169690501063123065> Is on mobile?", value=user.is_on_mobile(), inline=False
             )
             embed.add_field(
-                name="Roles:",
+                name="<:store:1169690541986959464> Roles:",
                 value=" ".join(
                     [
                         role.mention
@@ -94,7 +94,7 @@ class BasicUtility(commands.Cog):
                 ),
                 inline=False,
             )
-            embed.add_field(name="Top role", value=user.top_role.mention, inline=False)
+            embed.add_field(name="<:design:1169688944502378536> Top role", value=user.top_role.mention, inline=False)
 
         flags = " ".join(
             [
@@ -105,7 +105,7 @@ class BasicUtility(commands.Cog):
         )
 
         if flags != "":
-            embed.add_field(name="Flags", value=flags, inline=False)
+            embed.add_field(name="<:list:1169690529643114547> Flags", value=flags, inline=False)
 
         await interaction.send(embed=embed)
 
@@ -124,52 +124,40 @@ class BasicUtility(commands.Cog):
             title=f"{interaction.guild.name}'s information", color=0x2B2D31
         )
         embed.add_field(
-            name="<:gear:1168228790183415868> Main Information",
-            value=f"**Emojis:** `{emoji_count}`\n"
-            f"**Members:** `{len(interaction.guild.members)}`\n"
-            f"**Owner:** `{interaction.guild.owner}`\n"
-            f"**Roles:** `{len(interaction.guild.roles)}`\n"
-            f"**Created at:** {format_dt(interaction.guild.created_at, style='f')}\n"
-            f"**Icon:** [click]({interaction.guild.icon})\n"
-            f"**Boost:** `{interaction.guild.premium_subscription_count}`\n",
-            inline=True,
-        )
-
-        embed.add_field(
-            name="<:link:1168250171524649060> Server Channels",
-            value=f"**Channels:** `{len(interaction.guild.channels)}`\n"
-            f"**Text Channels:** `{len(interaction.guild.text_channels)}`\n"
-            f"**Voice Channels:** `{len(interaction.guild.voice_channels)}`\n"
-            f"**Categories:** `{len(interaction.guild.categories)}`\n"
-            f"**Threads:** `{len(interaction.guild.threads)}`\n",
-            inline=True,
-        )
-
-        embed.add_field(
-            name="<:settings:1168250174611660971> Server Members",
-            value=f"**All Members:** `{len(interaction.guild.members)}`\n"
-            f"**Humans:** `{list_of_users}`\n"
-            f"**Bots:** `{list_of_bots}`\n"
-            f"**Administrators:** `{len([r for r in interaction.guild.roles if r.permissions.administrator])}`\n"
-            f"**Moderators:** `{len([r for r in interaction.guild.roles if r.permissions.kick_members])}`\n"
-            f"**Joined at:** {format_dt(interaction.user.joined_at, style='f')}",
+            name="Main Information",
+            value=f"<:owner:1169684595697004616> **Owner:** {interaction.guild.owner.mention} ({interaction.guild.owner.id})\n"
+                  f"<:created_at:1169684592006017034> **Created at:** {format_dt(interaction.guild.created_at, style='f')}\n"
+                  f"<:boost:1169685353515462697> **Boosts:** {interaction.guild.premium_subscription_count}\n"
+                  f"<:star:1169685347576336385> **Emojis:** {emoji_count}\n"
+                  f"<:link:1169685349409226893> **Icon:** [click]({interaction.guild.icon})\n"
+                  f"<:channels:1169684589640429599> **Channels:** {len(interaction.guild.channels)}\n"
+                  f"<:design:1169686174374301746> <:channels:1169684589640429599> **Text Channels:** {len(interaction.guild.text_channels)}\n"
+                  f"<:design:1169686174374301746> <:voice:1169684588315029534> **Voice Channels:** {len(interaction.guild.voice_channels)}\n"
+                  f"<:design:1169686174374301746> <:category:1169684586666663999> **Categories:** {len(interaction.guild.categories)}\n"
+                  f"<:design:1169688944502378536> <:thread:1169685355423866963> **Threads:** {len(interaction.guild.threads)}\n\n",
             inline=False,
         )
-
+        embed.add_field(
+            name="Members",
+            value=f"<:members:1169684583369949285> **All members:** {len(interaction.guild.members)}\n"
+                  f"<:design:1169686174374301746> <:members:1169684583369949285> **Human:** {list_of_users}\n"
+                  f"<:design:1169688944502378536> <:bot:1169685346506776697> **Bots:** {list_of_bots}",
+            inline=False,
+        )
         embed.set_thumbnail(url=interaction.guild.icon)
         embed.set_image(url=interaction.guild.banner)
         await interaction.send(embed=embed)
 
     @commands.slash_command(name="clear", description="Clear messages from chat")
     async def clear(
-        self,
-        interaction: disnake.MessageCommandInteraction,
-        amount: int,
-        channel: disnake.TextChannel = commands.Param(
-            name="channel",
-            description="The channel to clear messages from",
-            default=None,
-        ),
+            self,
+            interaction: disnake.MessageCommandInteraction,
+            amount: int,
+            channel: disnake.TextChannel = commands.Param(
+                name="channel",
+                description="The channel to clear messages from",
+                default=None,
+            ),
     ):
         if channel is None:
             channel = interaction.channel
@@ -236,27 +224,27 @@ class BasicUtility(commands.Cog):
         ).set_thumbnail(url=self.bot.user.avatar)
         embed.add_field(
             name="Main",
-            value=f"<:ping:1168968111920255086> Ping: **{round(self.bot.latency * 1000)} ms\n**"
-            f"<:ram:1168969950275321927> RAM: **{round(memory_usage()[0], 2)} mb**\n"
-            f"<:uptime:1168968110154457088> Uptime: {format_dt(startup, style='F')}\n",
+            value=f"<:clock:1169690592465395722> Ping: **{round(self.bot.latency * 1000)} ms\n**"
+                  f"<:activities:1169690504393404456> RAM: **{round(memory_usage()[0], 2)} mb**\n"
+                  f"<:icons_goodping:1169690518645649478> Uptime: {format_dt(startup, style='F')}\n",
             inline=False,
         )
         embed.add_field(
             name="Popularity",
-            value=f"<:gear:1168228790183415868> Servers: **{len(self.bot.guilds)}**\n"
-            f"<:moderator:1168622624629334136> Big servers (1000+): **{len([g for g in self.bot.guilds if g.member_count >= 1000])}**\n"
-            f"<:users:1168968100637589607> Users: **{len(set(self.bot.get_all_members()))}**\n"
-            f"<:channel:1168968099194744912> Channels: **{len(ch)}**\n",
+            value=f"<:info:1169685342077583480> Servers: **{len(self.bot.guilds)}**\n"
+                  f"<:globe:1169690501063123065> Big servers (1000+): **{len([g for g in self.bot.guilds if g.member_count >= 1000])}**\n"
+                  f"<:members:1169684583369949285> Users: **{len(set(self.bot.get_all_members()))}**\n"
+                  f"<:channels:1169684589640429599> Channels: **{len(ch)}**\n",
             inline=False,
         )
         embed.add_field(
             name="Other Information",
-            value=f"<:staff:1168622635228344403> Created at: **31/10/2023**\n"
-            f"<:information:1168237956591530065> Bot version: **v1.0.0.**\n"
-            f"<:python:1168970645980315658> Python version: **3.11.6**\n"
-            f"<:crown:1168970928970023042> Owners: [Snaky](https://discord.com/users/999682446675161148), "
-            f"[Weever](https://discord.com/users/419159175009009675), "
-            f"[LazyDev](https://discord.com/users/1167458549132181668)",
+            value=f"<:calendar:1169690539168366712> Created at: **31/10/2023**\n"
+                  f"<:created_at:1169684592006017034> Bot version: **v1.0.0.**\n"
+                  f"<:wrench:1169690509929889802> Python version: **3.11.6**\n"
+                  f"<:owner:1169684595697004616> Owners: [Snaky](https://discord.com/users/999682446675161148), "
+                  f"[Weever](https://discord.com/users/419159175009009675), "
+                  f"[LazyDev](https://discord.com/users/1167458549132181668)",
             inline=False,
         )
         embed.set_footer(
@@ -272,13 +260,13 @@ class BasicUtility(commands.Cog):
 
     @commands.slash_command(name="avatar", description="View user avatar")
     async def avatar(
-        self,
-        interaction: disnake.MessageCommandInteraction,
-        user: disnake.User = commands.Param(
-            name="user",
-            description="The user you want to view the avatar",
-            default=None,
-        ),
+            self,
+            interaction: disnake.MessageCommandInteraction,
+            user: disnake.User = commands.Param(
+                name="user",
+                description="The user you want to view the avatar",
+                default=None,
+            ),
     ):
         user = user or interaction.author
         embed = disnake.Embed(color=0x2F3236)
@@ -400,13 +388,13 @@ class BasicUtility(commands.Cog):
         name="lock", description="Lock the current channel for everyone"
     )
     async def lock(
-        self,
-        interaction: disnake.MessageCommandInteraction,
-        channel: disnake.TextChannel = commands.Param(
-            name="channel",
-            description="The channel to lock",
-            default=None,
-        ),
+            self,
+            interaction: disnake.MessageCommandInteraction,
+            channel: disnake.TextChannel = commands.Param(
+                name="channel",
+                description="The channel to lock",
+                default=None,
+            ),
     ):
         channel = channel or interaction.channel
 
@@ -421,13 +409,13 @@ class BasicUtility(commands.Cog):
         name="unlock", description="Unlock the current channel for everyone"
     )
     async def lock(
-        self,
-        interaction: disnake.MessageCommandInteraction,
-        channel: disnake.TextChannel = commands.Param(
-            name="channel",
-            description="The channel to unlock",
-            default=None,
-        ),
+            self,
+            interaction: disnake.MessageCommandInteraction,
+            channel: disnake.TextChannel = commands.Param(
+                name="channel",
+                description="The channel to unlock",
+                default=None,
+            ),
     ):
         channel = channel or interaction.channel
 
