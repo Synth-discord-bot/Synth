@@ -108,6 +108,6 @@ class Bot(commands.Bot):
             activity=disnake.Activity(
                 type=disnake.ActivityType.competing,
                 name=f">>help | v1.0.",
-                status=disnake.Status.idle
+                status=disnake.Status.idle,
             )
         )

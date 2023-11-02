@@ -17,12 +17,12 @@ class BaseDatabase:
         :param param_filter: dictionary to add
         :return: added item
         """
-        if _id := param_filter.get("_id", None):
-            param_filter.pop("_id")
+        if _id := param_filter.get("id", None):
+            param_filter.pop("id")
         elif _id := param_filter.get("guild_id", None):
             param_filter.pop("guild_id")
-        elif _id := param_filter.get("id", None):
-            param_filter.pop("id")
+        elif _id := param_filter.get("_id", None):
+            param_filter.pop("_id")
 
         self.collection_cache[_id] = param_filter
         return param_filter
@@ -62,21 +62,15 @@ class BaseDatabase:
         :param param_filter: Filter criteria for finding the item to remove from the cache.
         :return: The removed item, or None if not found.
         """
-        global id_to_delete
 
-        if isinstance(_id, dict):
-            if _ := _id.get("_id", None):
-                id_to_delete = "_id"
-                _id.pop("_id")
-            elif _ := _id.get("guild_id", None):
-                id_to_delete = "guild_id"
-                _id.pop("guild_id")
-            elif _ := _id.get("id", None):
-                id_to_delete = "id"
-                _id.pop("id")
-        else:
-            id_to_delete = _id
+        id_to_delete = (
+            _id.get("id", None)
+            or _id.get("guild_id", None)
+            or _id.get("_id", None)
+            or _id
+        )
 
+        print(self.collection_cache)
         del self.collection_cache[id_to_delete]
         return
 
