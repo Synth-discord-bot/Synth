@@ -73,7 +73,6 @@ class Bot(commands.Bot):
                     commands.ExtensionFailed,
                     commands.ExtensionError,
                 ) as e:
-                    raise e
                     exc_type = e.__class__.__name__
                     exc_line = sys.exc_info()[2].tb_lineno
                     logging.error(
