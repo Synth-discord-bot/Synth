@@ -2,6 +2,7 @@ import io
 from io import BytesIO
 from typing import List, Union, Literal
 
+import ujson
 from disnake import (
     Attachment,
     Message,
@@ -14,6 +15,8 @@ from disnake import (
 from disnake.ext import commands
 
 from . import main_db
+
+from enum import StrEnum
 
 
 async def bot_get_guild_prefix(bot: commands.Bot, message: Message) -> List[str]:
@@ -120,8 +123,15 @@ def emoji(name: Literal["loading", "success", "error", "users"]):
     return layers[name]
 
 
-async def save_file_to_memory(file: Attachment) -> BytesIO:
+async def save_file_to_memory(file: Attachment, to_dict: bool = False) -> BytesIO:
     with io.BytesIO() as temp_file:
         await file.save(fp=temp_file)
         temp_file.seek(0)
+        if to_dict:
+            temp_file = ujson.load(temp_file)
         return temp_file
+
+
+class ConfirmEnum(StrEnum):
+    OK = "confirm_yes"
+    FAIL = "confirm_no"

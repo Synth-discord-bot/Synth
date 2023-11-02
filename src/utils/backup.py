@@ -20,7 +20,11 @@ class Backup:
         """Creates a backup of a guild"""
         return await BackupCreator(self.guild).create_backup()
 
-    async def restore(self, data: Dict[Any, Any], message: disnake.Message) -> None:
+    async def restore(
+        self,
+        data: Dict[Any, Any],
+        message: Union[disnake.Message, disnake.MessageInteraction],
+    ) -> None:
         """Restores a backup of a guild"""
         embed = disnake.Embed(color=0x2F3136)
         embed.title = "<a:loading:1168599537682755584> Loading Backup"
@@ -29,7 +33,7 @@ class Backup:
         embed.description = (
             "<:info:1169685342077583480> Stage 1 of 6\n> **Deleting channels**"
         )
-        await message.edit(embed=embed)
+        await message.edit_original_response(embed=embed, view=None)
 
         for channel in self.guild.channels:
             try:
@@ -41,7 +45,7 @@ class Backup:
         embed.description = (
             "<:info:1169685342077583480> Stage 2 of 6\n> **Deleting roles**"
         )
-        await message.edit(embed=embed)
+        await message.edit_original_response(embed=embed, view=None)
 
         for role in self.guild.roles:
             try:
@@ -52,7 +56,7 @@ class Backup:
         embed.description = (
             "<:info:1169685342077583480> Stage 3 of 6\n> **Creating roles**"
         )
-        await message.edit(embed=embed)
+        await message.edit_original_response(embed=embed, view=None)
 
         roles = data["roles"]
         for k in range(len(roles) + 1):
@@ -78,7 +82,7 @@ class Backup:
         embed.description = (
             "<:info:1169685342077583480> Stage 4 of 6\n> **Creating categories**"
         )
-        await message.edit(embed=embed)
+        await message.edit_original_response(embed=embed, view=None)
 
         categories = data["category"]
         for i in range(len(categories) + 1):
@@ -116,7 +120,7 @@ class Backup:
         embed.description = (
             "<:info:1169685342077583480> Stage 5 of 6\n> **Creating channels**"
         )
-        await message.edit(embed=embed)
+        await message.edit_original_response(embed=embed, view=None)
 
         text_channels = data["text"]
         for i in range(len(text_channels) + 1):
@@ -221,7 +225,7 @@ class Backup:
                 continue
 
         embed.description = "<:info:1169685342077583480> Stage 6 of 6\n> **Restoring the server main information**"
-        await message.edit(embed=embed)
+        await message.edit_original_response(embed=embed, view=None)
 
         icon_data = None
         if data["guild"]["icon"]:
@@ -274,7 +278,7 @@ class Backup:
         embed.colour = 0x2F3136
         embed.description = "Server backup has been successfully loaded."
 
-        await message.edit(embed=embed)
+        await message.edit_original_response(embed=embed, view=None)
 
 
 class BackupCreator:

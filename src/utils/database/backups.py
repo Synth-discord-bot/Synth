@@ -51,3 +51,15 @@ class BackupsDatabase(BaseDatabase):
             {"guild_id": guild_id},
             {"backup_data": backup_data},
         )
+        self._add_to_cache({"guild_id": guild_id, "backup_data": backup_data})
+
+    async def delete_backup(self, guild_id: int) -> Mapping[str, Any]:
+        """Delete backup from a database
+
+        returns: Dictionary of a last backup (if exists)
+        """
+        if await self.find_one_from_db({"guild_id": guild_id}) is not None:
+            result = await self.find_one_from_db({"guild_id": guild_id})
+            await self.remove_from_db({"guild_id": guild_id})
+            if result:
+                return result
