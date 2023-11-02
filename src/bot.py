@@ -73,6 +73,7 @@ class Bot(commands.Bot):
                     commands.ExtensionFailed,
                     commands.ExtensionError,
                 ) as e:
+                    raise e
                     exc_type = e.__class__.__name__
                     exc_line = sys.exc_info()[2].tb_lineno
                     logging.error(
@@ -106,8 +107,8 @@ class Bot(commands.Bot):
         await self.wait_until_ready()
         await self.change_presence(
             activity=disnake.Activity(
-                type=disnake.ActivityType.streaming,
-                name="New multi-functional bot, Synth",
-                state="Release soon...",
+                type=disnake.ActivityType.competing,
+                name=f">>help | v1.0.",
+                status=disnake.Status.idle
             )
         )

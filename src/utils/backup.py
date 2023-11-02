@@ -27,7 +27,7 @@ class Backup:
         embed.set_footer(text=message.author, icon_url=message.author.avatar)
 
         embed.description = (
-            "<:information:1168237956591530065> Stage 1 of 6\n> **Deleting channels**"
+            "<:info:1169685342077583480> Stage 1 of 6\n> **Deleting channels**"
         )
         await message.edit(embed=embed)
 
@@ -39,7 +39,7 @@ class Backup:
                 continue
 
         embed.description = (
-            "<:information:1168237956591530065> Stage 2 of 6\n> **Deleting roles**"
+            "<:info:1169685342077583480> Stage 2 of 6\n> **Deleting roles**"
         )
         await message.edit(embed=embed)
 
@@ -50,7 +50,7 @@ class Backup:
                 continue
 
         embed.description = (
-            "<:information:1168237956591530065> Stage 3 of 6\n> **Creating roles**"
+            "<:info:1169685342077583480> Stage 3 of 6\n> **Creating roles**"
         )
         await message.edit(embed=embed)
 
@@ -76,7 +76,7 @@ class Backup:
                 continue
 
         embed.description = (
-            "<:information:1168237956591530065> Stage 4 of 6\n> **Creating categories**"
+            "<:info:1169685342077583480> Stage 4 of 6\n> **Creating categories**"
         )
         await message.edit(embed=embed)
 
@@ -114,7 +114,7 @@ class Backup:
                 continue
 
         embed.description = (
-            "<:information:1168237956591530065> Stage 5 of 6\n> **Creating channels**"
+            "<:info:1169685342077583480> Stage 5 of 6\n> **Creating channels**"
         )
         await message.edit(embed=embed)
 
@@ -220,7 +220,7 @@ class Backup:
             except (disnake.Forbidden, disnake.HTTPException, TypeError):
                 continue
 
-        embed.description = "<:information:1168237956591530065> Stage 6 of 6\n> **Restoring the server main information**"
+        embed.description = "<:info:1169685342077583480> Stage 6 of 6\n> **Restoring the server main information**"
         await message.edit(embed=embed)
 
         icon_data = None
