@@ -90,7 +90,7 @@ class Buttons(ui.View):
 class Economy(commands.Cog):
     """Economy commands"""
 
-    EMOJI = "🪙"
+    EMOJI = "<:gift:1169690502635991241>"
 
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot

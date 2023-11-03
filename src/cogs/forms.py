@@ -157,7 +157,7 @@ class EditFormView(disnake.ui.View):
 class Forms(commands.Cog):
     """Helper commands to setup forms."""
 
-    EMOJI = "📝"
+    EMOJI = "<:store:1169690541986959464>"
 
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot

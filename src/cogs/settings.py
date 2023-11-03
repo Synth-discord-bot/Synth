@@ -10,7 +10,7 @@ from src.utils import main_db
 class Settings(commands.Cog):
     """Helper commands to set up the bot."""
 
-    EMOJI = "⚙️"
+    EMOJI = "<:settings:1169685352114552922>️"
 
     def __init__(self, bot) -> None:
         self.bot = bot

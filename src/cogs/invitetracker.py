@@ -9,7 +9,7 @@ from src.utils.misc import check_channel
 class InviteTracker(commands.Cog):
     """Helper commands to setup invite tracker system."""
 
-    EMOJI = "🔗"
+    EMOJI = "<:link:1169685349409226893>"
 
     def __init__(self, bot) -> None:
         self.bot = bot

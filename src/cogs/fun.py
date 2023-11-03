@@ -8,7 +8,7 @@ from disnake.ext import commands
 class Fun(commands.Cog):
     """Fun commands."""
 
-    EMOJI = "😂"
+    EMOJI = "<:created_at:1169684592006017034>"
 
     def __init__(self, bot):
         self.bot = bot

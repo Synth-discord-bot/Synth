@@ -135,3 +135,5 @@ async def save_file_to_memory(file: Attachment, to_dict: bool = False) -> BytesI
 class ConfirmEnum(StrEnum):
     OK = "confirm_yes"
     FAIL = "confirm_no"
+
+

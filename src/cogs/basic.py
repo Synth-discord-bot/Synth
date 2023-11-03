@@ -15,7 +15,7 @@ startup = datetime.datetime.now()
 class BasicUtility(commands.Cog):
     """Utility commands"""
 
-    EMOJI = "✨"
+    EMOJI = "<:globe:1169690501063123065>"
 
     def __init__(self, bot):
         self.bot = bot
