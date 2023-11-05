@@ -1,6 +1,7 @@
 import io
 from io import BytesIO
 from typing import List, Union, Literal
+import re
 
 import ujson
 from disnake import (
@@ -52,8 +53,8 @@ async def is_command_disabled(message: Message, command: str) -> bool:
 
 
 async def check_channel(
-    channel: TextChannel,
-    interaction: Union[MessageCommandInteraction, commands.Context],
+        channel: TextChannel,
+        interaction: Union[MessageCommandInteraction, commands.Context],
 ) -> bool:
     await interaction.send(
         f"Checking access to channel {channel.mention}...", ephemeral=True
@@ -137,3 +138,64 @@ class ConfirmEnum(StrEnum):
     FAIL = "confirm_no"
 
 
+async def str_to_seconds(input_string):
+    units = {
+        "s": 1,
+        "с": 1,
+        "m": 60,
+        "х": 60,
+        "h": 3600,
+        "г": 3600,
+        "d": 86400,
+        "д": 86400,
+        "w": 604800,
+        "т": 604800,
+        "o": 2592000,
+        "м": 2592000,
+        "y": 31536000,
+        "р": 31536000
+    }
+
+    input_string = str(input_string).lower().strip('-').replace('мес', 'е').replace('mo', 'o')
+
+    total_seconds = 0
+    matches = re.findall(r'(\d+)\s*([a-zA-Zа-яА-Я]+)', input_string)
+
+    for number, unit in matches:
+        multiplier = units.get(unit, 1)
+        total_seconds += int(number) * multiplier
+
+    total_seconds = max(total_seconds, 0)
+
+    return total_seconds
+
+
+def word_correct(number, p1, p2, p3):
+    ld = str(number)[-2:]
+    cases = {"0": p3, "1": p1, "2": p2, "3": p2, "4": p2, "5": p3, "6": p3, "7": p3, "8": p3, "9": p3}
+    if ld[0] == "1" and len(ld) > 1:
+        case = p3
+    else:
+        if len(ld) == 1:
+            case = cases.get(ld[0], p1)
+        else:
+            case = cases.get(ld[1], p2)
+    return case
+
+
+async def hms(sec):
+    time_units = [(604800, "week", "weeks"), (86400, "day", "days"), (3600, "hour", "hours"), (60, "minute", "minutes"),
+                  (1, "second", "seconds")]
+
+    for unit, singular, plural in time_units:
+        if sec >= unit:
+            value = int(sec // unit)
+            word = word_correct(value, singular, plural, plural)
+            display = f'{value} {word}'
+            sec %= unit
+            if sec > 0:
+                display += ' ' + await hms(sec)
+            return display
+
+    ms = int(sec * 1000)
+    return f'{ms} {word_correct(ms, "millisecond", "milliseconds", "milliseconds")}'

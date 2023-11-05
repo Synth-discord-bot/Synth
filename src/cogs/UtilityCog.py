@@ -12,7 +12,7 @@ from src.utils.misc import check_if_user_is_developer, emoji
 startup = datetime.datetime.now()
 
 
-class BasicUtility(commands.Cog):
+class Utility(commands.Cog):
     """Utility commands"""
 
     EMOJI = "<:globe:1169690501063123065>"
@@ -442,4 +442,4 @@ class BasicUtility(commands.Cog):
 
 
 def setup(bot: commands.Bot):
-    bot.add_cog(BasicUtility(bot=bot))
+    bot.add_cog(Utility(bot=bot))
