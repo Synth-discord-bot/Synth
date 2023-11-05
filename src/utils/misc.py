@@ -14,6 +14,7 @@ from disnake import (
     Forbidden,
 )
 from disnake.ext import commands
+import disnake
 
 from . import main_db
 
@@ -199,3 +200,46 @@ async def hms(sec):
 
     ms = int(sec * 1000)
     return f'{ms} {word_correct(ms, "millisecond", "milliseconds", "milliseconds")}'
+
+
+async def common_checks(ctx, member, check_bot=False, for_unban=False, for_mute=False, str_time=None):
+    ErrorEmbed = Embed(color=disnake.Colour.red())
+
+    if isinstance(member, disnake.User):
+        # Try to convert user to member
+        member = ctx.guild.get_member(member.id)
+
+    elif not member and not for_unban:
+        ErrorEmbed.description = f"{emoji('error')} | Member not found in the guild"
+        return False, ErrorEmbed
+
+    elif member == ctx.author:
+        ErrorEmbed.description = f"{emoji('error')} | You can't perform this action on yourself."
+        return False, ErrorEmbed
+
+    elif not for_unban and isinstance(member, disnake.Member) and check_bot and member.bot:
+        ErrorEmbed.description = f"{emoji('error')} | You can't perform this action on a bot."
+        return False, ErrorEmbed
+
+    elif not for_unban and isinstance(member, disnake.Member) and member.top_role >= ctx.author.top_role:
+        ErrorEmbed.description = f"{emoji('error')} | Your role is not higher than {member.mention}'s role."
+        return False, ErrorEmbed
+
+    elif not for_unban and isinstance(member, disnake.Member) and member.id == ctx.bot.user.id:
+        ErrorEmbed.description = f"{emoji('error')} | You can't perform this action on the bot."
+        return False, ErrorEmbed
+
+    elif check_bot and isinstance(member, disnake.Member) and member.top_role >= ctx.guild.get_member(ctx.bot.user.id).top_role and not ctx.author.guild.owner and not for_unban:
+        ErrorEmbed.description = f"{emoji('error')} | {member.mention}'s role is higher than mine, I can't perform this action."
+        return False, ErrorEmbed
+
+    elif for_mute and str_time > 2419200:  # 28 days in seconds
+        ErrorEmbed.description = f"{emoji('error')} | Mute time cannot be more than 28 days."
+        return False, ErrorEmbed
+
+    elif for_mute and str_time < 60:
+        ErrorEmbed.description = f"{emoji('error')} | Mute time cannot be less then 1 minute."
+        return False, ErrorEmbed
+
+    return True, None
+

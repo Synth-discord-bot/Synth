@@ -10,7 +10,7 @@ from disnake.ext.commands import UserConverter, MemberConverter
 from disnake.ui import ActionRow
 
 from src.utils import warns
-from src.utils.misc import emoji, str_to_seconds, hms
+from src.utils.misc import emoji, str_to_seconds, hms, common_checks
 
 
 class Moderation(commands.Cog):
@@ -26,42 +26,38 @@ class Moderation(commands.Cog):
     @commands.cooldown(1, 5, commands.BucketType.guild)
     @commands.has_permissions(kick_members=True, ban_members=True)
     async def ban(self, ctx, user: Union[int, str, disnake.Member], *, reason=None):
-        embed = disnake.Embed(color=0x2F3236)
+        embed = Embed(color=0x2F3236)
 
         if isinstance(user, disnake.Member):
             member = user.id
         else:
             member = await UserConverter().convert(ctx, str(user))
 
-        if member == ctx.author:
-            ErrorEmbed = disnake.Embed(color=disnake.Color.red())
-            ErrorEmbed.description = f"{emoji('error')} | You can't ban yourself!"
-            ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-            return await ctx.send(embed=ErrorEmbed)
+        check_result, error_embed = await common_checks(ctx, member)
+        if not check_result:
+            return await ctx.send(embed=error_embed)
 
-        else:
-            embed.title = "<:ban:1170712517308317756> Successfully banned"
+        embed.title = "<:ban:1170712517308317756> Successfully banned"
+        embed.description = (
+            f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+            f"**Member:** {member.mention} ({member})\n"
+            f"**Reason:** {reason}"
+        )
+        embed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
+        await ctx.send(embed=embed)
+
+        try:
+            embed.title = "<:ban:1170712517308317756> You were banned"
             embed.description = (
                 f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
-                f"**Member:** {member.mention} ({member})\n"
-                f"**Reason:** {reason}"
+                f"**Reason:** {reason}\n"
+                f"**Server:** {ctx.guild.name}"
             )
-            embed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-            await ctx.send(embed=embed)
+            await member.send(embed=embed)
+        except (Exception, BaseException, disnake.Forbidden):
+            pass
 
-            try:
-                embed.title = "<:ban:1170712517308317756> You were banned"
-                embed.description = (
-                    f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
-                    f"**Reason:** {reason}\n"
-                    f"**Server:** {ctx.guild.name}"
-                )
-                await member.send(embed=embed)
-
-            except (Exception, BaseException, disnake.Forbidden):
-                pass
-
-            await ctx.guild.ban(member, reason=f"{ctx.author}: {reason}")
+        await ctx.guild.ban(member, reason=f"{ctx.author}: {reason}")
 
     @commands.command()
     @commands.cooldown(1, 5, commands.BucketType.guild)
@@ -72,7 +68,11 @@ class Moderation(commands.Cog):
         else:
             member = await UserConverter().convert(ctx, str(id))
 
-        embed = disnake.Embed(color=0x2F3236)
+        check_result, error_embed = await common_checks(ctx, member, for_unban=True)
+        if not check_result:
+            return await ctx.send(embed=error_embed)
+
+        embed = Embed(color=0x2F3236)
         embed.title = "<:invite:1169690514430382160> Successfully unbanned"
         embed.description = (
             f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
@@ -87,143 +87,112 @@ class Moderation(commands.Cog):
     @commands.cooldown(1, 5, commands.BucketType.guild)
     @commands.has_permissions(kick_members=True, ban_members=True)
     async def kick(self, ctx, user: Union[int, str, disnake.Member], *, reason=None):
-        embed = disnake.Embed(color=0x2F3236)
-        ErrorEmbed = disnake.Embed(color=disnake.Color.red())
+        embed = Embed(color=0x2F3236)
 
         if isinstance(user, disnake.Member):
             member = user.id
         else:
             member = await MemberConverter().convert(ctx, str(user))
 
-        if member.top_role >= ctx.author.top_role:
+        check_result, error_embed = await common_checks(ctx, member)
+        if not check_result:
+            return await ctx.send(embed=error_embed)
 
-            ErrorEmbed.description = f"{emoji('error')} | Your role is not higher than {member.mention}'s role!"
-            ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-            return await ctx.send(embed=ErrorEmbed)
+        embed.title = "<:kick:1170712514288435271> Successfully kicked"
+        embed.description = (
+            f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+            f"**Member:** {member.mention} ({member})\n"
+            f"**Reason:** {reason}"
+        )
+        embed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
+        await ctx.send(embed=embed)
 
-        elif member.top_role >= ctx.guild.get_member(self.bot.user.id).top_role:
-            ErrorEmbed.description = f"{emoji('error')} | {member.mention}'s role is higher than mine, I can't kick him."
-            ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-            return await ctx.send(embed=ErrorEmbed)
-
-        elif member == ctx.author:
-            ErrorEmbed.description = f"{emoji('error')} | You can't kick yourself!"
-            ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-            return await ctx.send(embed=ErrorEmbed)
-
-        elif member.id == self.bot.user.id:
-            ErrorEmbed.description = f"{emoji('error')} | You can't kick me!"
-            ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-            return await ctx.send(embed=ErrorEmbed)
-
-        else:
-            embed.title = "<:kick:1170712514288435271> Successfully kicked"
+        try:
+            embed.title = "<:kick:1170712514288435271> You were kicked"
             embed.description = (
                 f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
-                f"**Member:** {member.mention} ({member})\n"
-                f"**Reason:** {reason}"
+                f"**Reason:** {reason}\n"
+                f"**Server:** {ctx.guild.name}"
             )
             embed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-            await ctx.send(embed=embed)
+            await member.send(embed=embed)
 
-            try:
-                embed.title = "<:kick:1170712514288435271> You were kicked"
-                embed.description = (
-                    f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
-                    f"**Reason:** {reason}\n"
-                    f"**Server:** {ctx.guild.name}"
-                )
-                embed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-                await member.send(embed=embed)
+        except (Exception, BaseException, disnake.Forbidden):
+            pass
 
-            except (Exception, BaseException, disnake.Forbidden):
-                pass
-
-            await member.kick(reason=reason)
+        await member.kick(reason=reason)
 
     @commands.command()
     @commands.cooldown(1, 5, commands.BucketType.guild)
     @commands.has_permissions(kick_members=True, ban_members=True)
     async def mute(self, ctx, member: Union[int, str, disnake.Member], mute_time: str, *, reason=None):
-        embed = disnake.Embed(color=0x2F3236)
-        ErrorEmbed = disnake.Embed(color=disnake.Color.red())
+        embed = Embed(color=0x2F3236)
+        ErrorEmbed = Embed(color=disnake.Color.red())
 
-        if isinstance(member, disnake.Member):
-            member = member.id
-        else:
-            member = await MemberConverter().convert(ctx, str(member))
+        if isinstance(member, int):  # Check if member is an integer (ID)
+            member = await ctx.guild.fetch_member(member)  # Convert the integer to a disnake.Member
+
+        if isinstance(member, str):  # Check if member is a string
+            member = await MemberConverter().convert(ctx, member)
 
         try:
             str_time = await str_to_seconds(mute_time)
         except ValueError:
             ErrorEmbed.description = f"{emoji('error')} | Invalid mute time format."
-            ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
+            ErrorEmbed.set_footer(text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
             return await ctx.send(embed=ErrorEmbed)
 
-        if member == ctx.author:
-            ErrorEmbed.description = f"{emoji('error')} | You can't mute yourself!"
-            ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-            return await ctx.send(embed=ErrorEmbed)
+        check_result, error_embed = await common_checks(ctx, member, for_mute=True, str_time=str_time)
+        if not check_result:
+            return await ctx.send(embed=error_embed)
 
-        elif member.id == self.bot.user.id:
-            ErrorEmbed.description = f"{emoji('error')} | You can't mute me!"
-            ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-            return await ctx.send(embed=ErrorEmbed)
+        embed.title = "<:mute:1170712518725992529> Successfully muted"
+        embed.description = (
+            f"**Member:** {member.mention} ({member})\n"
+            f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+            f"**Time:** {str(await hms(float(str_time)))}\n"
+            f"**Reason:** {reason}\n"
+            f"**Unmute date:** <t:{int(time.time()) + str_time}>"
+        )
+        embed.set_footer(text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
 
-        elif str_time > 2419200:  # 28 days in seconds
-            ErrorEmbed.description = f"{emoji('error')} | Mute time cannot be more than 28 days."
-            ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-            return await ctx.send(embed=ErrorEmbed)
+        await member.edit(timeout=disnake.utils.utcnow() + datetime.timedelta(seconds=str_time))
+        await ctx.send(embed=embed)
 
-        elif str_time < 60:
-            ErrorEmbed.description = f"{emoji('error')} | Mute time cannot be less then 1 minute."
-            ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-            return await ctx.send(embed=ErrorEmbed)
-
-        else:
-            embed.title = "<:mute:1170712518725992529> Successfully muted"
+        try:
+            embed.title = "<:mute:1170712518725992529> You were muted"
             embed.description = (
-                f"**Member:** {member.mention} ({member})\n"
                 f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+                f"**Server:** {ctx.guild.name}\n"
                 f"**Time:** {str(await hms(float(str_time)))}\n"
                 f"**Reason:** {reason}\n"
-                f"**Unmute date:** <t:{int(time.time()) + str_time}>"
+                f"**Unmute date:** <t:{int(time.time() + float(str_time))}>"
             )
-            embed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-
-            await member.edit(timeout=disnake.utils.utcnow() + datetime.timedelta(seconds=str_time))
-            await ctx.send(embed=embed)
-
-            try:
-                embed.title = "<:mute:1170712518725992529> You were muted"
-                embed.description = (
-                    f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
-                    f"**Server:** {ctx.guild.name}\n"
-                    f"**Time:** {str(await hms(float(str_time)))}\n"
-                    f"**Reason:** {reason}\n"
-                    f"**Unmute date:** <t:{int(time.time() + float(str_time))}>"
-                )
-                embed.set_footer(text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-                await member.send(embed=embed)
-
-            except (Exception, BaseException, disnake.Forbidden):
-                pass
+            embed.set_footer(text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
+            await member.send(embed=embed)
+        except (Exception, BaseException, disnake.Forbidden):
+            pass
 
     @commands.command()
     @commands.cooldown(1, 5, commands.BucketType.guild)
     @commands.has_permissions(kick_members=True, ban_members=True)
     async def unmute(self, ctx, member: Union[int, str, disnake.Member]):
-        embed = disnake.Embed(color=0x2F3236)
-        ErrorEmbed = disnake.Embed(color=disnake.Color.red())
+        embed = Embed(color=0x2F3236)
+        ErrorEmbed = Embed(color=disnake.Color.red())
 
-        if isinstance(member, disnake.Member):
-            member = member.id
-        else:
-            member = await MemberConverter().convert(ctx, str(member))
+        if isinstance(member, str):  # Check if member is a string
+            member = await MemberConverter().convert(ctx, member)
+
+        if isinstance(member, int):  # Check if member is an integer (ID)
+            member = await ctx.guild.fetch_member(member)  # Convert the integer to a disnake.Member
+
+        check_result, error_embed = await common_checks(ctx, member)
+        if not check_result:
+            return await ctx.send(embed=error_embed)
 
         if member == ctx.author:
             ErrorEmbed.description = f"{emoji('error')} | You can't unmute yourself!"
-            ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
+            ErrorEmbed.set_footer(text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
             return await ctx.send(embed=ErrorEmbed)
 
         embed.title = "<:unmute:1169690521472614500> Successfully unmuted"
@@ -244,7 +213,6 @@ class Moderation(commands.Cog):
             )
             embed.set_footer(text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
             await member.send(embed=embed)
-
         except (Exception, BaseException, disnake.Forbidden):
             pass
 
@@ -383,41 +351,20 @@ class Moderation(commands.Cog):
     @commands.cooldown(1, 20, commands.BucketType.guild)
     @commands.has_permissions(administrator=True)
     async def warn(self, ctx, user: Union[int, str, disnake.Member], *, reason=None):
-        ErrorEmbed = disnake.Embed(color=disnake.Color.red())
-
-        if isinstance(user, disnake.Member):
-            member = user.id
+        if isinstance(user, int):
+            member = await ctx.guild.fetch_member(user)
+        elif isinstance(user, str):
+            member = await MemberConverter().convert(ctx, user)
         else:
-            member = await MemberConverter().convert(ctx, str(user))
+            member = user
 
-        if member == ctx.author:
-            ErrorEmbed.description = f"{emoji('error')} | You can't warn yourself."
-            ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-            return await ctx.send(embed=ErrorEmbed)
-
-        elif member.bot:
-            ErrorEmbed.description = f"{emoji('error')} | You can't warn a bot."
-            ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-            return await ctx.send(embed=ErrorEmbed)
-
-        elif member.top_role >= ctx.author.top_role:
-            ErrorEmbed.description = f"{emoji('error')} | {member.mention}'s role is not lower than yours."
-            ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-            return await ctx.send(embed=ErrorEmbed)
-
-        elif member.id == self.bot.user.id:
-            ErrorEmbed.description = f"{emoji('error')} | You can't warn me"
-            ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-            return await ctx.send(embed=ErrorEmbed)
-
-        elif member.top_role >= ctx.guild.get_member(self.bot.user.id).top_role and not ctx.author.guild.owner:
-            ErrorEmbed.description = f"{emoji('error')} | {member.mention}'s role is higher than my role."
-            ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-            return await ctx.send(embed=ErrorEmbed)
+        common_check_result, error_embed = await common_checks(ctx, member)
+        if not common_check_result:
+            return await ctx.send(embed=error_embed)
 
         case = await warns.add_warn(ctx.guild.id, ctx.author, member, reason)
 
-        embed = disnake.Embed(title=f"<:icons_warning:1170751866905296978> Warned {member} (Case #{case})", color=0x2F3136)
+        embed = Embed(title=f"<:icons_warning:1170751866905296978> Warned {member} (Case #{case})", color=0x2F3136)
         embed.add_field(name="**Administrator:**", value=f"{ctx.author.mention} ({ctx.author})", inline=False)
         embed.add_field(name="**Member:**", value=f"{member.mention} ({member})", inline=False)
         embed.add_field(name="**Reason:**", value=reason, inline=False)
@@ -430,17 +377,14 @@ class Moderation(commands.Cog):
     @commands.cooldown(1, 20, commands.BucketType.guild)
     @commands.has_permissions(administrator=True)
     async def warns(self, ctx, member: Union[int, disnake.Member] = None):
-        ErrorEmbed = disnake.Embed(color=disnake.Color.red())
+        common_check_result, error_embed = await common_checks(ctx, member, check_bot=False)
+        if not common_check_result:
+            return await ctx.send(embed=error_embed)
 
         if not member:
             member = ctx.author
-        if member.bot:
-            ErrorEmbed.description = f"{emoji('error')} | You can't see bot's warnings"
-            ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-            return await ctx.send(embed=ErrorEmbed)
-
         if isinstance(member, int):
-            member = await ctx.guild.fetch_member(member)
+            member = await ctx.guild.fetch_member(member)  # Convert the integer to a disnake.Member
 
         warnings = await warns.get_user_warnings(ctx.guild.id, member)
 
@@ -464,7 +408,7 @@ class Moderation(commands.Cog):
             return [prev_button, next_button, delete_button]
 
         async def refresh_embed(ctx, warnings, index, total_pages):
-            embed = disnake.Embed(color=0x2F3136)
+            embed = Embed(color=0x2F3136)
             embed.title = f"Warns of {member}"
             embed.description = f"**Total warns count:** {len(warnings)}"
             embed.set_thumbnail(url=member.avatar)
@@ -480,7 +424,7 @@ class Moderation(commands.Cog):
                 embed.add_field(
                     name=f"Warn #{i}",
                     value=f"Administrator: {administrator.mention}\n"
-                          f"Timestamp: {timestamp}\n"  # Display timestamp as is
+                          f"Timestamp: {timestamp}\n"
                           f"Reason: {reason}",
                     inline=False
                 )
@@ -514,46 +458,17 @@ class Moderation(commands.Cog):
     @commands.cooldown(1, 20, commands.BucketType.guild)
     @commands.has_permissions(administrator=True)
     async def unwarn(self, ctx, member: Union[int, disnake.Member] = None, amount: int = 1):
-        ErrorEmbed = disnake.Embed(color=disnake.Color.red())
+        ErrorEmbed = Embed(color=disnake.Color.red())
+
+        common_check_result, error_embed = await common_checks(ctx, member, check_bot=False)
+        if not common_check_result:
+            return await ctx.send(embed=error_embed)
 
         member_id = member.id if isinstance(member, disnake.Member) else member
 
-        if not isinstance(member_id, int):  # Check if member_id is not an integer (an actual user)
-            member = await MemberConverter().convert(ctx, str(member_id))
-            if member == ctx.author:
-                ErrorEmbed.description = f"{emoji('error')} | You can't remove your warns"
-                ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-                return await ctx.send(embed=ErrorEmbed)
-
-            elif member.bot:
-                ErrorEmbed.description = f"{emoji('error')} | You can't remove warns from a bot"
-                ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-                return await ctx.send(embed=ErrorEmbed)
-
-            if not ctx.guild.get_member(member_id):  # Check if the member is in the guild
-                ErrorEmbed.description = f"{emoji('error')} | Member not found in the guild"
-                ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-                return await ctx.send(embed=ErrorEmbed)
-
-            if ctx.guild.get_member(member_id).top_role >= ctx.author.top_role:
-                ErrorEmbed.description = f"{emoji('error')} | Your role is not higher than {ctx.guild.get_member(member_id).mention}'s role!"
-                ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-                return await ctx.send(embed=ErrorEmbed)
-
-            elif member_id == self.bot.user.id:
-                ErrorEmbed.description = f"{emoji('error')} | You can't remove warns from me!"
-                ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-                return await ctx.send(embed=ErrorEmbed)
-
-            elif ctx.guild.get_member(self.bot.user.id).top_role >= ctx.guild.get_member(
-                    member_id).top_role and not ctx.guild.owner:
-                ErrorEmbed.description = f"{emoji('error')} | {ctx.guild.get_member(member_id).mention}'s role is higher than mine, I can't remove warns."
-                ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
-                return await ctx.send(embed=ErrorEmbed)
-
         count_deleted = await warns.delete_warnings(ctx.guild.id, member_id, amount)
         if isinstance(count_deleted, int):
-            embed = disnake.Embed(
+            embed = Embed(
                 title=f"Removed {count_deleted} warns",
                 description=f"Administrator: {ctx.author.mention} ({ctx.author})\n"
                             f"Member: {ctx.guild.get_member(member_id).mention} ({ctx.guild.get_member(member_id)})",
