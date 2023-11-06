@@ -29,7 +29,7 @@ class EventInvites(commands.Cog):
             value=f"{invite.channel.mention} (`ID: {invite.channel.id}`)",
             inline=False,
         )
-        embed.add_field(name="Link", value=f"{invite.url}", inline=False)
+        embed.add_field(name="Link", value=invite.url, inline=False)
         embed.add_field(
             name="Created at",
             value=disnake.utils.format_dt(datetime.now(), style="f"),
@@ -45,7 +45,7 @@ class EventInvites(commands.Cog):
         )
         embed.add_field(
             name="Max age",
-            value=("Infinite" if invite.max_age == 0 else age_format),
+            value="Infinite" if invite.max_age == 0 else age_format,
             inline=False,
         )
         embed.add_field(
@@ -74,7 +74,7 @@ class EventInvites(commands.Cog):
             value=f"{invite.channel.mention} (`ID: {invite.channel.id}`)",
             inline=False,
         )
-        embed.add_field(name="Expired link", value=f"{invite.url}", inline=False)
+        embed.add_field(name="Expired link", value=invite.url, inline=False)
         embed.add_field(
             name="Created at",
             value=disnake.utils.format_dt(datetime.now(), style="f"),

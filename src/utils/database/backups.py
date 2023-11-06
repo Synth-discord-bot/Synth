@@ -5,7 +5,7 @@ import disnake
 from .base import BaseDatabase
 
 
-class BackupsDatabase(BaseDatabase):
+class BackupDatabase(BaseDatabase):
     def __init__(self, database_name: str) -> None:
         super().__init__(database_name)
 

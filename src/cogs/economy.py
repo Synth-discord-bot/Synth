@@ -15,7 +15,7 @@ from disnake import (
 from disnake.ext import commands
 from disnake.ext.commands import MemberConverter
 
-from src.utils import economy, Economy as EcoDB
+from src.utils import economy, EconomyDatabase as EcoDB
 
 
 class Buttons(ui.View):
