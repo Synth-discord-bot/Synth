@@ -39,10 +39,11 @@ class Buttons(disnake.ui.View):
             content="Введите лимит (например: 9)", ephemeral=True
         )
         msg = await self.bot.wait_for(
-            "message", check=lambda x: x.author == interaction.author, timeout=15
+            "message",
+            check=lambda x: x.author == interaction.author and x.content.isdigit(),
+            timeout=15,
         )
-        if msg.content.isdigit():
-            await self.channel.edit(user_limit=int(msg.content))
+        await self.channel.edit(user_limit=int(msg.content))
         await msg.delete()
 
     @disnake.ui.button(label="🕵️")
@@ -277,10 +278,9 @@ class PrivateRoom(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        rooms = await self.private_rooms.get_private_room(
+        if rooms := await self.private_rooms.get_private_room(
             message.guild.id, to_return="channels"
-        )
-        if rooms:
+        ):
             for room in rooms:
                 if message.channel.id == room and message.author.id != self.bot.user.id:
                     await message.delete()

@@ -37,11 +37,13 @@ class Buttons(ui.View):
     @ui.button(emoji="✅", style=ButtonStyle.secondary, custom_id="test")
     async def yes_callback(self, _: ui.Button, interaction: MessageInteraction) -> None:
         await interaction.send(content="Please, wait...")
+
         received_balance = await self.economy.get_balance(user_id=self.receiver.id)
         new_received_balance = received_balance + self.money
+
         old_bal_sender = await self.economy.get_balance(user_id=self.ctx.author.id)
         new_sender_balance = old_bal_sender - self.money
-        print(new_received_balance, new_sender_balance)
+
         try:
             await self.economy.update_db(
                 {"id": self.receiver.id}, {"balance": new_received_balance}
@@ -113,7 +115,10 @@ class Economy(commands.Cog):
         await interaction.send(
             embed=Embed(
                 title="Balance",
-                description=f"{interaction.author.name}, your balance:\n**Cash:** {money} 🪙\n**Bank:** {bank}🪙\n**Total:** {total}🪙",
+                description=(
+                    f"{interaction.author.name}, your balance:"
+                    f"\n**Cash:** {money} 🪙\n**Bank:** {bank}🪙\n**Total:** {total}🪙"
+                ),
             ),
             ephemeral=True,
         )
@@ -179,7 +184,10 @@ class Economy(commands.Cog):
         await interaction.send(
             embed=Embed(
                 title="Balance",
-                description=f"{interaction.author.name}, your balance now:\n**Cash:** {cash} 🪙\n**Bank:** {bank}🪙\n**Total:** {total}🪙",
+                description=(
+                    f"{interaction.author.name}, your balance now:"
+                    f"\n**Cash:** {cash} 🪙\n**Bank:** {bank}🪙\n**Total:** {total}🪙"
+                ),
             )
         )
 
@@ -218,12 +226,13 @@ class Economy(commands.Cog):
                     description="You can't transfer less than 1 🪙",
                     color=Color.red(),
                 ).set_footer(text=f"Command executed by {interaction.author}"),
-            )  #
+            )
         else:
-            if isinstance(user, Member):
-                res = user.id
-            else:
-                res = await MemberConverter().convert(interaction, user)
+            res = (
+                user.id
+                if isinstance(user, Member)
+                else await MemberConverter().convert(interaction, str(user))
+            )
             await interaction.send(
                 f"Are you sure you want transfer {money} 🪙 to {res.mention}?",
                 view=Buttons(

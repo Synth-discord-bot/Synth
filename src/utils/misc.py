@@ -1,4 +1,5 @@
 import io
+from enum import StrEnum
 from io import BytesIO
 from typing import List, Union, Literal
 
@@ -11,12 +12,11 @@ from disnake import (
     TextChannel,
     HTTPException,
     Forbidden,
+    Guild,
 )
 from disnake.ext import commands
 
 from . import main_db
-
-from enum import StrEnum
 
 
 async def bot_get_guild_prefix(bot: commands.Bot, message: Message) -> List[str]:
@@ -28,7 +28,7 @@ async def bot_get_guild_prefix(bot: commands.Bot, message: Message) -> List[str]
 
 
 # get prefix for commands, events etc..
-async def get_prefix(message: Message) -> Union[List[str], str]:
+async def get_prefix(message: Union[Message, Guild]) -> Union[List[str], str]:
     if not message.guild or await main_db.get_prefix(message.guild.id) is None:
         return "s."
 

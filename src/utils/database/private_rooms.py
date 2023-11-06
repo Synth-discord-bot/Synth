@@ -13,10 +13,9 @@ class PrivateRoomsDatabase(BaseDatabase):
     async def get_private_room(
         self, guild_id: int, to_return: str = None
     ) -> Union[List[Dict[str, Any]], Mapping[str, Any], None]:
-        result = await self.find_one_from_db({"guild_id": guild_id})
-        if result and to_return:
-            return result.get(to_return, None)
-        if result:
+        if result := await self.find_one_from_db({"guild_id": guild_id}):
+            if result and to_return:
+                return result.get(to_return, None)
             return result
         else:
             return None
@@ -43,8 +42,7 @@ class PrivateRoomsDatabase(BaseDatabase):
     async def delete_private_room(
         self, member: Member, voice_channel: disnake.VoiceChannel
     ):
-        result = await self.get_private_room(member.guild.id, to_return="channels")
-        if result:
+        if result := await self.get_private_room(member.guild.id, to_return="channels"):
             for result_dict in result:
                 if voice_channel.id in result_dict.values():
                     result_dict.clear()
@@ -55,8 +53,9 @@ class PrivateRoomsDatabase(BaseDatabase):
     async def get_owner_id(
         self, guild_id: int, voice_channel: disnake.VoiceChannel
     ) -> Optional[int]:
-        result = await self.get_private_room(guild_id=guild_id, to_return="channels")
-        if result:
+        if result := await self.get_private_room(
+            guild_id=guild_id, to_return="channels"
+        ):
             for room in result:
                 if room.get("channel_id") == voice_channel.id:
                     return room.get("owner_id", None) or None

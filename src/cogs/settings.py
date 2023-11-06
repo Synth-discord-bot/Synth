@@ -49,7 +49,7 @@ class Settings(commands.Cog):
 
     @commands.command()
     async def set_prefix(self, ctx: commands.Context, prefix: str) -> Message:
-        """Set current prefix to another one"""
+        """Set the current prefix to another one"""
         if prefix is None or prefix == "":
             return await ctx.reply("Please enter a prefix!")
         elif len(prefix) >= 5:

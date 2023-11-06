@@ -21,10 +21,10 @@ class BackupDatabase(BaseDatabase):
 
         if await self.find_one_from_db({"guild_id": guild_id}) is None:
             return []
-        result = await self.find_one_from_db({"guild_id": guild_id})
-        if result and to_return:
-            return result.get(to_return, None)
-        if result:
+
+        if result := await self.find_one_from_db({"guild_id": guild_id}):
+            if result and to_return:
+                return result.get(to_return, None)
             return result
         else:
             return []

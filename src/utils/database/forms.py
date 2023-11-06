@@ -30,7 +30,7 @@ class FormsDatabase(BaseDatabase):
         form_description: str,
         form_channel_id: int,
         form_type: str,
-    ) -> int:
+    ) -> None:
         if await self.find_one_from_db({"guild_id": guild_id}) is None:
             await self.add_to_db(
                 {

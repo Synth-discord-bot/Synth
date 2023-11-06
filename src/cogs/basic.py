@@ -20,7 +20,6 @@ class BasicUtility(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.badges = {
-            # 0: "No Badge",
             1: "<:staff:1168622635228344403>",
             2: "<:partner:1168622631705137233>",
             4: "<:hypesquad:1168622629901586605>",
@@ -37,10 +36,6 @@ class BasicUtility(commands.Cog):
             1048576: "⚠️",
             133172312: "<:synthdev:1169689479452311582>",
         }
-
-    # @commands.command()
-    # async def test(self, ctx: commands.Context):
-    #     await ctx.send(f"Test emoji: ")
 
     @commands.slash_command(
         name=Localized("user", key="USER_COMMAND_NAME"),
@@ -60,8 +55,14 @@ class BasicUtility(commands.Cog):
         if user is None:
             user = interaction.user
 
+        dev_badge = (
+            ""
+            if not check_if_user_is_developer(bot=self.bot, user_id=user.id)
+            else " <:synthdev:1169689479452311582>"
+        )
+
         embed = disnake.Embed(
-            title=f"@{user.name} / {user.id} {'' if not check_if_user_is_developer(bot=self.bot, user_id=user.id) else ' <:synthdev:1169689479452311582>'}",
+            title=f"@{user.name} / {user.id} {dev_badge}",
             color=0x2B2D31,
             description=f"[Link to DM](discord://discord.com/users/{user.id})",
         )
@@ -139,16 +140,24 @@ class BasicUtility(commands.Cog):
         )
         embed.add_field(
             name="Main Information",
-            value=f"<:owner:1169684595697004616> **Owner:** {interaction.guild.owner.mention} ({interaction.guild.owner.id})\n"
-            f"<:created_at:1169684592006017034> **Created at:** {format_dt(interaction.guild.created_at, style='f')}\n"
-            f"<:boost:1169685353515462697> **Boosts:** {interaction.guild.premium_subscription_count}\n"
-            f"<:star:1169685347576336385> **Emojis:** {emoji_count}\n"
-            f"<:link:1169685349409226893> **Icon:** [click]({interaction.guild.icon})\n"
-            f"<:channels:1169684589640429599> **Channels:** {len(interaction.guild.channels)}\n"
-            f"<:design:1169686174374301746> <:channels:1169684589640429599> **Text Channels:** {len(interaction.guild.text_channels)}\n"
-            f"<:design:1169686174374301746> <:voice:1169684588315029534> **Voice Channels:** {len(interaction.guild.voice_channels)}\n"
-            f"<:design:1169686174374301746> <:category:1169684586666663999> **Categories:** {len(interaction.guild.categories)}\n"
-            f"<:design:1169688944502378536> <:thread:1169685355423866963> **Threads:** {len(interaction.guild.threads)}\n\n",
+            value=(
+                f"<:owner:1169684595697004616> **Owner:** "
+                f"{interaction.guild.owner.mention} ({interaction.guild.owner.id})\n"
+                f"<:created_at:1169684592006017034> **Created at:** "
+                f"{format_dt(interaction.guild.created_at, style='f')}\n"
+                f"<:boost:1169685353515462697> **Boosts:** {interaction.guild.premium_subscription_count}\n"
+                f"<:star:1169685347576336385> **Emojis:** {emoji_count}\n"
+                f"<:link:1169685349409226893> **Icon:** [click]({interaction.guild.icon})\n"
+                f"<:channels:1169684589640429599> **Channels:** {len(interaction.guild.channels)}\n"
+                f"<:design:1169686174374301746> <:channels:1169684589640429599> "
+                f"**Text Channels:** {len(interaction.guild.text_channels)}\n"
+                f"<:design:1169686174374301746> <:voice:1169684588315029534>"
+                f" **Voice Channels:** {len(interaction.guild.voice_channels)}\n"
+                f"<:design:1169686174374301746> <:category:1169684586666663999>"
+                f" **Categories:** {len(interaction.guild.categories)}\n"
+                f"<:design:1169688944502378536> <:thread:1169685355423866963>"
+                f" **Threads:** {len(interaction.guild.threads)}\n\n"
+            ),
             inline=False,
         )
         embed.add_field(
@@ -245,10 +254,13 @@ class BasicUtility(commands.Cog):
         )
         embed.add_field(
             name="Popularity",
-            value=f"<:info:1169685342077583480> Servers: **{len(self.bot.guilds)}**\n"
-            f"<:globe:1169690501063123065> Big servers (1000+): **{len([g for g in self.bot.guilds if g.member_count >= 1000])}**\n"
-            f"<:members:1169684583369949285> Users: **{len(set(self.bot.get_all_members()))}**\n"
-            f"<:channels:1169684589640429599> Channels: **{len(ch)}**\n",
+            value=(
+                f"<:info:1169685342077583480> Servers: **{len(self.bot.guilds)}**\n"
+                f"<:globe:1169690501063123065> Big servers (1000+): "
+                f"**{len([g for g in self.bot.guilds if g.member_count >= 1000])}**\n"
+                f"<:members:1169684583369949285> Users: **{len(set(self.bot.get_all_members()))}**\n"
+                f"<:channels:1169684589640429599> Channels: **{len(ch)}**\n"
+            ),
             inline=False,
         )
         embed.add_field(

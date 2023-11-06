@@ -90,7 +90,7 @@ class Giveaway(commands.Cog):  # Need rewrite
         users = await reaction.users().flatten()
         users = [user for user in users if not user.bot]
 
-        if len(users) == 0:
+        if not users:
             await giveaway_msg.edit(
                 content="Not enough participants to choose winners."
             )

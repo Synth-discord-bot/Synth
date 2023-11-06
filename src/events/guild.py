@@ -41,7 +41,8 @@ class EventGuild(commands.Cog):
         join_embed = (
             disnake.Embed(
                 title="Synth | New Era",
-                description=f"""
+                description=(
+                    f"""
 Hey :wave_tone1:. Thanks for adding our multi-functional bot, Synth.
 
 :rocket: Quick start:
@@ -49,8 +50,10 @@ Hey :wave_tone1:. Thanks for adding our multi-functional bot, Synth.
 2. To get more information about a command, type `{await get_prefix(message=guild)}help <command>`
 3. Join our support server — [click](https://discord.gg/7vT3H3tVYp)
 
-Finally, if you have any issues with the bot, you can take a look at the website. You can also join the [Synth Community](https://discord.gg/7vT3H3tVYp) and ask for help.
-            """,
+Finally, if you have any issues with the bot, you can take a look at the website. You can also join the 
+[Synth Community](https://discord.gg/7vT3H3tVYp) and ask for help.
+            """
+                ),
                 color=0x2F3136,
             )
             .set_thumbnail(url=self.bot.user.avatar)

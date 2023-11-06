@@ -37,14 +37,13 @@ class Fun(commands.Cog):
         description=Localized("Flip a coin", key="COIN_COMMAND_DESC"),
     )
     async def coin(self, interaction: disnake.MessageCommandInteraction):
-        if random.randint(0, 1) == 0:
-            embed = disnake.Embed(
-                title="Flip coin", color=0x2B2D31, description="Heads"
-            )
-        else:
-            embed = disnake.Embed(
-                title="Flip coin", color=0x2B2D31, description="Tails"
-            )
+        embed = disnake.Embed(title="Flip coin", color=0x2B2D31)
+
+        match random.randint(0, 1):
+            case 0:
+                embed.description = "Heads"
+            case 1:
+                embed.description = "Tails"
         await interaction.send(embed=embed)
 
     @commands.slash_command(
@@ -87,15 +86,16 @@ class Fun(commands.Cog):
 
         response_category = random.choice(["good", "medium", "bad"])
 
-        if response_category == "good":
-            response = random.choice(good_responses)
-            color = 0x39F007
-        elif response_category == "medium":
-            response = random.choice(medium_responses)
-            color = 0xF0D707
-        else:
-            response = random.choice(bad_responses)
-            color = 0xF00707
+        match response_category:
+            case "good":
+                response = random.choice(good_responses)
+                color = 0x39F007
+            case "medium":
+                response = random.choice(medium_responses)
+                color = 0xF0D707
+            case "bad":
+                response = random.choice(bad_responses)
+                color = 0xF00707
 
         embed = disnake.Embed(
             title="Magic 8ball",
@@ -125,29 +125,41 @@ class Fun(commands.Cog):
             name=Localized("question", key="BEN_COMMAND_QUESTION_NAME"),
         ),
     ):
+        global embed
+
         chance = random.randint(1, 5)
-        if chance == 1:
-            embed = disnake.Embed(
-                title="Yes", description=f"{question}", color=0x2B2D31
-            ).set_image(url="https://c.tenor.com/R_itimARcLAAAAAC/talking-ben-yes.gif")
-        if chance == 2:
-            embed = disnake.Embed(
-                title="No", description=f"{question}", color=0x2B2D31
-            ).set_image(url="https://c.tenor.com/3ZLujiiPc4YAAAAC/talking-ben-no.gif")
-        if chance == 3:
-            embed = disnake.Embed(
-                title="Hohoho", description=f"{question}", color=0x2B2D31
-            ).set_image(
-                url="https://c.tenor.com/agrQMQjQTzgAAAAd/talking-ben-laugh.gif"
-            )
-        if chance == 4:
-            embed = disnake.Embed(
-                title="Ugh...", description=f"{question}", color=0x2B2D31
-            ).set_image(url="https://c.tenor.com/fr6i8VzKJuEAAAAd/talking-ben-ugh.gif")
-        if chance == 5:
-            embed = disnake.Embed(
-                title=f"Bye...", description=f"{question}", color=0x2B2D31
-            ).set_image(url="https://c.tenor.com/7j3yFGeMMgIAAAAd/talking-ben-ben.gif")
+
+        match chance:
+            case 1:
+                embed = disnake.Embed(
+                    title="Yes", description=question, color=0x2B2D31
+                ).set_image(
+                    url="https://c.tenor.com/R_itimARcLAAAAAC/talking-ben-yes.gif"
+                )
+            case 2:
+                embed = disnake.Embed(
+                    title="No", description=question, color=0x2B2D31
+                ).set_image(
+                    url="https://c.tenor.com/3ZLujiiPc4YAAAAd/talking-ben-no.gif"
+                )
+            case 3:
+                embed = disnake.Embed(
+                    title="Hohoho", description=question, color=0x2B2D31
+                ).set_image(
+                    url="https://c.tenor.com/agrQMQjQTzgAAAAd/talking-ben-laugh.gif"
+                )
+            case 4:
+                embed = disnake.Embed(
+                    title="Ugh...", description=question, color=0x2B2D31
+                ).set_image(
+                    url="https://c.tenor.com/fr6i8VzKJuEAAAAd/talking-ben-ugh.gif"
+                )
+            case 5:
+                embed = disnake.Embed(
+                    title="Nope", description=question, color=0x2B2D31
+                ).set_image(
+                    url="https://c.tenor.com/7j3yFGeMMgIAAAAd/talking-ben-ben.gif"
+                )
         await interaction.send(embed=embed)
 
 
