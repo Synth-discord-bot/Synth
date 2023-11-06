@@ -11,36 +11,6 @@ from src.utils.backup import Backup as BackupGuild
 from src.utils.misc import save_file_to_memory, ConfirmEnum
 
 
-# class Confirmation(disnake.ui.View):
-#     def __init__(self) -> None:
-#         super().__init__(timeout=60.0)
-#         self.backups = backups
-#
-#     @disnake.ui.button(label="Yes", custom_id="confirm_yes", style=disnake.ButtonStyle.green)
-#     async def confirm_yes(self, _: disnake.ui.Button, interaction: disnake.MessageInteraction):
-#         backup_data = await BackupGuild(interaction.guild).create()
-#
-#         await self.backups.update_backups_info(interaction.guild.id, backup_data)
-#
-#         embed = disnake.Embed(color=0x2F3136)
-#         embed.title = "Finished"
-#         embed.description = f"Server backup has been successfully created"
-#
-#         with io.StringIO() as temp_file:
-#             ujson.dump(backup_data, temp_file, indent=4)
-#             temp_file.seek(0)
-#             file_data = temp_file.read().encode()
-#             await interaction.edit_original_message(
-#                 embed=embed, file=disnake.File(fp=io.BytesIO(file_data), filename="backup.json")
-#             )
-#
-#     @disnake.ui.button(label="No", custom_id="confirm_no", style=disnake.ButtonStyle.red)
-#     async def confirm_no(self, _: disnake.ui.Button, interaction: disnake.MessageInteraction):
-#         return await interaction.edit_original_response(content="????")
-#
-#     #так нам це для лоад теж треба, ы для деліта, ати лиш для кріейт робиш
-
-
 class BackupsView(disnake.ui.View):
     def __init__(self, bot: commands.Bot):
         super().__init__(timeout=None)
@@ -48,7 +18,7 @@ class BackupsView(disnake.ui.View):
         self.backups = backups
 
     async def confirm(
-        self, interaction: disnake.MessageInteraction, embed: disnake.Embed = None
+            self, interaction: disnake.MessageInteraction, embed: disnake.Embed = None
     ) -> Optional[str]:
         buttons = [
             disnake.ui.Button(
@@ -71,7 +41,7 @@ class BackupsView(disnake.ui.View):
         interaction = await self.bot.wait_for(
             "button_click",
             check=lambda i: i.author == interaction.author
-            and i.channel_id == interaction.channel_id,
+                            and i.channel_id == interaction.channel_id,
             timeout=60.0,
         )
 
@@ -79,7 +49,7 @@ class BackupsView(disnake.ui.View):
 
     @disnake.ui.button(label="Save", style=disnake.ButtonStyle.green)
     async def create_backup(
-        self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
+            self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ) -> None:
         embed = disnake.Embed(color=0x2F3136)
 
@@ -126,7 +96,7 @@ class BackupsView(disnake.ui.View):
                 raise e
         else:
             await interaction.followup.send(
-                content="OK. Operation cancelled", embed=None, ephemeral=True
+                content="Operation cancelled", embed=None, ephemeral=True
             )
             await interaction.edit_original_message(
                 content="Operation cancelled", embed=None, view=None
@@ -134,7 +104,7 @@ class BackupsView(disnake.ui.View):
 
     @disnake.ui.button(label="Load", style=disnake.ButtonStyle.blurple)
     async def load_backup(
-        self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
+            self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ) -> None:
         embed = disnake.Embed(color=0x2F3136)
 
@@ -158,8 +128,8 @@ class BackupsView(disnake.ui.View):
                     message: Optional[disnake.Message] = await self.bot.wait_for(
                         "message",
                         check=lambda m: m.author == interaction.author
-                        and m.channel.id == interaction.channel_id
-                        and m.attachments,
+                                        and m.channel.id == interaction.channel_id
+                                        and m.attachments,
                         timeout=None,
                     )
                     if message.attachments:
@@ -194,7 +164,7 @@ class BackupsView(disnake.ui.View):
 
     @disnake.ui.button(label="Delete", style=disnake.ButtonStyle.red)
     async def delete_backup(
-        self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
+            self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ) -> None:
         if not await self.backups.get(interaction.guild.id, to_return="backup_data"):
             embed = disnake.Embed(
@@ -223,7 +193,7 @@ class BackupsView(disnake.ui.View):
 
     @disnake.ui.button(label="File", style=disnake.ButtonStyle.gray)
     async def backup_file(
-        self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
+            self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ) -> None:
         if backups.check_backup(interaction.guild):
             data = await self.backups.get(interaction.guild.id, to_return="backup_data")
@@ -249,7 +219,7 @@ class BackupsView(disnake.ui.View):
 class Backup(commands.Cog):
     """Backup commands"""
 
-    EMOJI = "📅"
+    EMOJI = "<:category:1169684586666663999>"
 
     def __init__(self, bot: commands.Bot) -> None:
         super(Backup, self).__init__()
@@ -268,8 +238,8 @@ class Backup(commands.Cog):
         embed.add_field(
             name="Information",
             value=f"<:pin:1169690524073087088> Using this panel you can save your server backup.\n"
-            f"<:pin:1169690524073087088> Our system, is one of the most powerful backup system in discord.\n"
-            f"<:pin:1169690524073087088> To **interact with backups** use emojis under this message.\n",
+                  f"<:pin:1169690524073087088> Our system, is one of the most powerful backup system in discord.\n"
+                  f"<:pin:1169690524073087088> To **interact with backups** use emojis under this message.\n",
             inline=False,
         )
 

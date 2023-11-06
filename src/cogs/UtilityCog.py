@@ -12,14 +12,15 @@ from src.utils.misc import check_if_user_is_developer, emoji
 startup = datetime.datetime.now()
 
 
-class BasicUtility(commands.Cog):
+class Utility(commands.Cog):
     """Utility commands"""
 
-    EMOJI = "✨"
+    EMOJI = "<:globe:1169690501063123065>"
 
     def __init__(self, bot):
         self.bot = bot
         self.badges = {
+            # 0: "No Badge",
             1: "<:staff:1168622635228344403>",
             2: "<:partner:1168622631705137233>",
             4: "<:hypesquad:1168622629901586605>",
@@ -36,6 +37,10 @@ class BasicUtility(commands.Cog):
             1048576: "⚠️",
             133172312: "<:synthdev:1169689479452311582>",
         }
+
+    # @commands.command()
+    # async def test(self, ctx: commands.Context):
+    #     await ctx.send(f"Test emoji: ")
 
     @commands.slash_command(
         name=Localized("user", key="USER_COMMAND_NAME"),
@@ -55,14 +60,8 @@ class BasicUtility(commands.Cog):
         if user is None:
             user = interaction.user
 
-        dev_badge = (
-            ""
-            if not check_if_user_is_developer(bot=self.bot, user_id=user.id)
-            else " <:synthdev:1169689479452311582>"
-        )
-
         embed = disnake.Embed(
-            title=f"@{user.name} / {user.id} {dev_badge}",
+            title=f"@{user.name} / {user.id} {'' if not check_if_user_is_developer(bot=self.bot, user_id=user.id) else ' <:synthdev:1169689479452311582>'}",
             color=0x2B2D31,
             description=f"[Link to DM](discord://discord.com/users/{user.id})",
         )
@@ -140,24 +139,16 @@ class BasicUtility(commands.Cog):
         )
         embed.add_field(
             name="Main Information",
-            value=(
-                f"<:owner:1169684595697004616> **Owner:** "
-                f"{interaction.guild.owner.mention} ({interaction.guild.owner.id})\n"
-                f"<:created_at:1169684592006017034> **Created at:** "
-                f"{format_dt(interaction.guild.created_at, style='f')}\n"
-                f"<:boost:1169685353515462697> **Boosts:** {interaction.guild.premium_subscription_count}\n"
-                f"<:star:1169685347576336385> **Emojis:** {emoji_count}\n"
-                f"<:link:1169685349409226893> **Icon:** [click]({interaction.guild.icon})\n"
-                f"<:channels:1169684589640429599> **Channels:** {len(interaction.guild.channels)}\n"
-                f"<:design:1169686174374301746> <:channels:1169684589640429599> "
-                f"**Text Channels:** {len(interaction.guild.text_channels)}\n"
-                f"<:design:1169686174374301746> <:voice:1169684588315029534>"
-                f" **Voice Channels:** {len(interaction.guild.voice_channels)}\n"
-                f"<:design:1169686174374301746> <:category:1169684586666663999>"
-                f" **Categories:** {len(interaction.guild.categories)}\n"
-                f"<:design:1169688944502378536> <:thread:1169685355423866963>"
-                f" **Threads:** {len(interaction.guild.threads)}\n\n"
-            ),
+            value=f"<:owner:1169684595697004616> **Owner:** {interaction.guild.owner.mention} ({interaction.guild.owner.id})\n"
+            f"<:created_at:1169684592006017034> **Created at:** {format_dt(interaction.guild.created_at, style='f')}\n"
+            f"<:boost:1169685353515462697> **Boosts:** {interaction.guild.premium_subscription_count}\n"
+            f"<:star:1169685347576336385> **Emojis:** {emoji_count}\n"
+            f"<:link:1169685349409226893> **Icon:** [click]({interaction.guild.icon})\n"
+            f"<:channels:1169684589640429599> **Channels:** {len(interaction.guild.channels)}\n"
+            f"<:design:1169686174374301746> <:channels:1169684589640429599> **Text Channels:** {len(interaction.guild.text_channels)}\n"
+            f"<:design:1169686174374301746> <:voice:1169684588315029534> **Voice Channels:** {len(interaction.guild.voice_channels)}\n"
+            f"<:design:1169686174374301746> <:category:1169684586666663999> **Categories:** {len(interaction.guild.categories)}\n"
+            f"<:design:1169688944502378536> <:thread:1169685355423866963> **Threads:** {len(interaction.guild.threads)}\n\n",
             inline=False,
         )
         embed.add_field(
@@ -254,13 +245,10 @@ class BasicUtility(commands.Cog):
         )
         embed.add_field(
             name="Popularity",
-            value=(
-                f"<:info:1169685342077583480> Servers: **{len(self.bot.guilds)}**\n"
-                f"<:globe:1169690501063123065> Big servers (1000+): "
-                f"**{len([g for g in self.bot.guilds if g.member_count >= 1000])}**\n"
-                f"<:members:1169684583369949285> Users: **{len(set(self.bot.get_all_members()))}**\n"
-                f"<:channels:1169684589640429599> Channels: **{len(ch)}**\n"
-            ),
+            value=f"<:info:1169685342077583480> Servers: **{len(self.bot.guilds)}**\n"
+            f"<:globe:1169690501063123065> Big servers (1000+): **{len([g for g in self.bot.guilds if g.member_count >= 1000])}**\n"
+            f"<:members:1169684583369949285> Users: **{len(set(self.bot.get_all_members()))}**\n"
+            f"<:channels:1169684589640429599> Channels: **{len(ch)}**\n",
             inline=False,
         )
         embed.add_field(
@@ -312,103 +300,69 @@ class BasicUtility(commands.Cog):
         embed.set_image(url=str(user.display_avatar))
         await interaction.send(embed=embed)
 
-    # TODO: REWRITE THIS
+    async def send_processing_message(self, interaction, action, role):
+        message = await interaction.send(embed=disnake.Embed(
+            title=f"<a:loading:1168599537682755584> Please wait...",
+            description=f"{action} {role.mention} to all members in this server.\n"
+                        f"Please do not delete this message until the process is completed.",
+            color=0x2F3236
+        ).set_footer(text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
+        return message
 
-    # @commands.slash_command(
-    #     name="add-roles",
-    #     description="Add a specific role to all users"
-    # )
-    # async def addroles(
-    #         self, interaction: disnake.MessageCommandInteraction,
-    #         role: disnake.Role = commands.Param(
-    #             name="role",
-    #             description="The role to add to all users",
-    #             required=True
-    #         )
-    # ):
-    #     total_members = len(interaction.guild.members)
-    #     failed_members = []
-    #
-    #     if not role.permissions.administrator:
-    #         msg = await interaction.send(embed=disnake.Embed(
-    #             title=f"<a:loading:1168599537682755584> Please wait...",
-    #             description=f"Adding {role.mention} to **{total_members}** members.\n"
-    #                         f"Please do not delete this message, until the proccess is done.",
-    #             color=0x2F3236
-    #         ).set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
-    #
-    #         for member in interaction.guild.members:
-    #             try:
-    #                 await member.add_roles(role)
-    #             except disnake.Forbidden:
-    #                 failed_members.append(member)
-    #
-    #         if failed_members:
-    #             failed_count = len(failed_members)
-    #             await msg.edit(embed=disnake.Embed(
-    #                 description=f"Successfully added role to **{total_members - failed_count}/{total_members}** members. "
-    #                             f"Failed to add role to **{failed_count}** members.",
-    #                 color=0x2F3236
-    #             ).set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
-    #         else:
-    #             await msg.edit(embed=disnake.Embed(
-    #                 description=f"Successfully added role to all **{total_members}** members.",
-    #                 color=0x2F3236
-    #             ).set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
-    #     else:
-    #         await interaction.send(embed=disnake.Embed(
-    #             description=f"<a:error:1168599839899144253> | Sorry, this role has administrator permissions,"
-    #                         f"so I can't give it to all members",
-    #             color=0xFF0000
-    #         ))
-    #
-    # @commands.slash_command(
-    #     name="remove-roles",
-    #     description="Remove a specific role from all users"
-    # )
-    # async def removeroles(
-    #         self, interaction: disnake.MessageCommandInteraction,
-    #         role: disnake.Role = commands.Param(
-    #             name="role",
-    #             description="The role to remove from all users",
-    #             required=True
-    #         )
-    # ):
-    #     total_members = len(interaction.guild.members)
-    #     failed_members = []
-    #
-    #     if not role.permissions.administrator:
-    #         msg = await interaction.send(embed=disnake.Embed(
-    #             title=f"<a:loading:1168599537682755584> Please wait...",
-    #             description=f"Removing {role.mention} from **{total_members}** members.\n"
-    #                         f"Please do not delete this message, until the proccess is done.",
-    #             color=0x2F3236
-    #         ).set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
-    #
-    #         for member in interaction.guild.members:
-    #             try:
-    #                 await member.remove_roles(role)
-    #             except disnake.Forbidden:
-    #                 failed_members.append(member)
-    #
-    #         if failed_members:
-    #             failed_count = len(failed_members)
-    #             await msg.edit(embed=disnake.Embed(
-    #                 description=f"Successfully removed role from **{total_members - failed_count}/{total_members}** members. "
-    #                             f"Failed to remove role from **{failed_count}** members.",
-    #                 color=0x2F3236
-    #             ).set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
-    #         else:
-    #             await msg.edit(embed=disnake.Embed(
-    #                 description=f"Successfully removed role from all **{total_members}** members.",
-    #                 color=0x2F3236
-    #             ).set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
-    #     else:
-    #         await interaction.send(embed=disnake.Embed(
-    #             description=f"<a:error:1168599839899144253> | Sorry, this role has administrator permissions,"
-    #                         f"so I can't remove it from all members",
-    #             color=0xFF0000
-    #         ))
+    async def process_role_action(self, interaction, role, action_func, action_str):
+        total_members = len(interaction.guild.members)
+        failed_members = []
+
+        if not role.permissions.administrator:
+            processing_message = await self.send_processing_message(interaction, action_str, role)
+
+            for member in interaction.guild.members:
+                try:
+                    await action_func(member, role)
+                except disnake.Forbidden:
+                    failed_members.append(member)
+
+            if failed_members:
+                failed_count = len(failed_members)
+                await processing_message.edit(embed=disnake.Embed(
+                    description=f"Successfully {action_str} role for "
+                                f"**{total_members - failed_count}/{total_members}** members. "
+                                f"Failed to {action_str} role for **{failed_count}** members.",
+                    color=0x2F3236
+                ).set_footer(text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
+            else:
+                await processing_message.edit(embed=disnake.Embed(
+                    description=f"Successfully {action_str} role for all **{total_members}** members.",
+                    color=0x2F3236
+                ).set_footer(text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
+        else:
+            await interaction.send(embed=disnake.Embed(
+                description=f"<a:error:1168599839899144253> | Sorry, this role has administrator permissions, "
+                            f"so I can't {action_str} it to all members.",
+                color=0xFF0000
+            ))
+
+    @commands.slash_command(
+        name="add-roles",
+        description="Add a specific role to all users"
+    )
+    async def add_roles(self, interaction: disnake.MessageCommandInteraction,
+                        role: disnake.Role = commands.Param(
+                            name="role",
+                            description="The role to add to all users"
+                        )):
+        await self.process_role_action(interaction, role, disnake.Member.add_roles, "Adding")
+
+    @commands.slash_command(
+        name="remove-roles",
+        description="Remove a specific role from all users"
+    )
+    async def remove_roles(self, interaction: disnake.MessageCommandInteraction,
+                           role: disnake.Role = commands.Param(
+                               name="role",
+                               description="The role to remove from all users"
+                           )):
+        await self.process_role_action(interaction, role, disnake.Member.remove_roles, "Removing")
 
     @commands.slash_command(
         name="lock", description="Lock the current channel for everyone"
@@ -454,4 +408,4 @@ class BasicUtility(commands.Cog):
 
 
 def setup(bot: commands.Bot):
-    bot.add_cog(BasicUtility(bot=bot))
+    bot.add_cog(Utility(bot=bot))

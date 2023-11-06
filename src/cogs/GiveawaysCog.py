@@ -13,7 +13,7 @@ time_units = {"d": "days", "h": "hours", "m": "minutes", "s": "seconds"}
 class Giveaway(commands.Cog):  # Need rewrite
     """Helper commands to setup giveaway."""
 
-    EMOJI = "🎉"
+    EMOJI = "<:tada:1169690533719986297>"
 
     def __init__(self, bot) -> None:
         self.bot = bot
@@ -90,7 +90,7 @@ class Giveaway(commands.Cog):  # Need rewrite
         users = await reaction.users().flatten()
         users = [user for user in users if not user.bot]
 
-        if not users:
+        if len(users) == 0:
             await giveaway_msg.edit(
                 content="Not enough participants to choose winners."
             )

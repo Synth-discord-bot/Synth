@@ -64,8 +64,8 @@ class CustomHelpCommand(commands.MinimalHelpCommand):
         options: list[SelectOption] = [
             SelectOption(
                 label="Home",
-                emoji="🏠",
-                description="Go back to the main menu.",
+                emoji="<:home:1169690507253911733>",
+                description="Return to main menu",
             )
         ]
 
@@ -170,3 +170,5 @@ class CustomHelpCommand(commands.MinimalHelpCommand):
         await self.get_destination().send(embed=embed)
 
     send_group_help = send_command_help
+
+

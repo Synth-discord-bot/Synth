@@ -8,7 +8,7 @@ from src.utils.misc import check_channel
 class Logger(commands.Cog):
     """Helper commands to setup logger."""
 
-    EMOJI = "🗒️"
+    EMOJI = "<:list:1169690529643114547>️"
 
     def __init__(self, bot) -> None:
         self.bot = bot
@@ -30,9 +30,10 @@ class Logger(commands.Cog):
         invite_log_channel: disnake.TextChannel = None,
         message_log_channel: disnake.TextChannel = None,
     ):
-        if main_log := await check_channel(
+        main_log = await check_channel(
             channel=main_log_channel, interaction=interaction
-        ):
+        )
+        if main_log:
             guild_log = invite_log = message_log = False
             if guild_log_channel:
                 guild_log = await check_channel(
