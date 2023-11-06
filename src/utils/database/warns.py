@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Union
+from typing import Union, Dict, Any
 
 import disnake
 
@@ -95,5 +95,3 @@ class WarnDatabase(BaseDatabase):
         await self.update_db({"guild_id": guild_id}, {"warnings": warns_data["warnings"]})
 
         return len(removed_warnings)
-
-

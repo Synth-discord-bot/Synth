@@ -108,51 +108,6 @@ class BaseDatabase:
                 return result.get(to_return, None)
             return result
 
-        # for key, value in self.collection_cache.items():
-        #     if isinstance(query, (str, int)):
-        #         if query in value.values() or query in value.keys():
-        #             result.append({key: value})
-        #         else:
-        #             if isinstance(query, dict):
-        #                 for sub_key, sub_value in value.items():
-        #                     if query in sub_value.values() or query in sub_value.keys():
-        #                         result.append({key: value})
-        #                         break
-        #             else:
-        #                 for sub_value in value:
-        #                     print(sub_value)
-        #                     print(query)
-        #                     if isinstance(query, dict):
-        #                         print(sub_value.keys(), sub_value)
-        #                         if query in sub_value.values() or query in sub_value.keys():
-        #                             result.append({key: value})
-        #                             break
-        #                     elif isinstance(query, (str, int, bool)):
-        #                         if query == sub_value:
-        #                             result.append({key: value})
-        #                             break
-        #                     elif isinstance(query, list):
-        #                         for sub_sub_value in sub_value:
-        #                             if query == sub_sub_value:
-        #                                 result.append({key: value})
-        #                                 break
-        # if query in sub_value
-
-        # for key, value in self.collection_cache.items():
-        #     if isinstance(query, (str, int)):
-        #         if query in value.values() or query in value.keys():
-        #             result.append({key: value})
-        #     else:
-        #         for inner_query in query.values():
-        #             if isinstance(inner_query, dict) and all(
-        #                 k in value and value[k] == v for k, v in inner_query.items()
-        #             ):
-        #                 result.append({key: value})
-        #                 break
-        #             elif inner_query in value.values() or inner_query in value.keys():
-        #                 result.append({key: value})
-        #                 break
-
     async def find_one_from_cache(self, value: Dict[str, Any]) -> Any:
         results = self.get_items_in_cache(value)
         return results[0] if results else None
@@ -172,7 +127,7 @@ class BaseDatabase:
             if len(results[0].get(1, [])) >= 1:
                 return results[0].get(1, []) if return_first_result else results
 
-        # if not found in cache, search in database
+        # if not found in cache, search in a database
         results = await self.get_items_in_db(value, to_list=True)
         if results:
             return results[0] if return_first_result else results
@@ -198,8 +153,6 @@ class BaseDatabase:
         await self.collection.update_one(data, {"$set": new_value}, upsert=True)
         old_data = await self.find_one_from_db(data)
         self._update_cache(_id=old_data, new_value=new_value)  # type: ignore
-        # if result is None:
-        #     self._add_to_cache(param_filter=new_value)
 
     async def remove_from_db(self, data: Dict[str, Any]) -> None:
         await self.collection.delete_one(data)
