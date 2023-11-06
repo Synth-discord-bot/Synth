@@ -349,8 +349,7 @@ class Utility(commands.Cog):
     async def add_roles(self, interaction: disnake.MessageCommandInteraction,
                         role: disnake.Role = commands.Param(
                             name="role",
-                            description="The role to add to all users",
-                            required=True
+                            description="The role to add to all users"
                         )):
         await self.process_role_action(interaction, role, disnake.Member.add_roles, "Adding")
 
@@ -361,8 +360,7 @@ class Utility(commands.Cog):
     async def remove_roles(self, interaction: disnake.MessageCommandInteraction,
                            role: disnake.Role = commands.Param(
                                name="role",
-                               description="The role to remove from all users",
-                               required=True
+                               description="The role to remove from all users"
                            )):
         await self.process_role_action(interaction, role, disnake.Member.remove_roles, "Removing")
 
