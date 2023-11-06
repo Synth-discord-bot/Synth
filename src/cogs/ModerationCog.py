@@ -25,10 +25,13 @@ class Moderation(commands.Cog):
     @commands.command()
     @commands.cooldown(1, 5, commands.BucketType.guild)
     @commands.has_permissions(kick_members=True, ban_members=True)
-    async def ban(self, ctx: commands.Context, user: Union[int, str, disnake.Member], *, reason: str = None) -> None:
+    async def ban(self, ctx, user: Union[int, str, disnake.Member], *, reason=None):
         embed = Embed(color=0x2F3236)
 
-        member = user if isinstance(user, disnake.Member) else await UserConverter().convert(ctx, str(user))
+        if isinstance(user, disnake.Member):
+            member = user.id
+        else:
+            member = await UserConverter().convert(ctx, str(user))
 
         check_result, error_embed = await common_checks(ctx, member)
         if not check_result:
@@ -51,20 +54,19 @@ class Moderation(commands.Cog):
                 f"**Server:** {ctx.guild.name}"
             )
             await member.send(embed=embed)
-        except (disnake.HTTPException, disnake.Forbidden):
+        except (Exception, BaseException, disnake.Forbidden):
             pass
 
-        try:
-            await ctx.guild.ban(member, reason=f"{ctx.author}: {reason}")
-        except (disnake.HTTPException, disnake.Forbidden):
-            await ctx.send(content=f"Could not ban user {member.mention}")
-        return
-        
+        await ctx.guild.ban(member, reason=f"{ctx.author}: {reason}")
+
     @commands.command()
     @commands.cooldown(1, 5, commands.BucketType.guild)
     @commands.has_permissions(kick_members=True, ban_members=True)
-    async def unban(self, ctx: commands.Context, id: Union[str, int, disnake.Member, disnake.User]) -> None:
-        member = id if isinstance(id, disnake.Member) else await UserConverter().convert(ctx, str(id))
+    async def unban(self, ctx, id: int):
+        if isinstance(id, disnake.Member):
+            member = id
+        else:
+            member = await UserConverter().convert(ctx, str(id))
 
         check_result, error_embed = await common_checks(ctx, member, for_unban=True)
         if not check_result:
@@ -78,19 +80,19 @@ class Moderation(commands.Cog):
         )
         embed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
 
-        try:
-            await ctx.guild.unban(member)
-        except (disnake.HTTPException, disnake.Forbidden):
-            await ctx.send(content=f"Could not unban user {member.mention}")
+        await ctx.guild.unban(member)
         await ctx.send(embed=embed)
 
     @commands.command()
     @commands.cooldown(1, 5, commands.BucketType.guild)
     @commands.has_permissions(kick_members=True, ban_members=True)
-    async def kick(self, ctx: commands.Context, user: Union[int, str, disnake.Member], *, reason: str = None):
+    async def kick(self, ctx, user: Union[int, str, disnake.Member], *, reason=None):
         embed = Embed(color=0x2F3236)
 
-        member = user if isinstance(user, disnake.Member) else await MemberConverter().convert(ctx, str(user))
+        if isinstance(user, disnake.Member):
+            member = user.id
+        else:
+            member = await MemberConverter().convert(ctx, str(user))
 
         check_result, error_embed = await common_checks(ctx, member)
         if not check_result:
@@ -117,11 +119,8 @@ class Moderation(commands.Cog):
 
         except (Exception, BaseException, disnake.Forbidden):
             pass
-        
-        try:
-            await member.kick(reason=reason)
-        except (disnake.HTTPException, disnake.Forbidden):
-            await ctx.send(content=f"Could not kick user {member.mention}")
+
+        await member.kick(reason=reason)
 
     @commands.command()
     @commands.cooldown(1, 5, commands.BucketType.guild)
@@ -243,9 +242,11 @@ class Moderation(commands.Cog):
                 disnake.ui.Button(custom_id="back", emoji="◀️", style=disnake.ButtonStyle.blurple, disabled=index == 0),
                 disnake.ui.Button(custom_id="forward", emoji="▶️", style=disnake.ButtonStyle.blurple,
                                   disabled=index == total_pages - 1),
-                disnake.ui.Button(custom_id="close", emoji="<:delete:1169690519677440093>", style=disnake.ButtonStyle.danger)
+                disnake.ui.Button(custom_id="close", emoji="<:delete:1169690519677440093>",
+                                  style=disnake.ButtonStyle.danger)
             )] if total_pages > 1 else [
-                ActionRow(disnake.ui.Button(custom_id="close", emoji="<:delete:1169690519677440093>", style=disnake.ButtonStyle.danger))]
+                ActionRow(disnake.ui.Button(custom_id="close", emoji="<:delete:1169690519677440093>",
+                                            style=disnake.ButtonStyle.danger))]
             return buttons
 
         async def refresh_embed():
@@ -309,9 +310,11 @@ class Moderation(commands.Cog):
                 disnake.ui.Button(custom_id="back", emoji="◀️", style=disnake.ButtonStyle.blurple, disabled=index == 0),
                 disnake.ui.Button(custom_id="forward", emoji="▶️", style=disnake.ButtonStyle.blurple,
                                   disabled=index == total_pages - 1),
-                disnake.ui.Button(custom_id="close", emoji="<:delete:1169690519677440093>", style=disnake.ButtonStyle.danger)
+                disnake.ui.Button(custom_id="close", emoji="<:delete:1169690519677440093>",
+                                  style=disnake.ButtonStyle.danger)
             )] if total_pages > 1 else [
-                ActionRow(disnake.ui.Button(custom_id="close", emoji="<:delete:1169690519677440093>", style=disnake.ButtonStyle.danger))]
+                ActionRow(disnake.ui.Button(custom_id="close", emoji="<:delete:1169690519677440093>",
+                                            style=disnake.ButtonStyle.danger))]
             return buttons
 
         async def refresh_embed():
@@ -482,6 +485,112 @@ class Moderation(commands.Cog):
             ErrorEmbed.description = f"{emoji('error')} | Sorry, I couldn't remove any warns"
             ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
             return await ctx.send(embed=ErrorEmbed)
+
+    @commands.command()
+    @commands.cooldown(1, 20, commands.BucketType.guild)
+    @commands.has_permissions(administrator=True)
+    async def crossban(self, ctx, member: Union[int, disnake.Member], reason: str = None):
+        ErrorEmbed = Embed(color=disnake.Color.red())
+        embed = Embed(color=0x2F3236)
+        success_servers = []
+
+        common_check_result, error_embed = await common_checks(ctx, member, check_bot=False)
+        if not common_check_result:
+            return await ctx.send(embed=error_embed)
+
+        if not member:
+            member = ctx.author
+        if isinstance(member, int):
+            member = await ctx.guild.fetch_member(member)
+
+        for guild in self.bot.guilds:
+            author_permissions = guild.get_member(ctx.author.id).guild_permissions
+            if author_permissions.administrator:
+                for user in guild.members:
+                    if user.id == member.id:
+                        try:
+                            await guild.ban(member)
+                            if not guild == ctx.guild:
+                                embed.title = "<:ban:1170712517308317756> Crossban"
+                                embed.description = (
+                                    f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+                                    f"**Member:** {member} (`{member.id}`)\n"
+                                    f"**Reason:** {reason}"
+                                )
+                                embed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
+                                await guild.text_channels[0].send(embed=embed)
+
+                            success_servers.append(guild.name)
+                        except (Exception, BaseException, disnake.Forbidden):
+                            ErrorEmbed.title = "<:ban:1170712517308317756> Crossban Fail"
+                            ErrorEmbed.description = f"Failed to ban {member.mention} on **{guild.name}** guild."
+                            ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
+                            await ctx.send(embed=embed)
+                            continue
+
+        embed.title = "<:ban:1170712517308317756> Crossban Success"
+        embed.description = (
+            f"**Banned from {len(success_servers)} servers.**\n"
+            f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+            f"**Member:** {member} (`{member.id}`)\n"
+            f"**Reason:** {reason}"
+        )
+        embed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    @commands.cooldown(1, 20, commands.BucketType.guild)
+    @commands.has_permissions(administrator=True)
+    async def crosskick(self, ctx, member: Union[int, disnake.Member], reason: str = None):
+        ErrorEmbed = Embed(color=disnake.Color.red())
+        embed = Embed(color=0x2F3236)
+        success_servers = []
+
+        common_check_result, error_embed = await common_checks(ctx, member, check_bot=False)
+        if not common_check_result:
+            return await ctx.send(embed=error_embed)
+
+        if not member:
+            member = ctx.author
+        if isinstance(member, int):
+            member = await ctx.guild.fetch_member(member)
+
+        for guild in self.bot.guilds:
+            author_permissions = guild.get_member(ctx.author.id).guild_permissions
+            if author_permissions.administrator:
+                for user in guild.members:
+                    if user.id == member.id:
+                        try:
+                            await guild.kick(member)
+                            if not guild == ctx.guild:
+                                embed.title = "<:ban:1170712517308317756> Crosskick"
+                                embed.description = (
+                                    f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+                                    f"**Member:** {member} (`{member.id}`)\n"
+                                    f"**Reason:** {reason}"
+                                )
+                                embed.set_footer(text=f"Synth © 2023 | All Rights Reserved",
+                                                 icon_url=self.bot.user.avatar)
+                                await guild.text_channels[0].send(embed=embed)
+
+                            success_servers.append(guild.name)
+                        except (Exception, BaseException, disnake.Forbidden):
+                            ErrorEmbed.title = "<:ban:1170712517308317756> Crosskick Fail"
+                            ErrorEmbed.description = f"Failed to kick {member.mention} on **{guild.name}** guild."
+                            ErrorEmbed.set_footer(text=f"Synth © 2023 | All Rights Reserved",
+                                                  icon_url=self.bot.user.avatar)
+                            await ctx.send(embed=embed)
+                            continue
+
+        embed.title = "<:ban:1170712517308317756> Crosskick Success"
+        embed.description = (
+            f"**Kicked from {len(success_servers)} servers.**\n"
+            f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+            f"**Member:** {member} (`{member.id}`)\n"
+            f"**Reason:** {reason}"
+        )
+        embed.set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar)
+        await ctx.send(embed=embed)
 
 
 def setup(bot):
