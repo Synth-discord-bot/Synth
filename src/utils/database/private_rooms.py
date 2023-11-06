@@ -45,7 +45,7 @@ class PrivateRoomsDatabase(BaseDatabase):
         if result := await self.get_private_room(member.guild.id, to_return="channels"):
             for result_dict in result:
                 if voice_channel.id in result_dict.values():
-                    result_dict.clear()
+                    del result_dict
                     break
 
             await self.update_db({"guild_id": member.guild.id}, {"channels": result})
