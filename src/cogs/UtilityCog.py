@@ -300,103 +300,71 @@ class Utility(commands.Cog):
         embed.set_image(url=str(user.display_avatar))
         await interaction.send(embed=embed)
 
-    # TODO: REWRITE THIS
+    async def send_processing_message(self, interaction, action, role):
+        message = await interaction.send(embed=disnake.Embed(
+            title=f"<a:loading:1168599537682755584> Please wait...",
+            description=f"{action} {role.mention} to all members in this server.\n"
+                        f"Please do not delete this message until the process is completed.",
+            color=0x2F3236
+        ).set_footer(text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
+        return message
 
-    # @commands.slash_command(
-    #     name="add-roles",
-    #     description="Add a specific role to all users"
-    # )
-    # async def addroles(
-    #         self, interaction: disnake.MessageCommandInteraction,
-    #         role: disnake.Role = commands.Param(
-    #             name="role",
-    #             description="The role to add to all users",
-    #             required=True
-    #         )
-    # ):
-    #     total_members = len(interaction.guild.members)
-    #     failed_members = []
-    #
-    #     if not role.permissions.administrator:
-    #         msg = await interaction.send(embed=disnake.Embed(
-    #             title=f"<a:loading:1168599537682755584> Please wait...",
-    #             description=f"Adding {role.mention} to **{total_members}** members.\n"
-    #                         f"Please do not delete this message, until the proccess is done.",
-    #             color=0x2F3236
-    #         ).set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
-    #
-    #         for member in interaction.guild.members:
-    #             try:
-    #                 await member.add_roles(role)
-    #             except disnake.Forbidden:
-    #                 failed_members.append(member)
-    #
-    #         if failed_members:
-    #             failed_count = len(failed_members)
-    #             await msg.edit(embed=disnake.Embed(
-    #                 description=f"Successfully added role to **{total_members - failed_count}/{total_members}** members. "
-    #                             f"Failed to add role to **{failed_count}** members.",
-    #                 color=0x2F3236
-    #             ).set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
-    #         else:
-    #             await msg.edit(embed=disnake.Embed(
-    #                 description=f"Successfully added role to all **{total_members}** members.",
-    #                 color=0x2F3236
-    #             ).set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
-    #     else:
-    #         await interaction.send(embed=disnake.Embed(
-    #             description=f"<a:error:1168599839899144253> | Sorry, this role has administrator permissions,"
-    #                         f"so I can't give it to all members",
-    #             color=0xFF0000
-    #         ))
-    #
-    # @commands.slash_command(
-    #     name="remove-roles",
-    #     description="Remove a specific role from all users"
-    # )
-    # async def removeroles(
-    #         self, interaction: disnake.MessageCommandInteraction,
-    #         role: disnake.Role = commands.Param(
-    #             name="role",
-    #             description="The role to remove from all users",
-    #             required=True
-    #         )
-    # ):
-    #     total_members = len(interaction.guild.members)
-    #     failed_members = []
-    #
-    #     if not role.permissions.administrator:
-    #         msg = await interaction.send(embed=disnake.Embed(
-    #             title=f"<a:loading:1168599537682755584> Please wait...",
-    #             description=f"Removing {role.mention} from **{total_members}** members.\n"
-    #                         f"Please do not delete this message, until the proccess is done.",
-    #             color=0x2F3236
-    #         ).set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
-    #
-    #         for member in interaction.guild.members:
-    #             try:
-    #                 await member.remove_roles(role)
-    #             except disnake.Forbidden:
-    #                 failed_members.append(member)
-    #
-    #         if failed_members:
-    #             failed_count = len(failed_members)
-    #             await msg.edit(embed=disnake.Embed(
-    #                 description=f"Successfully removed role from **{total_members - failed_count}/{total_members}** members. "
-    #                             f"Failed to remove role from **{failed_count}** members.",
-    #                 color=0x2F3236
-    #             ).set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
-    #         else:
-    #             await msg.edit(embed=disnake.Embed(
-    #                 description=f"Successfully removed role from all **{total_members}** members.",
-    #                 color=0x2F3236
-    #             ).set_footer(text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
-    #     else:
-    #         await interaction.send(embed=disnake.Embed(
-    #             description=f"<a:error:1168599839899144253> | Sorry, this role has administrator permissions,"
-    #                         f"so I can't remove it from all members",
-    #             color=0xFF0000
-    #         ))
+    async def process_role_action(self, interaction, role, action_func, action_str):
+        total_members = len(interaction.guild.members)
+        failed_members = []
+
+        if not role.permissions.administrator:
+            processing_message = await self.send_processing_message(interaction, action_str, role)
+
+            for member in interaction.guild.members:
+                try:
+                    await action_func(member, role)
+                except disnake.Forbidden:
+                    failed_members.append(member)
+
+            if failed_members:
+                failed_count = len(failed_members)
+                await processing_message.edit(embed=disnake.Embed(
+                    description=f"Successfully {action_str} role for "
+                                f"**{total_members - failed_count}/{total_members}** members. "
+                                f"Failed to {action_str} role for **{failed_count}** members.",
+                    color=0x2F3236
+                ).set_footer(text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
+            else:
+                await processing_message.edit(embed=disnake.Embed(
+                    description=f"Successfully {action_str} role for all **{total_members}** members.",
+                    color=0x2F3236
+                ).set_footer(text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
+        else:
+            await interaction.send(embed=disnake.Embed(
+                description=f"<a:error:1168599839899144253> | Sorry, this role has administrator permissions, "
+                            f"so I can't {action_str} it to all members.",
+                color=0xFF0000
+            ))
+
+    @commands.slash_command(
+        name="add-roles",
+        description="Add a specific role to all users"
+    )
+    async def add_roles(self, interaction: disnake.MessageCommandInteraction,
+                        role: disnake.Role = commands.Param(
+                            name="role",
+                            description="The role to add to all users",
+                            required=True
+                        )):
+        await self.process_role_action(interaction, role, disnake.Member.add_roles, "Adding")
+
+    @commands.slash_command(
+        name="remove-roles",
+        description="Remove a specific role from all users"
+    )
+    async def remove_roles(self, interaction: disnake.MessageCommandInteraction,
+                           role: disnake.Role = commands.Param(
+                               name="role",
+                               description="The role to remove from all users",
+                               required=True
+                           )):
+        await self.process_role_action(interaction, role, disnake.Member.remove_roles, "Removing")
 
     @commands.slash_command(
         name="lock", description="Lock the current channel for everyone"

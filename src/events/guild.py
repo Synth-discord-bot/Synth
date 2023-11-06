@@ -16,7 +16,7 @@ class EventGuild(commands.Cog):
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: disnake.Guild):
-        embed = disnake.Embed(title="Synth | Joined Guild", color=0x2F3136)
+        embed = disnake.Embed(title="Joined Guild", color=0x2F3136)
         embed.add_field(
             name="Guild", value=f"`{guild.name}` / `{guild.id}`", inline=False
         )
@@ -71,7 +71,7 @@ Finally, if you have any issues with the bot, you can take a look at the website
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild: disnake.Guild):
-        embed = disnake.Embed(title="Synth | Removed Guild", color=0x2F3136)
+        embed = disnake.Embed(title="Left Guild", color=0x2F3136)
         embed.add_field(
             name="Guild", value=f"`{guild.name}` / `{guild.id}`", inline=False
         )

@@ -18,25 +18,26 @@ class Buttons(disnake.ui.View):
         self.voices = voices
         self.channel = channel
 
-    @disnake.ui.button(label="🖊")
+    @disnake.ui.button(emoji="<:store:1169690541986959464>")
     async def pen_callback(
         self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         await interaction.response.send_message(
-            content="Напишите новое название комнаты", ephemeral=True
+            content="Enter the new channel name:", ephemeral=True
         )
         msg = await self.bot.wait_for(
             "message", check=lambda x: x.author == interaction.author, timeout=15
         )
         await self.channel.edit(name=msg.content)
         await msg.delete()
+        await interaction.delete_original_message()
 
-    @disnake.ui.button(label="👥")
+    @disnake.ui.button(emoji="<:members:1169684583369949285>")
     async def _users(
         self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         await interaction.response.send_message(
-            content="Введите лимит (например: 9)", ephemeral=True
+            content="Enter the new channel limit:", ephemeral=True
         )
         msg = await self.bot.wait_for(
             "message", check=lambda x: x.author == interaction.author, timeout=15
@@ -44,17 +45,18 @@ class Buttons(disnake.ui.View):
         if msg.content.isdigit():
             await self.channel.edit(user_limit=int(msg.content))
         await msg.delete()
+        await interaction.delete_original_message()
 
-    @disnake.ui.button(label="🕵️")
+    @disnake.ui.button(emoji="<:created_at:1169684592006017034>️")
     async def _unlock_slot(
         self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         await self.channel.edit(user_limit=0)
         await interaction.response.send_message(
-            content="Успешно убрал лимит для входа в эту комнату", ephemeral=True
+            content="Successfully removed the user limit for this channel.", ephemeral=True
         )
 
-    @disnake.ui.button(label="🔒")
+    @disnake.ui.button(emoji="<:kick:1170712514288435271>")
     async def _lock(
         self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
@@ -62,24 +64,24 @@ class Buttons(disnake.ui.View):
             interaction.guild.default_role, connect=False
         )
         await interaction.response.send_message(
-            content="Успешно закрыл доступ для всех участников", ephemeral=True
+            content="Successfully locked this channel for everyone.", ephemeral=True
         )
 
-    @disnake.ui.button(label="🔓")
+    @disnake.ui.button(emoji="<:invite:1169690514430382160>")
     async def _unlock(
         self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         await self.channel.set_permissions(interaction.guild.default_role, connect=True)
         await interaction.response.send_message(
-            content="Успешно открыл доступ для всех участников", ephemeral=True
+            content="Successfully unlocked this channel for everyone.", ephemeral=True
         )
 
-    @disnake.ui.button(label="🚪")
+    @disnake.ui.button(emoji="<:ban:1170712517308317756>")
     async def _door(
         self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         await interaction.response.send_message(
-            content="Упомяните пользователей, для того, чтобы выгнать их",
+            content="Mention users, for disconnecting:",
             ephemeral=True,
         )
         msg = await self.bot.wait_for(
@@ -91,13 +93,14 @@ class Buttons(disnake.ui.View):
             if user.voice.channel == self.channel:
                 await user.move_to(channel=None)
         await msg.delete()
+        await interaction.delete_original_message()
 
-    @disnake.ui.button(label="✔")
+    @disnake.ui.button(emoji="<:allow:1171111639664300143>")
     async def _access(
         self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         await interaction.response.send_message(
-            content="Упомяните пользователей, которым разрешить вход в комнату",
+            content="Mention users, you allow to join the room:",
             ephemeral=True,
         )
         msg = await self.bot.wait_for(
@@ -108,13 +111,14 @@ class Buttons(disnake.ui.View):
         for user in msg.mentions:
             await self.channel.set_permissions(user, connect=True)
         await msg.delete()
+        await interaction.delete_original_message()
 
-    @disnake.ui.button(label="❌")
+    @disnake.ui.button(emoji="<:disallow:1171111636573093929>")
     async def _do_not_access(
         self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         await interaction.response.send_message(
-            content="Упомяните пользователей, которым не разрешать входить в эту комнату",
+            content="Mention users, you don't allow to join the room:",
             ephemeral=True,
         )
         msg = await self.bot.wait_for(
@@ -125,13 +129,14 @@ class Buttons(disnake.ui.View):
         for user in msg.mentions:
             await self.channel.set_permissions(user, connect=False)
         await msg.delete()
+        await interaction.delete_original_message()
 
-    @disnake.ui.button(label="🔉")
+    @disnake.ui.button(emoji="<:unmute:1169690521472614500>")
     async def _unmute(
         self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         await interaction.response.send_message(
-            content="Упомяните пользователей, которых надо размутить", ephemeral=True
+            content="Mention users, you want to unmute in te room:", ephemeral=True
         )
         msg = await self.bot.wait_for(
             "message",
@@ -141,13 +146,14 @@ class Buttons(disnake.ui.View):
         for u in msg.mentions:
             await self.channel.set_permissions(u, speak=True)
         await msg.delete()
+        await interaction.delete_original_message()
 
-    @disnake.ui.button(label="🔇")
+    @disnake.ui.button(emoji="<:mute:1170712518725992529>")
     async def _mute(
         self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         await interaction.response.send_message(
-            content="Упомяните пользователей, которых надо замутить", ephemeral=True
+            content="Mention users, you want to mute in te room:", ephemeral=True
         )
         msg = await self.bot.wait_for(
             "message",
@@ -157,13 +163,14 @@ class Buttons(disnake.ui.View):
         for u in msg.mentions:
             await self.channel.set_permissions(u, speak=False)
         await msg.delete()
+        await interaction.delete_original_message()
 
-    @disnake.ui.button(label="👑")
+    @disnake.ui.button(emoji="<:owner:1169684595697004616>")
     async def _takeown(
         self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         await interaction.response.send_message(
-            content="Укажите участника, которого сделать владельцем комнаты",
+            content="Enter te user, you want to transfer te ownership:",
             ephemeral=True,
         )
         msg = await self.bot.wait_for(
@@ -177,7 +184,7 @@ class Buttons(disnake.ui.View):
             voice_channel=self.channel,
             member=msg.mentions[0],
         )
-        await interaction.edit_original_response("Успешно...")
+        await interaction.edit_original_response("Successfully...")
 
     async def interaction_check(self, interaction: disnake.MessageInteraction) -> bool:
         if info := self.voices.get_items_in_cache({"guild_id": self.channel.guild.id}):
@@ -185,7 +192,7 @@ class Buttons(disnake.ui.View):
                 if channel.get("channel_id") == self.channel.id:
                     if interaction.author.id != channel.get("owner_id"):
                         await interaction.response.send_message(
-                            "Вы не можете использовать эти кнопки!", ephemeral=True
+                            "You are not allowed to use this buttons!", ephemeral=True
                         )
                         return False
             return True
@@ -246,17 +253,17 @@ class PrivateRoom(commands.Cog):
                     colour=0x2F3136,
                 )
                 embed.description += """\n
-                            🖊 - edit channel name
-                            👥 - change user count
-                            🕵️ - Remove the slot limit
-                            🔒 - close the room to everyone
-                            🔓 - open the room to everyone
-                            🚪 - kick user from the room
-                            ✔ - allow user access to the room
-                            ❌ - disallow user access to the room
-                            🔉 - unmute user
-                            🔇 - mute user
-                            👑 - transfer ownership of the room
+                            <:store:1169690541986959464> - edit channel name
+                            <:members:1169684583369949285> - change user count
+                            <:created_at:1169684592006017034> - Remove the slot limit
+                            <:invite:1169690514430382160> - open the room to everyone
+                            <:kick:1170712514288435271> - close the room to everyone
+                            <:ban:1170712517308317756> - kick user from the room
+                            <:allow:1171111639664300143> - allow user access to the room
+                            <:disallow:1171111636573093929> - disallow user access to the room
+                            <:mute:1170712518725992529> - mute user
+                            <:unmute:1169690521472614500> - unmute user
+                            <:owner:1169684595697004616> - transfer ownership of the room
                                             """
                 view = Buttons(bot=self.bot, author=member, channel=channel)
                 await channel.send(content=member.mention, embed=embed, view=view)
