@@ -39,20 +39,19 @@ class BaseDatabase:
 
         global id_to_update
 
-        if isinstance(_id, dict):
-            if _ := _id.get("_id", None):
-                id_to_update = "_id"
-                _id.pop("_id")
-            elif _ := _id.get("guild_id", None):
-                id_to_update = "guild_id"
-                _id.pop("guild_id")
-            elif _ := _id.get("id", None):
-                id_to_update = "id"
-                _id.pop("id")
-        else:
-            id_to_update = _id
+        id_to_update = (
+            _id.get("guild_id", None)
+            or _id.get("id", None)
+            or _id.get("_id", None)
+            or _id
+        )
 
-        self.collection_cache.setdefault(id_to_update, {}).update(new_value)
+        # self.collection_cache.setdefault(id_to_update, {}).update(new_value)
+        if self.collection_cache.get(id_to_update, None):
+            self.collection_cache[id_to_update] = _id
+        else:
+            self.collection_cache.get(id_to_update).update(new_value)
+
         return
 
     def _remove_from_cache(self, _id: Union[Dict[str, Any], int]) -> Any:
@@ -70,7 +69,6 @@ class BaseDatabase:
             or _id
         )
 
-        print(self.collection_cache)
         del self.collection_cache[id_to_delete]
         return
 
@@ -87,8 +85,8 @@ class BaseDatabase:
         return result
 
     def get_items_in_cache(
-        self, query: Union[Dict[Any, Any], int, str]
-    ) -> List[Dict[int, Dict[str, Any]]]:
+        self, query: Dict[Any, Any], to_return: str = None
+    ) -> Union[List[Dict[Union[int, str], Dict[str, Any]]], Dict[str, Any]]:
         """
         Get items from cache by search query
 
@@ -96,28 +94,66 @@ class BaseDatabase:
             query (Dict[int, Any]): Query to search
 
         Returns:
-            List[Dict[int, Dict[str, Any]]]: List of available items
+            List[Dict[int, Dict[str, Any]]]: List of items in query
         """
-        result = []
+        if _id := query.get("id", None):
+            query.pop("id")
+        elif _id := query.get("guild_id", None):
+            query.pop("guild_id")
+        elif _id := query.get("_id", None):
+            query.pop("_id")
 
-        for key, value in self.collection_cache.items():
-            if isinstance(query, (str, int)):
-                if query in value.values() or query in value.keys():
-                    result.append({key: value})
-            else:
-                for inner_query in query.values():
-                    if isinstance(inner_query, dict) and all(
-                        k in value and value[k] == v for k, v in inner_query.items()
-                    ):
-                        result.append({key: value})
-                        break
-                    elif inner_query in value.values() or inner_query in value.keys():
-                        result.append({key: value})
-                        break
+        if result := self.collection_cache.get(_id, {}):
+            if to_return:
+                return result.get(to_return, None)
+            return result
 
-        return result
+        # for key, value in self.collection_cache.items():
+        #     if isinstance(query, (str, int)):
+        #         if query in value.values() or query in value.keys():
+        #             result.append({key: value})
+        #         else:
+        #             if isinstance(query, dict):
+        #                 for sub_key, sub_value in value.items():
+        #                     if query in sub_value.values() or query in sub_value.keys():
+        #                         result.append({key: value})
+        #                         break
+        #             else:
+        #                 for sub_value in value:
+        #                     print(sub_value)
+        #                     print(query)
+        #                     if isinstance(query, dict):
+        #                         print(sub_value.keys(), sub_value)
+        #                         if query in sub_value.values() or query in sub_value.keys():
+        #                             result.append({key: value})
+        #                             break
+        #                     elif isinstance(query, (str, int, bool)):
+        #                         if query == sub_value:
+        #                             result.append({key: value})
+        #                             break
+        #                     elif isinstance(query, list):
+        #                         for sub_sub_value in sub_value:
+        #                             if query == sub_sub_value:
+        #                                 result.append({key: value})
+        #                                 break
+        # if query in sub_value
 
-    async def find_one_from_cache(self, value: Any) -> Any:
+        # for key, value in self.collection_cache.items():
+        #     if isinstance(query, (str, int)):
+        #         if query in value.values() or query in value.keys():
+        #             result.append({key: value})
+        #     else:
+        #         for inner_query in query.values():
+        #             if isinstance(inner_query, dict) and all(
+        #                 k in value and value[k] == v for k, v in inner_query.items()
+        #             ):
+        #                 result.append({key: value})
+        #                 break
+        #             elif inner_query in value.values() or inner_query in value.keys():
+        #                 result.append({key: value})
+        #                 break
+
+    async def find_one_from_cache(self, value: Dict[str, Any]) -> Any:
         results = self.get_items_in_cache(value)
         return results[0] if results else None
 
@@ -152,9 +188,9 @@ class BaseDatabase:
         logging.info(f"[{self.name}]: Found {len(results)} items in database")
         for data in results:
             _id = (
-                data.get("_id", None)
-                or data.get("guild_id", None)
+                data.get("guild_id", None)
                 or data.get("id", None)
+                or data.get("_id", None)
             )
             self.collection_cache[_id] = data
 

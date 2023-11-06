@@ -6,7 +6,7 @@ from disnake import Member
 from .base import BaseDatabase
 
 
-class Economy(BaseDatabase):
+class EconomyDatabase(BaseDatabase):
     def __init__(self, database_name: str) -> None:
         super().__init__(database_name=database_name)
 

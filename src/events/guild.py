@@ -55,8 +55,11 @@ Finally, if you have any issues with the bot, you can take a look at the website
             )
             .set_thumbnail(url=self.bot.user.avatar)
             .set_image(
-                url="https://cdn.discordapp.com/attachments/1167873742240755843/1168533333010022410/"
-                "synthbanner.png?ex=65521c78&is=653fa778&hm=5481d9be9b4f7e39f60d6ac52677de9b44b2236ceaae8b94c5cfd35348f6167a&"
+                url=(
+                    "https://cdn.discordapp.com/attachments/1167873742240755843/1168533333010022410/"
+                    "synthbanner.png?ex=65521c78&is=653fa778&hm"
+                    "=5481d9be9b4f7e39f60d6ac52677de9b44b2236ceaae8b94c5cfd35348f6167a&"
+                )
             )
         )
 
@@ -84,7 +87,7 @@ Finally, if you have any issues with the bot, you can take a look at the website
             inline=False,
         )
 
-        channel = await self.bot.fetch_channel(getenv("BOT_LOGS", "id"))
+        channel = await self.bot.fetch_channel(int(getenv("BOT_LOGS", "id")))
         await channel.send(embed=embed)
 
     @commands.Cog.listener()
@@ -112,14 +115,21 @@ Finally, if you have any issues with the bot, you can take a look at the website
 
         embed.add_field(name="Type of channel", value=channel_type, inline=False)
         embed.add_field(
+            name="Created at",
+            value=disnake.utils.format_dt(channel.created_at, style="f"),
+        )
+        embed.add_field(
             name="Deleted at",
             value=disnake.utils.format_dt(datetime.now(), style="f"),
             inline=True,
         )
-        embed.add_field(name="Channel", value=f"{channel.name}")
+        embed.add_field(name="Channel", value=channel.name)
+        embed.add_field(name="ID", value=channel.id)
+        embed.add_field(name="Position", value=channel.position)
+        embed.add_field(name="Category", value=channel.category or "No Category")
 
-        channel = channel.guild.get_channel(int(logger_channel))
-        await channel.send(embed=embed)
+        if channel := channel.guild.get_channel(int(logger_channel)):
+            await channel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_guild_channel_create(self, channel: disnake.abc.GuildChannel) -> None:
@@ -147,10 +157,16 @@ Finally, if you have any issues with the bot, you can take a look at the website
         embed.add_field(name="Type of channel", value=channel_type, inline=False)
         embed.add_field(
             name="Created at",
+            value=disnake.utils.format_dt(channel.created_at, style="f"),
+        )
+        embed.add_field(
+            name="Deleted at",
             value=disnake.utils.format_dt(datetime.now(), style="f"),
             inline=True,
         )
         embed.add_field(name="Channel", value=f"{channel.mention} (ID: `{channel.id}`)")
+        embed.add_field(name="Position", value=channel.position)
+        embed.add_field(name="Category", value=channel.category or "No Category")
 
         channel = channel.guild.get_channel(int(logger_channel))
         await channel.send(embed=embed)
@@ -204,10 +220,6 @@ Finally, if you have any issues with the bot, you can take a look at the website
                     after_channel_type = "Unknown Type"
         else:
             before_channel_type = after_channel_type = before.type
-
-        embed.add_field(
-            name="Before type of channel", value=before_channel_type, inline=False
-        )
         embed.add_field(
             name="Edited at",
             value=disnake.utils.format_dt(datetime.now(), style="f"),
@@ -217,9 +229,15 @@ Finally, if you have any issues with the bot, you can take a look at the website
         value = []
         if before.name != after.name:
             value.append(f"New name: `{after.name}`\nOld name: `{before.name}`\n")
-        if before.topic != after.topic:  # type: ignore
-            value.append(f"Old topic: `{before.topic}`\nNew topic: `{after.topic}`\n")  # type: ignore
-        value.append(f"After type of channel: **{after_channel_type}**")
+
+        if isinstance(before, disnake.TextChannel):
+            if before.topic != after.topic:  # type: ignore
+                value.append(f"Old topic: `{before.topic}`\nNew topic: `{after.topic}`\n")  # type: ignore
+
+        if before.type != after.type:
+            value.append(
+                f"Before type of channel: **{before_channel_type}**\nAfter type of channel: **{after_channel_type}**\n"
+            )
         embed.set_field_at(
             field_index,
             name="Additional information",
