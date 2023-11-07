@@ -53,8 +53,8 @@ async def is_command_disabled(message: Message, command: str) -> bool:
 
 
 async def check_channel(
-        channel: TextChannel,
-        interaction: Union[MessageCommandInteraction, commands.Context],
+    channel: TextChannel,
+    interaction: Union[MessageCommandInteraction, commands.Context],
 ) -> bool:
     await interaction.send(
         f"Checking access to channel {channel.mention}...", ephemeral=True
@@ -153,13 +153,15 @@ async def str_to_seconds(input_string):
         "o": 2592000,
         "м": 2592000,
         "y": 31536000,
-        "р": 31536000
+        "р": 31536000,
     }
 
-    input_string = str(input_string).lower().strip('-').replace('мес', 'е').replace('mo', 'o')
+    input_string = (
+        str(input_string).lower().strip("-").replace("мес", "е").replace("mo", "o")
+    )
 
     total_seconds = 0
-    matches = re.findall(r'(\d+)\s*([a-zA-Zа-яА-Я]+)', input_string)
+    matches = re.findall(r"(\d+)\s*([a-zA-Zа-яА-Я]+)", input_string)
 
     for number, unit in matches:
         multiplier = units.get(unit, 1)
@@ -172,7 +174,18 @@ async def str_to_seconds(input_string):
 
 def word_correct(number, p1, p2, p3):
     ld = str(number)[-2:]
-    cases = {"0": p3, "1": p1, "2": p2, "3": p2, "4": p2, "5": p3, "6": p3, "7": p3, "8": p3, "9": p3}
+    cases = {
+        "0": p3,
+        "1": p1,
+        "2": p2,
+        "3": p2,
+        "4": p2,
+        "5": p3,
+        "6": p3,
+        "7": p3,
+        "8": p3,
+        "9": p3,
+    }
     if ld[0] == "1" and len(ld) > 1:
         case = p3
     else:
@@ -184,24 +197,31 @@ def word_correct(number, p1, p2, p3):
 
 
 async def hms(sec):
-    time_units = [(604800, "week", "weeks"), (86400, "day", "days"), (3600, "hour", "hours"), (60, "minute", "minutes"),
-                  (1, "second", "seconds")]
+    time_units = [
+        (604800, "week", "weeks"),
+        (86400, "day", "days"),
+        (3600, "hour", "hours"),
+        (60, "minute", "minutes"),
+        (1, "second", "seconds"),
+    ]
 
     for unit, singular, plural in time_units:
         if sec >= unit:
             value = int(sec // unit)
             word = word_correct(value, singular, plural, plural)
-            display = f'{value} {word}'
+            display = f"{value} {word}"
             sec %= unit
             if sec > 0:
-                display += ' ' + await hms(sec)
+                display += " " + await hms(sec)
             return display
 
     ms = int(sec * 1000)
     return f'{ms} {word_correct(ms, "millisecond", "milliseconds", "milliseconds")}'
 
 
-async def common_checks(ctx, member, check_bot=False, for_unban=False, for_mute=False, str_time=None):
+async def common_checks(
+    ctx, member, check_bot=False, for_unban=False, for_mute=False, str_time=None
+):
     ErrorEmbed = Embed(color=disnake.Colour.red())
 
     if isinstance(member, disnake.User):
@@ -213,33 +233,62 @@ async def common_checks(ctx, member, check_bot=False, for_unban=False, for_mute=
         return False, ErrorEmbed
 
     elif member == ctx.author:
-        ErrorEmbed.description = f"{emoji('error')} | You can't perform this action on yourself."
+        ErrorEmbed.description = (
+            f"{emoji('error')} | You can't perform this action on yourself."
+        )
         return False, ErrorEmbed
 
-    elif not for_unban and isinstance(member, disnake.Member) and check_bot and member.bot:
-        ErrorEmbed.description = f"{emoji('error')} | You can't perform this action on a bot."
+    elif (
+        not for_unban
+        and isinstance(member, disnake.Member)
+        and check_bot
+        and member.bot
+    ):
+        ErrorEmbed.description = (
+            f"{emoji('error')} | You can't perform this action on a bot."
+        )
         return False, ErrorEmbed
 
-    elif not for_unban and isinstance(member, disnake.Member) and member.top_role >= ctx.author.top_role:
-        ErrorEmbed.description = f"{emoji('error')} | Your role is not higher than {member.mention}'s role."
+    elif (
+        not for_unban
+        and isinstance(member, disnake.Member)
+        and member.top_role >= ctx.author.top_role
+    ):
+        ErrorEmbed.description = (
+            f"{emoji('error')} | Your role is not higher than {member.mention}'s role."
+        )
         return False, ErrorEmbed
 
-    elif not for_unban and isinstance(member, disnake.Member) and member.id == ctx.bot.user.id:
-        ErrorEmbed.description = f"{emoji('error')} | You can't perform this action on the bot."
+    elif (
+        not for_unban
+        and isinstance(member, disnake.Member)
+        and member.id == ctx.bot.user.id
+    ):
+        ErrorEmbed.description = (
+            f"{emoji('error')} | You can't perform this action on the bot."
+        )
         return False, ErrorEmbed
 
-    elif check_bot and isinstance(member, disnake.Member) and member.top_role >= ctx.guild.get_member(
-            ctx.bot.user.id).top_role and not ctx.author.guild.owner and not for_unban:
+    elif (
+        check_bot
+        and isinstance(member, disnake.Member)
+        and member.top_role >= ctx.guild.get_member(ctx.bot.user.id).top_role
+        and not ctx.author.guild.owner
+        and not for_unban
+    ):
         ErrorEmbed.description = f"{emoji('error')} | {member.mention}'s role is higher than mine, I can't perform this action."
         return False, ErrorEmbed
 
     elif for_mute and str_time > 2419200:  # 28 days in seconds
-        ErrorEmbed.description = f"{emoji('error')} | Mute time cannot be more than 28 days."
+        ErrorEmbed.description = (
+            f"{emoji('error')} | Mute time cannot be more than 28 days."
+        )
         return False, ErrorEmbed
 
     elif for_mute and str_time < 60:
-        ErrorEmbed.description = f"{emoji('error')} | Mute time cannot be less then 1 minute."
+        ErrorEmbed.description = (
+            f"{emoji('error')} | Mute time cannot be less then 1 minute."
+        )
         return False, ErrorEmbed
 
     return True, None
-

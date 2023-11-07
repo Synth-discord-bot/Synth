@@ -53,7 +53,8 @@ class Buttons(disnake.ui.View):
     ):
         await self.channel.edit(user_limit=0)
         await interaction.response.send_message(
-            content="Successfully removed the user limit for this channel.", ephemeral=True
+            content="Successfully removed the user limit for this channel.",
+            ephemeral=True,
         )
 
     @disnake.ui.button(emoji="<:kick:1170712514288435271>")

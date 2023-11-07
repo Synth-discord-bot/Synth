@@ -27,9 +27,7 @@ class EventMessages(commands.Cog):
 
         files = []
         embeds = []
-        embed = disnake.Embed(
-            color=0x2F3136, title="Deleted Message", description=None
-        )
+        embed = disnake.Embed(color=0x2F3136, title="Deleted Message", description=None)
         embed.add_field(name="Additional information", value="No information")
         field_dop_index = next(
             index

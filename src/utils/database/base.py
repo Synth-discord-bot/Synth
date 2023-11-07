@@ -47,10 +47,12 @@ class BaseDatabase:
         )
 
         # self.collection_cache.setdefault(id_to_update, {}).update(new_value)
-        if self.collection_cache.get(id_to_update, None):
+        if self.collection_cache.get(id_to_update, None) is None:
             self.collection_cache[id_to_update] = _id
         else:
-            self.collection_cache.get(id_to_update).update(new_value)
+            self.collection_cache.get(id_to_update, None).update(new_value)
+
+        print(self.collection_cache)
 
         return
 
@@ -96,10 +98,10 @@ class BaseDatabase:
         Returns:
             List[Dict[int, Dict[str, Any]]]: List of items in query
         """
-        if _id := query.get("id", None):
-            query.pop("id")
-        elif _id := query.get("guild_id", None):
+        if _id := query.get("guild_id", None):
             query.pop("guild_id")
+        elif _id := query.get("id", None):
+            query.pop("id")
         elif _id := query.get("_id", None):
             query.pop("_id")
 
@@ -124,11 +126,13 @@ class BaseDatabase:
         # try to search in cache
         results = self.get_items_in_cache(value)
         if results:
-            if len(results[0].get(1, [])) >= 1:
-                return results[0].get(1, []) if return_first_result else results
+            print(results)
+            if len(results) >= 1:
+                return results if return_first_result else results
 
         # if not found in cache, search in a database
         results = await self.get_items_in_db(value, to_list=True)
+        print(results)
         if results:
             return results[0] if return_first_result else results
 
@@ -152,6 +156,7 @@ class BaseDatabase:
     async def update_db(self, data: Dict[str, Any], new_value: Dict[str, Any]) -> None:
         await self.collection.update_one(data, {"$set": new_value}, upsert=True)
         old_data = await self.find_one_from_db(data)
+        print(old_data)
         self._update_cache(_id=old_data, new_value=new_value)  # type: ignore
 
     async def remove_from_db(self, data: Dict[str, Any]) -> None:
