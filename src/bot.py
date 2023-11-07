@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import traceback
 
 import disnake
 from disnake.ext import commands
@@ -73,10 +74,8 @@ class Bot(commands.Bot):
                     commands.ExtensionFailed,
                     commands.ExtensionError,
                 ) as e:
-                    exc_type = e.__class__.__name__
-                    exc_line = sys.exc_info()[2].tb_lineno
                     logging.error(
-                        f"Failed to load {extension}! {exc_type}: {str(e)}, line {exc_line}"
+                        f"\n\nFailed to load {extension}!\n{traceback.print_exception(e)}"
                     )
                     continue
                 finally:

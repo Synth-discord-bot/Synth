@@ -12,13 +12,6 @@ from src.utils.misc import check_if_user_is_developer, emoji
 startup = datetime.datetime.now()
 
 
-def test_cd(ctx: commands.Context):
-    if ctx.author.roles in [ctx.guild.get_role(1162802393449234492)]:
-        return 10.0
-    else:
-        return 5.0
-
-
 class Utility(commands.Cog):
     """Utility commands"""
 
@@ -46,9 +39,6 @@ class Utility(commands.Cog):
         }
 
     @commands.command()
-    @commands.dynamic_cooldown(
-        1, test_cd(ctx=commands.Context), commands.BucketType.user
-    )
     async def test(self, ctx: commands.Context):
         await ctx.send(f"Test emoji: ")
 

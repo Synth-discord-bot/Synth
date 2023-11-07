@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Any
 
 import disnake
 from disnake import (
@@ -20,12 +20,12 @@ from src.utils import economy, EconomyDatabase as EcoDB
 
 class Buttons(ui.View):
     def __init__(
-        self,
-        ctx: MessageCommandInteraction,
-        bot: commands.Bot,
-        receiver: Member,
-        money: int,
-        economy_data: EcoDB,
+            self,
+            ctx: MessageCommandInteraction,
+            bot: commands.Bot,
+            receiver: Member,
+            money: int,
+            economy_data: EcoDB,
     ) -> None:
         super().__init__(timeout=20)
         self.ctx = ctx
@@ -128,9 +128,9 @@ class Economy(commands.Cog):
         description=Localized("bank", key="BANK_COMMAND_DESC"),
     )
     async def bank(
-        self,
-        interaction: disnake.MessageCommandInteraction,
-        money: int | str = "all",
+            self,
+            interaction: disnake.MessageCommandInteraction,
+            money: Any = "all",
     ) -> None:
         """Send money to the bank
 
@@ -196,10 +196,10 @@ class Economy(commands.Cog):
         description=Localized("", key="PAY_COMMAND_DESC"),
     )
     async def pay(
-        self,
-        interaction: disnake.MessageCommandInteraction,
-        money: int = 0,
-        user: Union[int, str, Member] = None,
+            self,
+            interaction: disnake.MessageCommandInteraction,
+            user: disnake.Member,
+            money: int = 0,
     ):
         if user is None:
             return await interaction.send("Please specify the user (mention or id)")
@@ -228,17 +228,12 @@ class Economy(commands.Cog):
                 ).set_footer(text=f"Command executed by {interaction.author}"),
             )
         else:
-            res = (
-                user.id
-                if isinstance(user, Member)
-                else await MemberConverter().convert(interaction, str(user))
-            )
             await interaction.send(
-                f"Are you sure you want transfer {money} 🪙 to {res.mention}?",
+                f"Are you sure you want transfer {money} 🪙 to {user.mention}?",
                 view=Buttons(
                     ctx=interaction,
                     bot=self.bot,
-                    receiver=res,
+                    receiver=user,
                     money=money,
                     economy_data=self.economy,
                 ),
