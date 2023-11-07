@@ -170,5 +170,3 @@ class CustomHelpCommand(commands.MinimalHelpCommand):
         await self.get_destination().send(embed=embed)
 
     send_group_help = send_command_help
-
-

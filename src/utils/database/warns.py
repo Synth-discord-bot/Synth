@@ -10,7 +10,13 @@ class WarnDatabase(BaseDatabase):
     def __init__(self, database_name: str) -> None:
         super().__init__(database_name=database_name)
 
-    async def add_warn(self, guild_id: int, administrator: disnake.Member, user: disnake.Member, reason: str) -> int:
+    async def add_warn(
+        self,
+        guild_id: int,
+        administrator: disnake.Member,
+        user: disnake.Member,
+        reason: str,
+    ) -> int:
         """
         Add a warning for a user in the database.
         :param administrator: Administrator who gave the warn
@@ -25,7 +31,7 @@ class WarnDatabase(BaseDatabase):
         if not warns_data:
             warns_data = {
                 "guild_id": guild_id,
-                "warnings": {}  # A dictionary to store user warnings
+                "warnings": {},  # A dictionary to store user warnings
             }
 
         # Check if the user already has warnings, or initialize an empty list
@@ -38,7 +44,7 @@ class WarnDatabase(BaseDatabase):
         new_case = {
             "moderator_id": administrator.id,
             "reason": reason,
-            "timestamp": timestamp
+            "timestamp": timestamp,
         }
         user_warnings.append(new_case)
 
@@ -67,16 +73,21 @@ class WarnDatabase(BaseDatabase):
         user_warnings = warns_data["warnings"].get(str(user.id), [])
         return user_warnings
 
-    async def delete_warnings(self, guild_id: int, user: Union[int, disnake.Member], amount: int) -> int | None:
+    async def delete_warnings(
+        self, guild_id: int, user: Union[int, disnake.Member], amount: int
+    ) -> int | None:
         user_id = user.id if isinstance(user, disnake.Member) else user
 
         # Fetch the existing warnings for the guild
-        warns_data = await self.find_one({"guild_id": guild_id}, return_first_result=True)
+        warns_data = await self.find_one(
+            {"guild_id": guild_id}, return_first_result=True
+        )
         if not warns_data:
             return None  # No warnings data for the guild
 
         # Check if the user has warnings, or return 0
         user_warnings = warns_data["warnings"].get(str(user_id), None)
+        print(warns_data["warnings"].get(str(user_id)))
         if not user_warnings:
             return 0
 
@@ -92,6 +103,8 @@ class WarnDatabase(BaseDatabase):
         warns_data["warnings"][str(user_id)] = user_warnings
 
         # Update the database with the modified guild data
-        await self.update_db({"guild_id": guild_id}, {"warnings": warns_data["warnings"]})
+        await self.update_db(
+            {"guild_id": guild_id}, {"warnings": warns_data["warnings"]}
+        )
 
         return len(removed_warnings)

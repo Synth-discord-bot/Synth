@@ -38,9 +38,9 @@ class Utility(commands.Cog):
             133172312: "<:synthdev:1169689479452311582>",
         }
 
-    # @commands.command()
-    # async def test(self, ctx: commands.Context):
-    #     await ctx.send(f"Test emoji: ")
+    @commands.command()
+    async def test(self, ctx: commands.Context):
+        await ctx.send(f"Test emoji: ")
 
     @commands.slash_command(
         name=Localized("user", key="USER_COMMAND_NAME"),
@@ -301,12 +301,16 @@ class Utility(commands.Cog):
         await interaction.send(embed=embed)
 
     async def send_processing_message(self, interaction, action, role):
-        message = await interaction.send(embed=disnake.Embed(
-            title=f"<a:loading:1168599537682755584> Please wait...",
-            description=f"{action} {role.mention} to all members in this server.\n"
-                        f"Please do not delete this message until the process is completed.",
-            color=0x2F3236
-        ).set_footer(text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
+        message = await interaction.send(
+            embed=disnake.Embed(
+                title=f"<a:loading:1168599537682755584> Please wait...",
+                description=f"{action} {role.mention} to all members in this server.\n"
+                f"Please do not delete this message until the process is completed.",
+                color=0x2F3236,
+            ).set_footer(
+                text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
+            )
+        )
         return message
 
     async def process_role_action(self, interaction, role, action_func, action_str):
@@ -314,7 +318,9 @@ class Utility(commands.Cog):
         failed_members = []
 
         if not role.permissions.administrator:
-            processing_message = await self.send_processing_message(interaction, action_str, role)
+            processing_message = await self.send_processing_message(
+                interaction, action_str, role
+            )
 
             for member in interaction.guild.members:
                 try:
@@ -324,45 +330,63 @@ class Utility(commands.Cog):
 
             if failed_members:
                 failed_count = len(failed_members)
-                await processing_message.edit(embed=disnake.Embed(
-                    description=f"Successfully {action_str} role for "
-                                f"**{total_members - failed_count}/{total_members}** members. "
-                                f"Failed to {action_str} role for **{failed_count}** members.",
-                    color=0x2F3236
-                ).set_footer(text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
+                await processing_message.edit(
+                    embed=disnake.Embed(
+                        description=f"Successfully {action_str} role for "
+                        f"**{total_members - failed_count}/{total_members}** members. "
+                        f"Failed to {action_str} role for **{failed_count}** members.",
+                        color=0x2F3236,
+                    ).set_footer(
+                        text="Synth © 2023 | All Rights Reserved",
+                        icon_url=self.bot.user.avatar,
+                    )
+                )
             else:
-                await processing_message.edit(embed=disnake.Embed(
-                    description=f"Successfully {action_str} role for all **{total_members}** members.",
-                    color=0x2F3236
-                ).set_footer(text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar))
+                await processing_message.edit(
+                    embed=disnake.Embed(
+                        description=f"Successfully {action_str} role for all **{total_members}** members.",
+                        color=0x2F3236,
+                    ).set_footer(
+                        text="Synth © 2023 | All Rights Reserved",
+                        icon_url=self.bot.user.avatar,
+                    )
+                )
         else:
-            await interaction.send(embed=disnake.Embed(
-                description=f"<a:error:1168599839899144253> | Sorry, this role has administrator permissions, "
-                            f"so I can't {action_str} it to all members.",
-                color=0xFF0000
-            ))
+            await interaction.send(
+                embed=disnake.Embed(
+                    description=f"<a:error:1168599839899144253> | Sorry, this role has administrator permissions, "
+                    f"so I can't {action_str} it to all members.",
+                    color=0xFF0000,
+                )
+            )
 
     @commands.slash_command(
-        name="add-roles",
-        description="Add a specific role to all users"
+        name="add-roles", description="Add a specific role to all users"
     )
-    async def add_roles(self, interaction: disnake.MessageCommandInteraction,
-                        role: disnake.Role = commands.Param(
-                            name="role",
-                            description="The role to add to all users"
-                        )):
-        await self.process_role_action(interaction, role, disnake.Member.add_roles, "Adding")
+    async def add_roles(
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        role: disnake.Role = commands.Param(
+            name="role", description="The role to add to all users"
+        ),
+    ):
+        await self.process_role_action(
+            interaction, role, disnake.Member.add_roles, "Adding"
+        )
 
     @commands.slash_command(
-        name="remove-roles",
-        description="Remove a specific role from all users"
+        name="remove-roles", description="Remove a specific role from all users"
     )
-    async def remove_roles(self, interaction: disnake.MessageCommandInteraction,
-                           role: disnake.Role = commands.Param(
-                               name="role",
-                               description="The role to remove from all users"
-                           )):
-        await self.process_role_action(interaction, role, disnake.Member.remove_roles, "Removing")
+    async def remove_roles(
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        role: disnake.Role = commands.Param(
+            name="role", description="The role to remove from all users"
+        ),
+    ):
+        await self.process_role_action(
+            interaction, role, disnake.Member.remove_roles, "Removing"
+        )
 
     @commands.slash_command(
         name="lock", description="Lock the current channel for everyone"

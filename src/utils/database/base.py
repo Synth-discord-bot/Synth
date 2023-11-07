@@ -21,6 +21,8 @@ class BaseDatabase:
             param_filter.pop("id")
         elif _id := param_filter.get("guild_id", None):
             param_filter.pop("guild_id")
+        elif _id := param_filter.get("channel_id", None):
+            param_filter.pop("channel_id")
         elif _id := param_filter.get("_id", None):
             param_filter.pop("_id")
 
@@ -47,10 +49,10 @@ class BaseDatabase:
         )
 
         # self.collection_cache.setdefault(id_to_update, {}).update(new_value)
-        if self.collection_cache.get(id_to_update, None):
+        if self.collection_cache.get(id_to_update, None) is None:
             self.collection_cache[id_to_update] = _id
         else:
-            self.collection_cache.get(id_to_update).update(new_value)
+            self.collection_cache.get(id_to_update, None).update(new_value)
 
         return
 
@@ -63,12 +65,14 @@ class BaseDatabase:
         """
 
         id_to_delete = (
-            _id.get("id", None)
+            _id.get("channel_id", None)
             or _id.get("guild_id", None)
+            or _id.get("id", None)
             or _id.get("_id", None)
             or _id
         )
 
+        print(self.collection_cache)
         del self.collection_cache[id_to_delete]
         return
 
@@ -96,10 +100,10 @@ class BaseDatabase:
         Returns:
             List[Dict[int, Dict[str, Any]]]: List of items in query
         """
-        if _id := query.get("id", None):
-            query.pop("id")
-        elif _id := query.get("guild_id", None):
+        if _id := query.get("guild_id", None):
             query.pop("guild_id")
+        elif _id := query.get("id", None):
+            query.pop("id")
         elif _id := query.get("_id", None):
             query.pop("_id")
 
@@ -124,8 +128,8 @@ class BaseDatabase:
         # try to search in cache
         results = self.get_items_in_cache(value)
         if results:
-            if len(results[0].get(1, [])) >= 1:
-                return results[0].get(1, []) if return_first_result else results
+            if len(results) >= 1:
+                return results if return_first_result else results
 
         # if not found in cache, search in a database
         results = await self.get_items_in_db(value, to_list=True)
@@ -144,6 +148,7 @@ class BaseDatabase:
         for data in results:
             _id = (
                 data.get("guild_id", None)
+                or data.get("channel_id", None)
                 or data.get("id", None)
                 or data.get("_id", None)
             )

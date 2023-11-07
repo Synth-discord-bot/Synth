@@ -6,6 +6,7 @@ from .database.logger import LoggerDatabase
 from .database.tickets import TicketDatabase
 from .database.private_rooms import PrivateRoomsDatabase
 from .database.warns import WarnDatabase
+from .database.giveaway import GiveawayDatabase
 
 economy = EconomyDatabase("economy")
 main_db = MainDatabase("bot")
@@ -16,3 +17,4 @@ backups = BackupDatabase("backups")
 invites = InviteTrackerDatabase("invites")
 private_rooms = PrivateRoomsDatabase("private_rooms")
 warns = WarnDatabase("warns")
+giveaway = GiveawayDatabase("giveaway")

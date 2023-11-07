@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Any
 
 import disnake
 from disnake import (
@@ -130,7 +130,7 @@ class Economy(commands.Cog):
     async def bank(
         self,
         interaction: disnake.MessageCommandInteraction,
-        money: int | str = "all",
+        money: Any = "all",
     ) -> None:
         """Send money to the bank
 
@@ -198,8 +198,8 @@ class Economy(commands.Cog):
     async def pay(
         self,
         interaction: disnake.MessageCommandInteraction,
+        user: disnake.Member,
         money: int = 0,
-        user: Union[int, str, Member] = None,
     ):
         if user is None:
             return await interaction.send("Please specify the user (mention or id)")
@@ -228,17 +228,12 @@ class Economy(commands.Cog):
                 ).set_footer(text=f"Command executed by {interaction.author}"),
             )
         else:
-            res = (
-                user.id
-                if isinstance(user, Member)
-                else await MemberConverter().convert(interaction, str(user))
-            )
             await interaction.send(
-                f"Are you sure you want transfer {money} 🪙 to {res.mention}?",
+                f"Are you sure you want transfer {money} 🪙 to {user.mention}?",
                 view=Buttons(
                     ctx=interaction,
                     bot=self.bot,
-                    receiver=res,
+                    receiver=user,
                     money=money,
                     economy_data=self.economy,
                 ),
