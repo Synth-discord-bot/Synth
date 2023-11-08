@@ -1,10 +1,12 @@
-import asyncio
 import datetime
 import random
 import re
+
 import disnake
-from disnake.ext import commands
 from disnake import Localized
+from disnake.ext import commands, tasks
+
+from src.utils import giveaway
 
 time_units = {"d": "days", "h": "hours", "m": "minutes", "s": "seconds"}
 
@@ -12,10 +14,43 @@ time_units = {"d": "days", "h": "hours", "m": "minutes", "s": "seconds"}
 class Giveaway(commands.Cog):  # Need rewrite
     """Helper commands to set up giveaway."""
 
-    EMOJI = "🎉"
+    EMOJI = "<:tada:1169690533719986297>"
 
     def __init__(self, bot) -> None:
         self.bot = bot
+        self.giveaway_db = giveaway
+
+    async def cog_load(self) -> None:
+        await self.check_gw.start()
+        await self.giveaway_db.fetch_and_cache_all()
+
+    async def end_gw(self, i):
+        channel = self.bot.get_channel(i["channel_id"])
+        message: disnake.Message = await channel.fetch_message(i["message_id"])
+        winner_amount = i["winner_amount"]
+
+        embed = disnake.Embed.from_dict(i["embed_data"])
+        embed.title = "Giveaway over"
+        embed.set_footer(text="Ended")
+        embed.timestamp = datetime.datetime.now()
+
+        users = await message.reactions[0].users().flatten()
+        users.remove(self.bot.user)
+
+        if len(users) < winner_amount:
+            winners = random.sample(users, len(users))
+        else:
+            winners = random.sample(users, winner_amount)
+
+        await self.giveaway_db.delete_giveaway(value=i)
+        winners = ", ".join(w.mention for w in winners)
+        await message.edit(content=f"Giveaway over, winners: {winners}", embed=embed)
+
+        if len(users) > 0:
+            prize = i.get("prize")
+            await message.reply(
+                (f"{winners} congratulations, you have won **{prize}**!")
+            )
 
     @commands.slash_command(
         name=Localized("giveaway", key="GIVEAWAY_COMMAND_NAME"),
@@ -30,7 +65,7 @@ class Giveaway(commands.Cog):  # Need rewrite
     )
     async def create(
         self,
-        interaction,
+        interaction: disnake.ApplicationCommandInteraction,
         prize: str = commands.Param(
             description=Localized(
                 "Choice prize", key="GIVEAWAY_CREATE_COMMAND_PRIZE_DESC"
@@ -63,53 +98,33 @@ class Giveaway(commands.Cog):  # Need rewrite
 
         end_time = datetime.datetime.now() + duration_delta
         embed = disnake.Embed(title="Giveaway", description=None, color=0x2B2D31)
-        embed.add_field(name=f"Prize", value=f"```\n{prize}\n```", inline=True)
-        embed.add_field(name=f"Winners", value=f"```\n{winners}\n```", inline=True)
+        embed.add_field(name="Prize", value=f"```\n{prize}\n```", inline=True)
+        embed.add_field(name="Winners", value=f"```\n{winners}\n```", inline=True)
         embed.add_field(
-            name=f"Note",
-            value=f"```\nClick on the reaction 🎉 below to participate.\n```",
+            name="Note",
+            value="```\nClick on the reaction 🎉 below to participate.\n```",
             inline=False,
         )
         embed.add_field(
-            name=f"End",
-            value=f"{disnake.utils.format_dt(end_time, style = 'R')} ({disnake.utils.format_dt(end_time, style = 'f')})",
+            name="End",
+            value=f"{disnake.utils.format_dt(end_time, style='R')} ({disnake.utils.format_dt(end_time, style='f')})",
             inline=False,
         )
+
         await interaction.send("Creating..", ephemeral=True)
         await interaction.delete_original_message()
-        giveaway_msg = await interaction.channel.send(
+        giveaway_msg: disnake.Message = await interaction.channel.send(
             content="Active giveaway", embed=embed
         )
         await giveaway_msg.add_reaction("🎉")
-        await asyncio.sleep(duration_delta.total_seconds())
-        channel = interaction.channel
-        giveaway_msg = await channel.fetch_message(giveaway_msg.id)
-        reaction = disnake.utils.get(giveaway_msg.reactions, emoji="🎉")
 
-        users = await reaction.users().flatten()
-        users = [user for user in users if not user.bot]
-
-        if len(users) == 0:
-            await giveaway_msg.edit(
-                content="Not enough participants to choose winners."
-            )
-            return
-
-        if len(users) <= winners:
-            winners_mention = " ".join([user.mention for user in users])
-        else:
-            winners_mention = " ".join(
-                [random.choice(users).mention for _ in range(winners)]
-            )
-
-        embed.remove_field(index=3)
-        embed.set_footer(
-            text=f"The giveaway's over",
-            icon_url="https://cdn.discordapp.com/attachments/635043187815219214/1116117523436421130/fzfZCur.png",
-        )
-        await giveaway_msg.edit(content=f"Winner: {winners_mention}!", embed=embed)
-        await giveaway_msg.reply(
-            content=f"Congratulations {winners_mention}! You won **{prize}**!"
+        await self.giveaway_db.insert_giveaway(
+            channel_id=interaction.channel.id,
+            message_id=giveaway_msg.id,
+            end_time=end_time.timestamp(),
+            winners=winners,
+            embed=embed.to_dict(),
+            prize=prize,
         )
 
     @giveaway.sub_command(
@@ -167,11 +182,11 @@ class Giveaway(commands.Cog):  # Need rewrite
                 winners_mention = field.value.split()
 
         if len(users) <= len(winners_mention):
-            winners_mention = " ".join([user.mention for user in users])
+            winners_mention = " ".join([user.mention for user in users]).split(" ")
         else:
             winners_mention = " ".join(
                 [random.choice(users).mention for _ in range(winners)]
-            )
+            ).split(" ")
 
         if len(winners_mention) > 0 and winners_mention[-1] in users:
             winners_mention.remove(winners_mention[-1])
@@ -180,6 +195,27 @@ class Giveaway(commands.Cog):  # Need rewrite
             await giveaway_msg.reply(content=f"🎉 New winners: {winners_mention}")
         else:
             await giveaway_msg.reply(content=f"🎉 New winner: {winners_mention}")
+
+    @tasks.loop(seconds=1)
+    async def check_gw(self):
+        await self.bot.wait_until_ready()
+
+        async for giveaway_data in self.giveaway_db.collection.find({}):
+            channel: disnake.TextChannel = self.bot.get_channel(
+                giveaway_data["channel_id"]
+            )
+            try:
+                await channel.fetch_message(giveaway_data["message_id"])
+            except (disnake.NotFound, disnake.Forbidden, disnake.HTTPException):
+                await self.giveaway_db.delete_giveaway(value=giveaway_data)
+                continue
+
+            end_time = giveaway_data["end_time"]
+
+            now = datetime.datetime.now().timestamp()
+
+            if now > end_time:
+                await self.end_gw(giveaway_data)
 
 
 def setup(bot: commands.Bot) -> None:

@@ -1,17 +1,16 @@
-from typing import Dict
-
 from disnake import Message, Embed
 from disnake.ext import commands
 
-# from disnake.ext.ipc import Server, ClientPayload
-
 from src.utils import main_db
+
+
+# from disnake.ext.ipc import Server, ClientPayload
 
 
 class Settings(commands.Cog):
     """Helper commands to set up the bot."""
 
-    EMOJI = "⚙️"
+    EMOJI = "<:settings:1169685352114552922>️"
 
     def __init__(self, bot) -> None:
         self.bot = bot
@@ -50,7 +49,7 @@ class Settings(commands.Cog):
 
     @commands.command()
     async def set_prefix(self, ctx: commands.Context, prefix: str) -> Message:
-        """Set current prefix to another one"""
+        """Set the current prefix to another one"""
         if prefix is None or prefix == "":
             return await ctx.reply("Please enter a prefix!")
         elif len(prefix) >= 5:

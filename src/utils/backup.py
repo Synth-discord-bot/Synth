@@ -1,112 +1,399 @@
+import asyncio
+import base64
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Union
+from io import BytesIO
+from typing import Dict, Any, Union
 
+import aiohttp
 import disnake
-
-CHANNEL_ATTRIBUTE_NAMES = [
-    "name",
-    "id",
-    "nsfw",
-    "position",
-    "type",
-    "overwrites",
-    "category_id",
-    "permissions_synced",
-    "default_auto_archive_duration",
-    "default_thread_slowmode_delay",
-    "slowmode_delay",
-    "bitrate",
-    "user_limit",
-    "rtc_region",
-    "video_quality_mode",
-]
-
-ROLE_ATTRIBUTE_NAMES = [
-    "name",
-    "id",
-    "permissions",
-    "colour",
-    "hoist",
-    "display_icon",
-    "mentionable",
-    "position",
-]
-
-
-def generate_unique_id() -> str:
-    """Generates a unique id based off of the current timestamp
-
-    Returns
-    -------
-    str
-        The unique id
-    """
-
-    return hex(
-        int(
-            datetime.now().timestamp() * 1000
-            - datetime.fromisoformat("2020-01-01").timestamp() * 1000
-        )
-    )[2:].upper()
+from disnake.utils import get
 
 
 class Backup:
-    """
-    A class used to represent a backup
-
-    Attributes
-    ----------
-    _id: str
-        The unique backup id
-    channels: Optional[List[Dict]]
-        An optional list of all guild channels in a backup
-    rules_channel: Optional[int]
-        Optional rules channel id of community guilds
-    public_updates_channel: Optional[int]
-        Optional updates channel id of community guilds
-    roles: Optional[List[Dict]]
-        An optional list of all guild roles in a backup
-    """
-
     def __init__(
             self,
-            _id: Optional[str] = None,
-            channels: Optional[List[Dict]] = None,
-            guild_info: Optional[Dict] = None,
-            categories: Optional[Dict] = None,
-            rules_channel: Optional[int] = None,
-            public_updates_channel: Optional[int] = None,
-            roles: Optional[List[Dict]] = None,
+            guild: disnake.Guild,
     ) -> None:
-        self.guild_id: str = _id
-        self.guild_info = guild_info
-        self.categories: Optional[Dict] = categories
-        self.channels: Optional[List[Dict]] = channels
-        self.rules_channel: Optional[int] = rules_channel
-        self.public_updates_channel: Optional[int] = public_updates_channel
-        self.roles: Optional[List[Dict]] = roles
+        self.guild: disnake.Guild = guild
 
-    @property
-    def id(self) -> str:
-        return self.guild_id
+    async def create(self) -> Dict[Any, Any]:
+        """Creates a backup of a guild"""
+        return await BackupCreator(self.guild).create_backup()
 
-    @classmethod
-    async def create(cls, guild: disnake.Guild) -> "Backup":
-        """Creates a backup of a guild
+    async def restore(
+            self,
+            data: Dict[Any, Any],
+            message: Union[disnake.Message, disnake.MessageInteraction],
+    ) -> None:
+        """Restores a backup of a guild"""
+        embed = disnake.Embed(color=0x2F3136)
+        embed.title = "<a:loading:1168599537682755584> Loading Backup"
+        embed.set_footer(text=message.author, icon_url=message.author.avatar)
 
-        Parameters
-        ----------
-        guild: discord.Guild
-            The guild that you want to create a backup of
+        embed.description = (
+            "<:info:1169685342077583480> Stage 1 of 6\n> **Deleting channels**"
+        )
+        await message.edit_original_response(embed=embed, view=None)
 
-        Returns
-        -------
-        Backup
-            The backup
-        """
-        category_info = {}
-        for index, category in enumerate(guild.categories):
-            category_data = {
+        for channel in self.guild.channels:
+            try:
+                if channel != message.channel:
+                    await channel.delete()
+            except (disnake.Forbidden, disnake.NotFound, disnake.HTTPException):
+                continue
+
+        embed.description = (
+            "<:info:1169685342077583480> Stage 2 of 6\n> **Deleting roles**"
+        )
+        await message.edit_original_response(embed=embed, view=None)
+
+        for role in self.guild.roles:
+            try:
+                await role.delete()
+            except (disnake.Forbidden, disnake.HTTPException):
+                continue
+
+        embed.description = (
+            "<:info:1169685342077583480> Stage 3 of 6\n> **Creating roles**"
+        )
+        await message.edit_original_response(embed=embed, view=None)
+
+        roles = data["roles"]
+        for k in range(len(roles) + 1):
+            try:
+                if roles.get(str(k), None):
+                    await self.guild.create_role(
+                        name=roles[str(k)]["name"],
+                        colour=disnake.Colour(value=roles[str(k)]["color"]),
+                        permissions=disnake.Permissions(
+                            permissions=roles[str(k)]["perms"]
+                        ),
+                        hoist=roles[str(k)]["hoist"],
+                        mentionable=roles[str(k)]["mentionable"],
+                    )
+            except (
+                    disnake.NotFound,
+                    disnake.Forbidden,
+                    disnake.HTTPException,
+                    TypeError,
+            ):
+                continue
+
+        embed.description = (
+            "<:info:1169685342077583480> Stage 4 of 6\n> **Creating categories**"
+        )
+        await message.edit_original_response(embed=embed, view=None)
+
+        categories = data["category"]
+        for i in range(len(categories) + 1):
+            try:
+                overwrites = {}
+                if data["category"].get(str(i), None) is not None:
+                    raw_overwrites = data["category"][str(i)]["perms"]
+
+                    for role_to_recovery in self.guild.roles:
+                        try:
+                            ovw = disnake.PermissionOverwrite.from_pair(
+                                disnake.Permissions(
+                                    permissions=raw_overwrites[role_to_recovery.name][
+                                        "a"
+                                    ]
+                                ),
+                                disnake.Permissions(
+                                    permissions=raw_overwrites[role_to_recovery.name][
+                                        "d"
+                                    ]
+                                ),
+                            )
+                            overwrites[role_to_recovery] = ovw
+                        except (Exception, ExceptionGroup):
+                            continue
+
+                    await self.guild.create_category(
+                        name=categories[str(i)]["name"],
+                        position=categories[str(i)]["position"],
+                        overwrites=overwrites,
+                    )
+            except (disnake.Forbidden, disnake.HTTPException, TypeError):
+                continue
+
+        embed.description = (
+            "<:info:1169685342077583480> Stage 5 of 6\n> **Creating channels**"
+        )
+        await message.edit_original_response(embed=embed, view=None)
+
+        text_channels = data["text"]
+        for i in range(len(text_channels) + 1):
+            try:
+                overwrites = {}
+                if text_channels.get(str(i), None) is not None:
+                    raw_overwrites = text_channels[str(i)]["perms"]
+
+                    for old_role_permissions in self.guild.roles:
+                        try:
+                            ovw = disnake.PermissionOverwrite.from_pair(
+                                disnake.Permissions(
+                                    permissions=raw_overwrites[
+                                        old_role_permissions.name
+                                    ]["a"]
+                                ),
+                                disnake.Permissions(
+                                    permissions=raw_overwrites[
+                                        old_role_permissions.name
+                                    ]["d"]
+                                ),
+                            )
+                            overwrites[old_role_permissions] = ovw
+                        except (Exception, ExceptionGroup):
+                            continue
+
+                    new_channel_name = data["text"][str(i)]["name"]
+                    current_channel_name = message.channel.name
+
+                    if new_channel_name != current_channel_name:
+                        if text_channels[str(i)].get("category", None) is None:
+                            await self.guild.create_text_channel(
+                                name=new_channel_name,
+                                topic=text_channels[str(i)]["topic"],
+                                nsfw=text_channels[str(i)]["nsfw"],
+                                slowmode_delay=text_channels[str(i)]["slowmode"],
+                                position=text_channels[str(i)]["position"],
+                                overwrites=overwrites,
+                            )
+                        else:
+                            await self.guild.create_text_channel(
+                                name=new_channel_name,
+                                topic=data["text"][str(i)]["topic"],
+                                nsfw=data["text"][str(i)]["nsfw"],
+                                slowmode_delay=data["text"][str(i)]["slowmode"],
+                                position=data["text"][str(i)]["position"],
+                                category=get(
+                                    self.guild.categories,
+                                    name=data["text"][str(i)]["category"],
+                                ),
+                                overwrites=overwrites,
+                            )
+            except (disnake.Forbidden, disnake.HTTPException, TypeError):
+                continue
+
+        voice_channels = data["voice"]
+        for i in range(len(voice_channels) + 1):
+            try:
+                overwrites = {}
+                if voice_channels.get(str(i), None) is not None:
+                    raw_overwrites = voice_channels[str(i)]["perms"]
+
+                    for old_role_permissions in self.guild.roles:
+                        try:
+                            ovw = disnake.PermissionOverwrite.from_pair(
+                                disnake.Permissions(
+                                    permissions=raw_overwrites[
+                                        old_role_permissions.name
+                                    ]["a"]
+                                ),
+                                disnake.Permissions(
+                                    permissions=raw_overwrites[
+                                        old_role_permissions.name
+                                    ]["d"]
+                                ),
+                            )
+                            overwrites[old_role_permissions] = ovw
+                        except (Exception, ExceptionGroup):
+                            continue
+
+                    if voice_channels[str(i)].get("category", None) is None:
+                        await self.guild.create_voice_channel(
+                            name=voice_channels[str(i)]["name"],
+                            user_limit=voice_channels[str(i)]["limit"],
+                            bitrate=voice_channels[str(i)]["bitrate"],
+                            position=voice_channels[str(i)]["position"],
+                            overwrites=overwrites,
+                        )
+                    else:
+                        await self.guild.create_voice_channel(
+                            name=voice_channels[str(i)]["name"],
+                            user_limit=voice_channels[str(i)]["limit"],
+                            bitrate=voice_channels[str(i)]["bitrate"],
+                            position=voice_channels[str(i)]["position"],
+                            category=get(  # TODO: FIX
+                                self.guild.categories,
+                                name=voice_channels[str(i)]["category"],
+                            ),
+                            overwrites=overwrites,
+                        )
+            except (disnake.Forbidden, disnake.HTTPException, TypeError):
+                continue
+
+        embed.description = "<:info:1169685342077583480> Stage 6 of 6\n> **Restoring the server main information**"
+        await message.edit_original_response(embed=embed, view=None)
+
+        icon_data = None
+        if data["guild"]["icon"]:
+            icon_data = BytesIO(base64.b64decode(data["guild"]["icon"]))
+
+        banner_data = None
+        if data["guild"]["banner"]:
+            banner_data = BytesIO(base64.b64decode(data["guild"]["banner"]))
+
+        verification_level_mapping = {
+            "none": disnake.VerificationLevel.none,
+            "low": disnake.VerificationLevel.low,
+            "medium": disnake.VerificationLevel.medium,
+            "high": disnake.VerificationLevel.high,
+            "highest": disnake.VerificationLevel.highest,
+        }
+
+        ver_level_mongo = data.get("guild")["verification_level"][0]
+        ver_level = verification_level_mapping.get(
+            ver_level_mongo, disnake.VerificationLevel.none
+        )
+
+        afk_channel = disnake.utils.get(
+            self.guild.voice_channels, name=data["guild"]["afk_channel"]
+        )
+        system_channel = disnake.utils.get(
+            self.guild.text_channels, name=data["guild"]["system_channel"]
+        )
+        rules_channel = disnake.utils.get(
+            self.guild.text_channels, name=data["guild"]["rules_channel"]
+        )
+
+        await self.guild.edit(
+            name=data["guild"]["name"],
+            afk_timeout=data["guild"]["afk_timeout"],
+            description=data["guild"]["description"],
+            rules_channel=rules_channel or None,
+            public_updates_channel=data["guild"]["public_updates_channel"] or None,
+            premium_progress_bar_enabled=data["guild"]["premium_progress_bar_enabled"],
+            system_channel=system_channel,
+            afk_channel=afk_channel,
+            verification_level=ver_level,
+            icon=icon_data.read() if icon_data is not None else None,
+            banner=banner_data.read() if banner_data is not None else None,
+        )
+
+        await asyncio.sleep(3)
+
+        embed.title = "<a:success:1168599845192339577> Success"
+        embed.colour = 0x2F3136
+        embed.description = "Server backup has been successfully loaded."
+
+        await message.edit_original_response(embed=embed, view=None)
+
+
+class BackupCreator:
+    def __init__(self, guild: disnake.Guild) -> None:
+        self.guild: disnake.Guild = guild
+
+    async def create_backup(
+            self,
+    ) -> Dict[str, Union[Dict[Any, Any], Dict[str, str], Dict[str, int]]]:
+        icon_data = None  # Default to None
+        banner_data = None  # Default to None
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(self.guild.icon.url) as icon_response:
+                    if icon_response.status == 200:
+                        icon_data = base64.b64encode(await icon_response.read()).decode(
+                            "utf-8"
+                        )
+        except (Exception, disnake.Forbidden):
+            pass
+        finally:
+            await session.close()
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(self.guild.banner.url) as banner_response:
+                    if banner_response.status == 200:
+                        banner_data = base64.b64encode(
+                            await banner_response.read()
+                        ).decode("utf-8")
+        except (Exception, disnake.Forbidden):
+            pass
+        finally:
+            await session.close()
+
+        backup_data = {
+            "info": {
+                "nextsave": 2147483647,
+                "interval": 0,
+                "created": int(datetime.now().timestamp()),
+            },
+            "guild": {
+                "name": self.guild.name,
+                "rules_channel": self.guild.rules_channel.name
+                if self.guild.rules_channel
+                else None,
+                "public_updates_channel": self.guild.public_updates_channel.name
+                if self.guild.public_updates_channel
+                else None,
+                "afk_channel": self.guild.afk_channel.name
+                if self.guild.afk_channel
+                else None,
+                "afk_timeout": self.guild.afk_timeout if self.guild.afk_timeout else 0,
+                "premium_progress_bar_enabled": self.guild.premium_progress_bar_enabled,
+                "verification_level": self.guild.verification_level
+                if self.guild.verification_level
+                else disnake.VerificationLevel.none,
+                "system_channel": self.guild.system_channel.name
+                if self.guild.system_channel
+                else None,
+                "description": self.guild.description,
+                "icon": icon_data if self.guild.icon else None,
+                "banner": banner_data if self.guild.banner else None,
+            },
+            "text": {},
+            "voice": {},
+            "category": {},
+            "roles": {},
+        }
+
+        for index, text_channel in enumerate(self.guild.text_channels):
+            text_dict = {
+                "name": text_channel.name,
+                "topic": (
+                    text_channel.topic.replace(".", "") if text_channel.topic else None
+                ),
+                "slowmode": text_channel.slowmode_delay,
+                "nsfw": text_channel.nsfw,
+                "position": text_channel.position,
+                "perms": {
+                    role.name: {
+                        "a": ovw.pair()[0].value,
+                        "d": ovw.pair()[1].value,
+                    }
+                    for role, ovw in text_channel.overwrites.items()
+                },
+            }
+
+            if text_channel.category:
+                text_dict["category"] = text_channel.category.name
+
+            backup_data["text"].setdefault(str(index), {}).update(text_dict)
+
+        for index, voice_channel in enumerate(self.guild.voice_channels):
+            voice_dict = {
+                "name": voice_channel.name.replace(".", " "),
+                "limit": voice_channel.user_limit,
+                "bitrate": voice_channel.bitrate,
+                "position": voice_channel.position,
+                "perms": {
+                    role.name: {
+                        "a": ovw.pair()[0].value,
+                        "d": ovw.pair()[1].value,
+                    }
+                    for role, ovw in voice_channel.overwrites.items()
+                },
+            }
+            if voice_channel.category:
+                voice_dict["category"] = voice_channel.category.name
+
+            backup_data["voice"].setdefault(str(index), {}).update(voice_dict)
+
+        for index, category in enumerate(self.guild.categories):
+            category_dict = {
                 "name": category.name.replace(".", ""),
                 "position": category.position,
                 "perms": {
@@ -117,203 +404,17 @@ class Backup:
                     for role, ovw in category.overwrites.items()
                 },
             }
-            category_info[str(index)] = category_data
+            backup_data["category"].setdefault(str(index), {}).update(category_dict)
 
-        guild_info = {
-            "name": guild.name, "rules_channel": guild.rules_channel,
-            "public_updates_channel": guild.public_updates_channel,
-            "afk_channel": guild.afk_channel, "afk_timeout": guild.afk_timeout,
-            "description": guild.description,
-        }
-
-        roles = [
-            await convert_guild_role_to_json(role)
-            for role in guild.roles
-            if not role.is_bot_managed()
-        ]
-
-        for i, role in enumerate(sorted(roles, key=lambda r: r.get("position"))):
-            role.update({"position": i})
-
-        return cls(
-            _id=str(guild.id),
-            guild_info=guild_info,
-            categories=category_info,
-            channels=[
-                convert_guild_channel_to_json(channel) for channel in guild.channels
-            ],
-            rules_channel=guild.rules_channel.id if guild.rules_channel else None,
-            public_updates_channel=guild.public_updates_channel.id
-            if guild.public_updates_channel
-            else None,
-            roles=roles,
-        )
-
-    def to_json(self) -> dict:
-        """Converts self into a dict object"""
-
-        return self.__dict__
-
-
-class BackupChannel:
-    def __init__(self, **kwargs) -> None:
-        self.name = kwargs.get("name")
-        self.id = kwargs.get("id")
-        self.nsfw = kwargs.get("nsfw")
-        self.position = kwargs.get("position")
-        self.type = kwargs.get("type")
-        self.overwrites = kwargs.get("overwrites")
-
-        self.category_id = kwargs.get("category_id")
-        self.permissions_synced = kwargs.get("permissions_synced")
-
-        self.default_auto_archive_duration = kwargs.get("default_auto_archive_duration")
-        self.default_thread_slowmode_delay = kwargs.get("default_thread_slowmode_delay")
-        self.slowmode_delay = kwargs.get("slowmode_delay")
-
-        self.bitrate = kwargs.get("bitrate")
-        self.user_limit = kwargs.get("user_limit")
-        self.rtc_region = kwargs.get("rtc_region")
-        self.video_quality_mode = kwargs.get("video_quality_mode")
-
-    def to_json(self) -> Dict:
-        data = {
-            "name": self.name,
-            "id": self.id,
-            "nsfw": self.nsfw,
-            "position": self.position,
-            "type": self.type,
-            "overwrites": self.overwrites,
-            "permissions_synced": self.permissions_synced,
-        }
-
-        if self.type in [0, 5, 10, 11, 12, 15]:
-            data.update(
-                {
-                    "category_id": self.category_id,
-                    "default_auto_archive_duration": self.default_auto_archive_duration,
-                    "default_thread_slowmode_delay": self.default_thread_slowmode_delay,
-                    "slowmode_delay": self.slowmode_delay,
+        for index, role in enumerate(self.guild.roles):
+            if not role.managed and role != self.guild.default_role:
+                role_data = {
+                    "name": role.name.replace(".", ""),
+                    "perms": role.permissions.value,
+                    "color": role.colour.value,
+                    "hoist": role.hoist,
+                    "mentionable": role.mentionable,
                 }
-            )
+                backup_data["roles"].setdefault(str(index), {}).update(role_data)
 
-        elif self.type in [2, 13]:
-            data.update(
-                {
-                    "category_id": self.category_id,
-                    "slowmode_delay": self.slowmode_delay,
-                    "bitrate": self.bitrate,
-                    "user_limit": self.user_limit,
-                    "rtc_region": self.rtc_region,
-                    "video_quality_mode": self.video_quality_mode,
-                }
-            )
-
-        return data
-
-
-def convert_permission_overwrite_to_list(
-        overwrites: Dict[
-            Union[disnake.Role, disnake.Member, disnake.Object], disnake.PermissionOverwrite
-        ],
-) -> List[Dict]:
-    """Converts a discord.PermissionOverwrite object to a list
-
-    Parameters
-    ----------
-    overwrites: discord.PermissionOverwrite
-        The overwrites which should be converted
-
-    Returns
-    -------
-    list
-        A list containing dicts for each overwrite
-    """
-
-    return [
-        {
-            "target_id": target.id,
-            "overwrites": overwrite._values,
-        }
-        for target, overwrite in overwrites.items()
-    ]
-
-
-def extract_attributes_from_class(
-        attributes: List[str], _class: Any, convert: Optional[Dict[str, Callable]] = None
-) -> Dict:
-    """Extracts the values of the attributes given in `attributes` from the `_class` object
-
-    Parameters
-    ----------
-    attributes: List[str]
-        The list of attribute names you want to extract
-    _class: Any
-        The class instance of which the attributes should be extracted
-    convert: Dict[str, Callable]
-        Allows to convert the attribute value to something else e.g. {"attribute1": lambda value: value + 1}
-
-    Returns
-    -------
-    dict
-        The attributes with their values
-    """
-
-    result = {}
-
-    if _class is None:
-        return result
-
-    for attribute in dir(_class):
-        if str(attribute) not in attributes:
-            continue
-
-        value = getattr(_class, attribute)
-
-        if convert:
-            attribute_converter = convert.get(attribute)
-
-            if callable(attribute_converter):
-                value = attribute_converter(value)
-
-        result.update({attribute: value})
-
-    return result
-
-
-def convert_guild_channel_to_json(guild_channel: disnake.abc.GuildChannel) -> Dict:
-    if guild_channel.type != disnake.ChannelType.category:
-        return extract_attributes_from_class(
-            attributes=CHANNEL_ATTRIBUTE_NAMES,
-            _class=guild_channel,
-            convert={
-                "type": lambda type_value: type_value[1],
-                "overwrites": lambda overwrites: convert_permission_overwrite_to_list(
-                    overwrites
-                ),
-                "video_quality_mode": lambda video_quality_mode: video_quality_mode[1],
-            },
-        )
-
-
-async def convert_guild_role_to_json(guild_role: disnake.Role) -> Dict:
-    raw_guild_role = extract_attributes_from_class(
-        attributes=ROLE_ATTRIBUTE_NAMES,
-        _class=guild_role,
-        convert={
-            "colour": lambda colour: list(colour.to_rgb()),
-            "permissions": lambda permissions: permissions.value,
-        },
-    )
-
-    # # Poor implementation of image saving, but it works (somehow)
-    # if (dis_icon := raw_guild_role.get("display_icon")) is not None:
-    #     if not os.path.exists(get_path("assets")):
-    #         os.mkdir(get_path("assets"))
-    #
-    #     with open(get_path(f"assets/{dis_icon.key}.png"), "wb") as role_image_file:
-    #         role_image_file.write(await dis_icon.read())
-    #
-    #     raw_guild_role.update({"display_icon": dis_icon.key})
-
-    return raw_guild_role
+        return backup_data

@@ -1,2 +1,2 @@
-from .economy import Economy
 from .bot import MainDatabase
+from .economy import EconomyDatabase

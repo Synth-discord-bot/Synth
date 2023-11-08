@@ -1,8 +1,5 @@
-import datetime
-
 import disnake
 from disnake.ext import commands
-from disnake.ext.commands import TextChannelConverter
 
 from src.utils import logger
 from src.utils.misc import check_channel
@@ -11,7 +8,7 @@ from src.utils.misc import check_channel
 class Logger(commands.Cog):
     """Helper commands to setup logger."""
 
-    EMOJI = "🗒️"
+    EMOJI = "<:list:1169690529643114547>️"
 
     def __init__(self, bot) -> None:
         self.bot = bot

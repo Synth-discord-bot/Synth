@@ -1,5 +1,6 @@
 import disnake
 from disnake.ext import commands
+
 from src.utils import ticket
 
 
@@ -68,7 +69,7 @@ class SetupTicketSettings(disnake.ui.View):
 class Ticket(commands.Cog):
     """Helper commands to setup ticket system"""
 
-    EMOJI = "🎫"
+    EMOJI = "<:thread:1169685355423866963>"
 
     def __init__(self, bot: commands.Bot) -> None:
         super().__init__()

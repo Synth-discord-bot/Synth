@@ -1,13 +1,14 @@
-from disnake.ext import commands
-import disnake
 import random
+
+import disnake
 from disnake import Localized
+from disnake.ext import commands
 
 
 class Fun(commands.Cog):
     """Fun commands."""
 
-    EMOJI = "😂"
+    EMOJI = "<:created_at:1169684592006017034>"
 
     def __init__(self, bot):
         self.bot = bot
@@ -57,33 +58,57 @@ class Fun(commands.Cog):
             name=Localized("question", key="8BALL_COMMAND_QUESTION_NAME"),
         ),
     ):
-        responses = [
+        good_responses = [
             "It is certain.",
             "It is decidedly so.",
             "Without a doubt.",
             "Yes - definitely.",
             "You may rely on it.",
             "As I see it, yes.",
+            "Yes.",
+        ]
+        medium_responses = [
             "Most likely.",
             "Outlook good.",
-            "Yes.",
             "Signs point to yes.",
             "Reply hazy, try again.",
             "Ask again later.",
             "Better not tell you now.",
             "Cannot predict now.",
             "Concentrate and ask again.",
+        ]
+        bad_responses = [
             "Don't count on it.",
             "My reply is no.",
             "My sources say no.",
             "Outlook not so good.",
             "Very doubtful.",
         ]
+
+        response_category = random.choice(["good", "medium", "bad"])
+
+        if response_category == "good":
+            response = random.choice(good_responses)
+            color = 0x39F007
+        elif response_category == "medium":
+            response = random.choice(medium_responses)
+            color = 0xF0D707
+        else:
+            response = random.choice(bad_responses)
+            color = 0xF00707
+
         embed = disnake.Embed(
             title="Magic 8ball",
-            color=0x2B2D31,
-            description=f"Question: `{question}`\nAnswer: `{random.choice(responses)}`",
+            color=color,
+            description=f"Question: `{question}`\nAnswer: `{response}`",
         )
+        embed.set_image(
+            url="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fwww.tapscape.com%2Fwp"
+            "-content%2Fuploads%2F2018%2F06%2FMagic-8-Ball.jpg&f=1&nofb=1&ipt"
+            "=a3fd2b53113d3242cd34d2cd8df87ca0071c68bebf442a1c66ccf94438a76b34&ipo=images"
+        )
+        embed.set_footer(text="Synth © 2023 | All Rights Reserved")
+
         await interaction.send(embed=embed)
 
     @commands.slash_command(

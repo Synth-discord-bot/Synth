@@ -1,18 +1,18 @@
 import logging
 import os
 import sys
+import traceback
 
 import disnake
 from disnake.ext import commands
-from datetime import datetime
-
-# from disnake.ext.ipc import Server
 
 from src.cogs.TicketsCog import SetupTicketSettings
 from .utils import misc
 from .utils.help import CustomHelpCommand
 from .utils.misc import get_prefix, is_command_disabled
 
+
+# from disnake.ext.ipc import Server
 
 
 class Bot(commands.Bot):
@@ -74,10 +74,8 @@ class Bot(commands.Bot):
                     commands.ExtensionFailed,
                     commands.ExtensionError,
                 ) as e:
-                    exc_type = e.__class__.__name__
-                    exc_line = sys.exc_info()[2].tb_lineno
                     logging.error(
-                        f"Failed to load {extension}! {exc_type}: {str(e)}, line {exc_line}"
+                        f"\n\nFailed to load {extension}!\n{traceback.print_exception(e)}"
                     )
                     continue
                 finally:
@@ -107,8 +105,8 @@ class Bot(commands.Bot):
         await self.wait_until_ready()
         await self.change_presence(
             activity=disnake.Activity(
-                type=disnake.ActivityType.watching,
-                name=f"{len(self.guilds)} | >>help",
-                state="Release soon..."
+                type=disnake.ActivityType.competing,
+                name=f">>help | v1.0.",
+                status=disnake.Status.idle,
             )
         )
