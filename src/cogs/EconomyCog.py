@@ -1,4 +1,4 @@
-from typing import Union, Any
+from typing import Any
 
 import disnake
 from disnake import (
@@ -13,7 +13,6 @@ from disnake import (
     MessageCommandInteraction,
 )
 from disnake.ext import commands
-from disnake.ext.commands import MemberConverter
 
 from src.utils import economy, EconomyDatabase as EcoDB
 

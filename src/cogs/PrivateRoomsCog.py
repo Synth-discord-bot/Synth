@@ -7,19 +7,15 @@ from src.utils import private_rooms, PrivateRoomsDatabase
 
 class SetOwnerSelect(disnake.ui.UserSelect):
     def __init__(
-            self,
-            bot: commands.Bot,
-            channel: disnake.VoiceChannel,
-            voices: PrivateRoomsDatabase = private_rooms
+        self,
+        bot: commands.Bot,
+        channel: disnake.VoiceChannel,
+        voices: PrivateRoomsDatabase = private_rooms,
     ):
         self.bot = bot
         self.voices = voices
         self.channel = channel
-        super().__init__(
-            placeholder="Choose member",
-            min_values=1,
-            max_values=1
-        )
+        super().__init__(placeholder="Choose member", min_values=1, max_values=1)
 
     async def callback(self, inter: disnake.MessageInteraction):
         await inter.response.send_message(f"{self.values[0]}")
@@ -40,30 +36,30 @@ class SetOwnerSelect(disnake.ui.UserSelect):
             for channel in result.get("channels"):
                 if channel.get("channel_id") == self.channel.id:
                     if selected_users[0].id != channel.get("owner_id"):
-                        await inter.channel.send(f"Successfully transferred ownership to {selected_users[0]}")
+                        await inter.channel.send(
+                            f"Successfully transferred ownership to {selected_users[0]}"
+                        )
                         return await self.voices.set_owner(
                             guild_id=inter.guild_id,
                             voice_channel=self.channel,
                             member=selected_users[0],
                         )
-                    return await inter.channel.send("You are already the owner of the room")
+                    return await inter.channel.send(
+                        "You are already the owner of the room"
+                    )
 
 
 class AccessToChannelSelect(disnake.ui.UserSelect):
     def __init__(
-            self,
-            bot: commands.Bot,
-            channel: disnake.VoiceChannel,
-            voices: PrivateRoomsDatabase = private_rooms
+        self,
+        bot: commands.Bot,
+        channel: disnake.VoiceChannel,
+        voices: PrivateRoomsDatabase = private_rooms,
     ):
         self.bot = bot
         self.voices = voices
         self.channel = channel
-        super().__init__(
-            placeholder="Choose members",
-            min_values=1,
-            max_values=25
-        )
+        super().__init__(placeholder="Choose members", min_values=1, max_values=25)
 
     async def callback(self, inter: disnake.MessageInteraction):
         # await inter.response.send_message(f"{self.values[0]}")
@@ -85,7 +81,9 @@ class AccessToChannelSelect(disnake.ui.UserSelect):
                 if channel.get("channel_id") == self.channel.id:
                     for user in selected_users:
                         if perms := self.channel.permissions_for(user):
-                            await inter.channel.set_permissions(user, connect=True if not perms.connect else False)
+                            await inter.channel.set_permissions(
+                                user, connect=True if not perms.connect else False
+                            )
 
                     await inter.send("Successfully", ephemeral=True)
                     # await self.channel.set_permissions(user, speak=False)
@@ -102,11 +100,11 @@ class AccessToChannelSelect(disnake.ui.UserSelect):
 
 class Buttons(disnake.ui.View):
     def __init__(
-            self,
-            bot: commands.Bot,
-            author: disnake.Member,
-            channel: disnake.VoiceChannel,
-            voices: PrivateRoomsDatabase = private_rooms,
+        self,
+        bot: commands.Bot,
+        author: disnake.Member,
+        channel: disnake.VoiceChannel,
+        voices: PrivateRoomsDatabase = private_rooms,
     ):
         super().__init__(timeout=0)
         self.bot = bot
@@ -116,7 +114,7 @@ class Buttons(disnake.ui.View):
 
     @disnake.ui.button(emoji="<:store:1169690541986959464>")
     async def pen_callback(
-            self, _: disnake.ui.button, interaction: disnake.MessageInteraction
+        self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         await interaction.response.send_message(
             content="Enter the new channel name:", ephemeral=True
@@ -130,7 +128,7 @@ class Buttons(disnake.ui.View):
 
     @disnake.ui.button(emoji="<:members:1169684583369949285>")
     async def _users(
-            self, _: disnake.ui.button, interaction: disnake.MessageInteraction
+        self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         await interaction.response.send_message(
             content="Enter the new channel limit:", ephemeral=True
@@ -145,16 +143,17 @@ class Buttons(disnake.ui.View):
 
     @disnake.ui.button(emoji="<:created_at:1169684592006017034>️")
     async def _unlock_slot(
-            self, _: disnake.ui.button, interaction: disnake.MessageInteraction
+        self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         await self.channel.edit(user_limit=0)
         await interaction.response.send_message(
-            content="Successfully removed the user limit for this channel.", ephemeral=True
+            content="Successfully removed the user limit for this channel.",
+            ephemeral=True,
         )
 
     @disnake.ui.button(emoji="<:kick:1170712514288435271>")
     async def _lock(
-            self, _: disnake.ui.button, interaction: disnake.MessageInteraction
+        self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         await self.channel.set_permissions(
             interaction.guild.default_role, connect=False
@@ -165,7 +164,7 @@ class Buttons(disnake.ui.View):
 
     @disnake.ui.button(emoji="<:invite:1169690514430382160>")
     async def _unlock(
-            self, _: disnake.ui.button, interaction: disnake.MessageInteraction
+        self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         await self.channel.set_permissions(interaction.guild.default_role, connect=True)
         await interaction.response.send_message(
@@ -174,7 +173,7 @@ class Buttons(disnake.ui.View):
 
     @disnake.ui.button(emoji="<:ban:1170712517308317756>")
     async def _door(
-            self, _: disnake.ui.button, interaction: disnake.MessageInteraction
+        self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         await interaction.response.send_message(
             content="Mention users, for disconnecting:",
@@ -193,7 +192,7 @@ class Buttons(disnake.ui.View):
 
     @disnake.ui.button(emoji="<:allow:1171111639664300143>")
     async def _access(
-            self, _: disnake.ui.button, interaction: disnake.MessageInteraction
+        self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         # await interaction.response.send_message(
         #     content="Mention users, you allow to join the room:",
@@ -210,15 +209,18 @@ class Buttons(disnake.ui.View):
         # await interaction.delete_original_message()
         view = disnake.ui.View()
 
-        view.add_item(AccessToChannelSelect(self.bot, channel=self.channel, voices=self.voices))
+        view.add_item(
+            AccessToChannelSelect(self.bot, channel=self.channel, voices=self.voices)
+        )
         await interaction.response.send_message(
-            "Select a users to allow/disallow to join the room:", view=view,
-            ephemeral=True
+            "Select a users to allow/disallow to join the room:",
+            view=view,
+            ephemeral=True,
         )
 
     @disnake.ui.button(emoji="<:disallow:1171111636573093929>")
     async def _do_not_access(
-            self, _: disnake.ui.button, interaction: disnake.MessageInteraction
+        self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         await interaction.response.send_message(
             content="Mention users, you don't allow to join the room:",
@@ -236,7 +238,7 @@ class Buttons(disnake.ui.View):
 
     @disnake.ui.button(emoji="<:unmute:1169690521472614500>")
     async def _unmute(
-            self, _: disnake.ui.button, interaction: disnake.MessageInteraction
+        self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         await interaction.response.send_message(
             content="Mention users, you want to unmute in te room:", ephemeral=True
@@ -253,7 +255,7 @@ class Buttons(disnake.ui.View):
 
     @disnake.ui.button(emoji="<:mute:1170712518725992529>")
     async def _mute(
-            self, _: disnake.ui.button, interaction: disnake.MessageInteraction
+        self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         await interaction.response.send_message(
             content="Mention users, you want to mute in te room:", ephemeral=True
@@ -270,14 +272,16 @@ class Buttons(disnake.ui.View):
 
     @disnake.ui.button(emoji="<:owner:1169684595697004616>")
     async def transfer_ownership(
-            self, _: disnake.ui.button, interaction: disnake.MessageInteraction
+        self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         # user_select = disnake.ui.UserSelect(placeholder="Select a user...")
         #
         view = disnake.ui.View()
 
         view.add_item(SetOwnerSelect(self.bot, channel=self.channel))
-        await interaction.response.send_message("Select a user:", view=view, ephemeral=True)
+        await interaction.response.send_message(
+            "Select a user:", view=view, ephemeral=True
+        )
         # тут робимо спочатку для теста
 
         # await interaction.response.send_message(
@@ -343,10 +347,10 @@ class PrivateRoom(commands.Cog):
 
     @commands.Cog.listener()
     async def on_voice_state_update(
-            self,
-            member: disnake.Member,
-            before: disnake.VoiceState,
-            after: disnake.VoiceState,
+        self,
+        member: disnake.Member,
+        before: disnake.VoiceState,
+        after: disnake.VoiceState,
     ):
         if after.channel and len(after.channel.members) != 0:
             is_main_room = await self.private_rooms.get_private_room(
@@ -382,7 +386,7 @@ class PrivateRoom(commands.Cog):
                 return
         elif before.channel and len(before.channel.members) == 0:
             if room_channels := await self.private_rooms.get_private_room(
-                    member.guild.id, to_return="channels"
+                member.guild.id, to_return="channels"
             ):
                 for room in room_channels:
                     if room_id := room.get("channel_id", None):
