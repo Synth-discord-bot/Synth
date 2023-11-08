@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 import io
-=======
->>>>>>> 806890f7f3011613a74d6e889d19da9ca56ca3b0
 from datetime import datetime
 
 import disnake
@@ -19,12 +16,6 @@ class EventMessages(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message_delete(self, message: disnake.Message) -> None:
-<<<<<<< HEAD
-=======
-        if message.author == message.guild.me:
-            return
-
->>>>>>> 806890f7f3011613a74d6e889d19da9ca56ca3b0
         logger_channel = await self.logger.get_loggers(
             guild_id=message.guild.id, to_return="message"
         )
@@ -32,7 +23,6 @@ class EventMessages(commands.Cog):
         if not logger_channel:
             return
 
-<<<<<<< HEAD
         if message.author == message.guild.me:
             return
 
@@ -40,24 +30,11 @@ class EventMessages(commands.Cog):
         embeds = []
         embed = disnake.Embed(color=0x2F3136, title="Deleted Message", description=None)
         embed.add_field(name="Additional information", value="No information")
-=======
-        message.content = (
-            message.content[:1900] + "..."
-            if len(message.content) > 1900
-            else message.content
-        )  # TODO: send message to text file if message.content > 1900
-        embeds = []
-        embed = disnake.Embed(
-            color=0x2F3136, title="Synth | Deleted Message", description=None
-        )
-        embed.add_field(name="Additional information", value="No")
->>>>>>> 806890f7f3011613a74d6e889d19da9ca56ca3b0
         field_dop_index = next(
             index
             for index, field in enumerate(embed.fields)
             if field.name == "Additional information"
         )
-<<<<<<< HEAD
         embeds.append(embed)
 
         if len(message.content) > 1900:
@@ -71,11 +48,6 @@ class EventMessages(commands.Cog):
             )
             message.content = "See message.txt file"
 
-=======
-        files = []
-        embeds.append(embed)
-
->>>>>>> 806890f7f3011613a74d6e889d19da9ca56ca3b0
         if message.attachments:
             for num, attachment in enumerate(message.attachments, start=1):
                 embed.set_field_at(
@@ -102,7 +74,6 @@ class EventMessages(commands.Cog):
             inline=False,
         )
         embed.add_field(
-<<<<<<< HEAD
             name="Content",
             value=message.content,
             inline=False,
@@ -111,16 +82,10 @@ class EventMessages(commands.Cog):
             name="Deleted at",
             value=disnake.utils.format_dt(datetime.now(), style="f"),
             inline=False,
-=======
-            name="Deleted at",
-            value=disnake.utils.format_dt(datetime.now(), style="f"),
-            inline=True,
->>>>>>> 806890f7f3011613a74d6e889d19da9ca56ca3b0
         )
         embed.add_field(
             name="Channel",
             value=f"{message.channel.mention} (`ID: {message.channel.id}`)",
-<<<<<<< HEAD
             inline=False,
         )
         embed.set_thumbnail(url=message.author.avatar)
@@ -212,13 +177,6 @@ class EventMessages(commands.Cog):
 
         for file in range(0, len(files), 10):
             await channel.send(files=files[file : file + 10])
-=======
-        )
-        embed.set_thumbnail(url=message.author.avatar)
-
-        channel = message.guild.get_channel(int(logger_channel))
-        await channel.send(embeds=embeds, files=files)
->>>>>>> 806890f7f3011613a74d6e889d19da9ca56ca3b0
 
     @commands.Cog.listener()
     async def on_message_edit(self, before, after):
@@ -231,15 +189,11 @@ class EventMessages(commands.Cog):
         logger_channel = await self.logger.get_loggers(
             guild_id=before.guild.id, to_return="message"
         )
-<<<<<<< HEAD
         temp_file = None
-=======
->>>>>>> 806890f7f3011613a74d6e889d19da9ca56ca3b0
 
         if not logger_channel:
             return
 
-<<<<<<< HEAD
         if before.content == after.content:
             return
 
@@ -256,21 +210,6 @@ class EventMessages(commands.Cog):
                 if len(after.content) <= 1900
                 else after.content
             ),
-=======
-        before.content = (
-            before.content[:1900] + "..."
-            if len(before.content) > 1900
-            else before.content
-        )  # TODO: send message to text file if before.content > 1900
-        after.content = (
-            after.content[:1900] + "..." if len(after.content) > 1900 else after.content
-        )  # TODO: send message to text file if after.content > 1900
-        if before.content == after.content:
-            return
-        embed = disnake.Embed(
-            title="Synth | Edited Message",
-            description=f"Before: {before.content}\nAfter: {after.content}",
->>>>>>> 806890f7f3011613a74d6e889d19da9ca56ca3b0
             color=0x2F3136,
         )
         embed.add_field(
@@ -280,11 +219,7 @@ class EventMessages(commands.Cog):
         )
         embed.add_field(
             name="Edited at",
-<<<<<<< HEAD
             value=disnake.utils.format_dt(after.edited_at, style="f"),
-=======
-            value=disnake.utils.format_dt(datetime.now(), style="f"),
->>>>>>> 806890f7f3011613a74d6e889d19da9ca56ca3b0
             inline=True,
         )
         embed.add_field(
@@ -292,7 +227,6 @@ class EventMessages(commands.Cog):
             value=f"{before.channel.mention} (`ID: {before.channel.id}`)",
         )
         channel = before.guild.get_channel(int(logger_channel))
-<<<<<<< HEAD
         await channel.send(
             embed=embed,
             file=disnake.File(
@@ -301,9 +235,6 @@ class EventMessages(commands.Cog):
             if temp_file
             else None,
         )
-=======
-        await channel.send(embed=embed)
->>>>>>> 806890f7f3011613a74d6e889d19da9ca56ca3b0
 
 
 def setup(bot: commands.Bot) -> None:

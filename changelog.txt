@@ -1,10 +1,7 @@
-<<<<<<< HEAD
 0.3.1:
 [Database]: fixed bug in BackupsDatabase. Re-implement base class
 [Backups]: some changes, backups now work
 
-=======
->>>>>>> 806890f7f3011613a74d6e889d19da9ca56ca3b0
 0.3:
 Updated base database, logger
 
@@ -22,7 +19,7 @@ Re-module database (better than before)
 Implement better Help-command
 
 0.0.2.1:
-add main bot (AKA bot settings) database
+add the main bot (AKA bot settings) database
 users can change prefix to bot in guilds
 
 0.0.2:
