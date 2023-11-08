@@ -32,7 +32,7 @@ class BackupDatabase(BaseDatabase):
     async def update_backups_info(
         self,
         guild_id: Union[int, str, disnake.Guild],
-        backup_data: Union[dict],
+        backup_data: Dict[Any, Any],
     ) -> None:
         if await self.find_one_from_db({"guild_id": guild_id}) is None:
             return await self.add_to_db(

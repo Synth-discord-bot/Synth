@@ -1,7 +1,10 @@
+<<<<<<< HEAD
 0.3.1:
 [Database]: fixed bug in BackupsDatabase. Re-implement base class
 [Backups]: some changes, backups now work
 
+=======
+>>>>>>> 806890f7f3011613a74d6e889d19da9ca56ca3b0
 0.3:
 Updated base database, logger
 
