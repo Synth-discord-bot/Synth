@@ -528,8 +528,7 @@ class PrivateRoom(commands.Cog):
                 await member.move_to(channel=channel)
 
                 embed = disnake.Embed(
-                    title="Private Room",
-                    description="Choose action:",
+                    title="Private Rooms Settings",
                     colour=0x2F3136,
                 )
                 embed.description += """\n
