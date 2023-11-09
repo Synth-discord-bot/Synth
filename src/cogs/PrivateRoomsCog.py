@@ -537,7 +537,7 @@ class PrivateRoom(commands.Cog):
                     <:list:1169690529643114547> - remove the slot limit
                     <:invite:1169690514430382160> - open/close the room for everyone
                     <:ban:1170712517308317756> - kick user from the room
-                    <:hammer:1169685339720384512> - allow/disallow defined users to access the room
+                    <:hammer:1169685339720384512> - give/remove access for the room
                     <:mute:1170712518725992529> - mute/unmute user
                     <:owner:1169684595697004616> - transfer ownership of the room
                 """
