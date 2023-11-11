@@ -15,51 +15,80 @@ from disnake.ext import commands
 from disnake.abc import GuildChannel
 import disnake.utils
 from disnake.ui import View
-from wavelink.ext import spotify
-import wavelink
+import mafic
 import datetime
 from disnake import Interaction, ChannelType
+from mafic import NodePool, Player, Playlist, Track, TrackEndEvent
 
 
-class queueView(View):
+class MyPlayer(Player[commands.Bot]):
+    def __init__(self, client: commands.Bot, channel: disnake.VoiceChannel) -> None:
+        super().__init__(client, channel)
+
+        # Mafic does not provide a queue system right now, low priority.
+        self.queue: list[Track] = []
+
+
+class QueueView(View):
 
     @disnake.ui.button(label="Skip", style=disnake.ButtonStyle.green)
-    async def skips(self, button, interaction: disnake.Interaction):
-        if interaction.guild.voice_client.queue.is_empty:
-            return await interaction.response.send_message(
-                "Queue is empty, write `>play` to play some music or I will disconnect at the end of the music!",
-                ephemeral=True)
+    async def skips(self, button, interaction: disnake.MessageInteraction):
 
-        try:
-            next_song = interaction.guild.voice_client.queue.get()
-            await interaction.guild.voice_client.play(next_song)
-            embed = disnake.Embed(title=f"Music from - {interaction.guild.voice_client.track.author} ",
-                                  description=f"[{interaction.guild.voice_client.track.title}]({str(interaction.guild.voice_client.track.uri)})",
-                                  color=0x2F3136)
-            embed.add_field(name="Artist:", value=f"**`{interaction.guild.voice_client.track.author}`**", inline=True)
-            embed.add_field(name="Duration:",
-                            value=f"**`{str(datetime.timedelta(seconds=interaction.guild.voice_client.track.length))}`**",
-                            inline=True)
-            embed.set_footer(text=f"Music by Que")
-            embed.set_image(url=f"{interaction.guild.voice_client.track.thumbnail}")
-            await interaction.edit_original_message(embed=embed, view=queueView())
-        except Exception:
+        if not interaction.guild.voice_client:
+            player = await interaction.user.voice.channel.connect(cls=MyPlayer)
+        else:
+            player = interaction.guild.voice_client
+
+        print(player.queue)
+
+        if not player.queue:
             return await interaction.response.send_message(
-                "Queue empty, write `>play` to play some music or I will disconnect at the end of the music!",
+                "Queue is empty, write `>>play` to play some music or I will disconnect at the end of the music!",
+                ephemeral=True)
+        try:
+            tracks = await player.fetch_tracks(player.queue.get())
+            track = tracks[0]
+            await player.play(player.queue.get())
+
+            embed = disnake.Embed(title=f"Music from - {track.author} ",
+                                  description=f"[{track.title}]({str(track.uri)})",
+                                  color=0x2F3136)
+            embed.add_field(name="Artist:", value=f"**`{track.author}`**", inline=True)
+            embed.add_field(name="Duration:",
+                            value=f"**`{str(datetime.timedelta(seconds=track.length))}`**",
+                            inline=True)
+            embed.set_footer(text=f"Synth © 2023 | All Rights Reserved")
+            # embed.set_image(url=f"{interaction.guild.voice_client.track.thumbnail}")
+            await interaction.edit_original_message(embed=embed, view=QueueView())
+        except (Exception, BaseException, disnake.Forbidden):
+            return await interaction.response.send_message(
+                "Queue empty, write `>>play` to play some music or I will disconnect at the end of the music!",
                 ephemeral=True)
 
     @disnake.ui.button(label="Resume/Pause", style=disnake.ButtonStyle.blurple)
     async def resume_and_pause(self, button: disnake.ui.Button, interaction: disnake.Interaction):
-        if interaction.guild.voice_client.is_paused():
-            await interaction.guild.voice_client.resume()
+        if not interaction.guild.voice_client:
+            player = await interaction.user.voice.channel.connect(cls=mafic.Player)
         else:
-            await interaction.guild.voice_client.pause()
+            player = interaction.guild.voice_client
+
+        if player.paused is True:
+            await player.resume()
+            await interaction.response.defer()
+        else:
+            await player.pause()
+            await interaction.response.defer()
 
     @disnake.ui.button(label="Disconnect", style=disnake.ButtonStyle.danger)
     async def dc(self, button, interaction):
+        if not interaction.guild.voice_client:
+            player = await interaction.user.voice.channel.connect(cls=mafic.Player)
+        else:
+            player = interaction.guild.voice_client
+
         await interaction.guild.voice_client.disconnect()
         await interaction.response.send_message(
-            embed=disnake.Embed(title="Dissconect", description="I have disconnected", color=0x2F3136))
+            embed=disnake.Embed(title="Disconnect", description="I have disconnected", color=0x2F3136))
 
 
 class Music(commands.Cog):
@@ -68,20 +97,27 @@ class Music(commands.Cog):
     def __init__(self, bot: commands.Bot):
         super(Music, self).__init__()
         self.bot = bot
+        self.pool = mafic.NodePool(self.bot)
+        self.bot.loop.create_task(self.add_nodes())
 
-    async def cog_load(self) -> None:
-        async def setup_hook(self) -> None:
-            sc = spotify.SpotifyClient(
-                client_id='35e4a1289f4745f494aa9e6c418c9a0a',
-                client_secret='2fe747df85f34bbdb23557e7ce31dc9b'
-            )
-            node: wavelink.Node = wavelink.Node(uri='http://localhost:2333', password='youshallnotpass')
-            await wavelink.NodePool.connect(client=self.bot, nodes=[node], spotify=sc)
+    async def add_nodes(self):
+        await self.pool.create_node(
+            label="MAIN", host='localhost', port=2333, password='youshallnotpass',
+        )
 
-    @commands.Cog.listener()
-    async def on_wavelink_node_ready(self, node: wavelink.Node):
-        """Event fired when a node has finished connecting."""
-        print(f'Node: <{node.id}> is ready!')
+    # async def cog_load(self) -> None:
+    #     async def setup_hook(self) -> None:
+    #         sc = spotify.SpotifyClient(
+    #             client_id='35e4a1289f4745f494aa9e6c418c9a0a',
+    #             client_secret='2fe747df85f34bbdb23557e7ce31dc9b'
+    #         )
+    #         node: wavelink.Node = wavelink.Node(uri='http://localhost:2333', password='youshallnotpass')
+    #         await wavelink.NodePool.connect(client=self.bot, nodes=[node], spotify=sc)
+
+    # @commands.Cog.listener()
+    # async def on_wavelink_node_ready(self, node: wavelink.Node):
+    #     """Event fired when a node has finished connecting."""
+    #     print(f'Node: <{node.id}> is ready!')
 
     # @commands.command()
     # async def play(self, ctx: commands.Context, search: wavelink.YouTubeTrack, *, channel: disnake.VoiceChannel | None = None):
@@ -101,37 +137,56 @@ class Music(commands.Cog):
     #     vc = await channel.connect(cls=wavelink.Player)
     #     await vc.play(search)
 
+    @commands.Cog.listener()
+    async def on_track_end(event: TrackEndEvent):
+        assert isinstance(event.player, MyPlayer)
+
+        if event.player.queue:
+            await event.player.play(event.player.queue.pop(0))
+
     @commands.command()
-    async def play(self, ctx: commands.Context, *, search: wavelink.YouTubeTrack):
+    async def play(self, ctx: commands.Context, *, query: str):
         if not ctx.voice_client:
-            vc: wavelink.Player = await ctx.author.voice.channel.connect(cls=wavelink.Player)
+            player = await ctx.author.voice.channel.connect(cls=MyPlayer)
         elif not getattr(ctx.author.voice, "channel", None):
             return await ctx.send("Join a voice channel first, lol")
         else:
-            vc: wavelink.Player = ctx.author.channel.voice
+            player = ctx.guild.voice_client
 
-        tracks = await wavelink.YouTubeTrack.search(str(search))
+        tracks = await player.fetch_tracks(query)
+
+        if not tracks:
+            return await ctx.send("No tracks found.")
+
+        if isinstance(tracks, Playlist):
+            tracks = tracks.tracks
+            if len(tracks) > 1:
+                player.queue.extend(tracks[1:])
+
+        else:
+            player.queue.extend(tracks[0:])
+
         track = tracks[0]
 
-        if vc.queue.is_empty and not vc.is_playing():
-            await vc.play(search)
+        if not player.current:
+            await player.play(track)
             embed = disnake.Embed(title=f"Music from - {track.author} ",
                                   description=f"[{track.title}]({str(track.uri)})", color=0x2F3136)
             embed.add_field(name="Artist:", value=f"**`{track.author}`**", inline=True)
             embed.add_field(name="Duration:", value=f"**`{str(datetime.timedelta(seconds=track.length))}`**",
                             inline=True)
-            embed.set_footer(text=f"Music by Que")
-            embed.set_image(url=f"{track.thumbnail}")
-            await ctx.send(embed=embed, view=queueView())
-        else:
-            await vc.queue.put_wait(search)
-            await ctx.send(
-                embed=disnake.Embed(title="Queue", description=f"{search.title} added to the queue!", color=0x2F3136))
-        vc.ctx = ctx
-        try:
-            if vc.queue.loop is True: return
-        except (Exception, BaseException, disnake.Forbidden):
-            setattr(vc, "loop", False)
+            embed.set_footer(text=f"Synth © 2023 | All Rights Reserved")
+            # embed.set_image(url=f"{track.thumbnail}")
+            await ctx.send(embed=embed, view=QueueView())
+        # else:
+        #     await player.queue.put_wait(search)
+        #     await ctx.send(
+        #         embed=disnake.Embed(title="Queue", description=f"{search.title} added to the queue!", color=0x2F3136))
+        # player.ctx = ctx
+        # try:
+        #     if player.queue.loop is True: return
+        # except (Exception, BaseException, disnake.Forbidden):
+        #     setattr(player, "loop", False)
 
     # @commands.Cog.listener()
     # async def on_wavelink_node_ready(self, node: wavelink.Node):
