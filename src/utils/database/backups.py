@@ -9,7 +9,7 @@ class BackupDatabase(BaseDatabase):
     def __init__(self, database_name: str) -> None:
         super().__init__(database_name)
 
-    def check_backup(self, guild):
+    def check_backup(self, guild: disnake.Guild) -> bool:
         return len(self.get_items_in_cache({"guild_id": guild.id})) != 0
 
     async def get(
@@ -32,7 +32,7 @@ class BackupDatabase(BaseDatabase):
     async def update_backups_info(
         self,
         guild_id: Union[int, str, disnake.Guild],
-        backup_data: Union[dict],
+        backup_data: Dict[Any, Any],
     ) -> None:
         if await self.find_one_from_db({"guild_id": guild_id}) is None:
             return await self.add_to_db(

@@ -6,7 +6,7 @@ from src.utils import forms, FormsDatabase
 
 
 class ButtonOrSelect(disnake.ui.Select):
-    def __init__(self, bot: commands.Bot, forms_db: FormsDatabase):
+    def __init__(self, bot: commands.Bot, forms_db: FormsDatabase) -> None:
         super().__init__(
             placeholder="Choose a category",
             min_values=1,

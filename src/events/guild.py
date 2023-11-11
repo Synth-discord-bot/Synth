@@ -15,7 +15,7 @@ class EventGuild(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_guild_join(self, guild: disnake.Guild):
+    async def on_guild_join(self, guild: disnake.Guild) -> None:
         embed = disnake.Embed(title="Joined Guild", color=0x2F3136)
         embed.add_field(
             name="Guild", value=f"`{guild.name}` / `{guild.id}`", inline=False

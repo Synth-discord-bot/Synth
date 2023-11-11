@@ -11,11 +11,11 @@ time_units = {"d": "days", "h": "hours", "m": "minutes", "s": "seconds"}
 
 
 class Giveaway(commands.Cog):  # Need rewrite
-    """Helper commands to setup giveaway."""
+    """Helper commands to set up giveaway."""
 
     EMOJI = "<:tada:1169690533719986297>"
 
-    def __init__(self, bot) -> None:
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
 
     @commands.slash_command(
