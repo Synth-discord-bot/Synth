@@ -1,5 +1,5 @@
 import datetime
-from typing import Union, Any
+from typing import Union
 
 import disnake
 from disnake import Localized
@@ -17,9 +17,10 @@ class Utility(commands.Cog):
 
     EMOJI = "<:globe:1169690501063123065>"
 
-    def __init__(self, bot: commands.Bot) -> None:
+    def __init__(self, bot):
         self.bot = bot
         self.badges = {
+            # 0: "No Badge",
             1: "<:staff:1168622635228344403>",
             2: "<:partner:1168622631705137233>",
             4: "<:hypesquad:1168622629901586605>",
@@ -38,7 +39,7 @@ class Utility(commands.Cog):
         }
 
     @commands.command()
-    async def test(self, ctx: commands.Context) -> None:
+    async def test(self, ctx: commands.Context):
         await ctx.send(f"Test emoji: ")
 
     @commands.slash_command(
@@ -55,17 +56,12 @@ class Utility(commands.Cog):
             name=Localized("user", key="USER_COMMAND_USER_NAME"),
             default=None,
         ),
-    ) -> None:
+    ):
         if user is None:
             user = interaction.user
 
-        is_dev = (
-            ""
-            if not check_if_user_is_developer(bot=self.bot, user_id=user.id)
-            else " <:synthdev:1169689479452311582>"
-        )
         embed = disnake.Embed(
-            title=f"@{user.name} / {user.id} {is_dev}",
+            title=f"@{user.name} / {user.id} {'' if not check_if_user_is_developer(bot=self.bot, user_id=user.id) else ' <:synthdev:1169689479452311582>'}",
             color=0x2B2D31,
             description=f"[Link to DM](discord://discord.com/users/{user.id})",
         )
@@ -133,34 +129,26 @@ class Utility(commands.Cog):
             "Display information about server.", key="SERVER_COMMAND_DESC"
         ),
     )
-    async def server(self, interaction: disnake.MessageCommandInteraction) -> None:
+    async def server(self, interaction: disnake.MessageCommandInteraction):
         emoji_count = len(interaction.guild.emojis)
         list_of_bots = len([m for m in interaction.guild.members if m.bot])
         list_of_users = len([m for m in interaction.guild.members if not m.bot])
-        guild_created_at = format_dt(interaction.guild.created_at, style="f")
-        text_channels = len(interaction.guild.text_channels)
-        voice_channels = len(interaction.guild.voice_channels)
-        categories = len(interaction.guild.categories)
-        threads = len(interaction.guild.threads)
-        owner = interaction.guild.owner
 
         embed = disnake.Embed(
             title=f"{interaction.guild.name}'s information", color=0x2B2D31
         )
         embed.add_field(
             name="Main Information",
-            value=(
-                f"<:owner:1169684595697004616> **Owner:** {owner.mention} ({owner.id})\n"
-                f"<:created_at:1169684592006017034> **Created at:** {guild_created_at}\n"
-                f"<:boost:1169685353515462697> **Boosts:** {interaction.guild.premium_subscription_count}\n"
-                f"<:star:1169685347576336385> **Emojis:** {emoji_count}\n"
-                f"<:link:1169685349409226893> **Icon:** [click]({interaction.guild.icon})\n"
-                f"<:channels:1169684589640429599> **Channels:** {len(interaction.guild.channels)}\n"
-                f"<:design:1169686174374301746> <:channels:1169684589640429599> **Text Channels:** {text_channels}\n"
-                f"<:design:1169686174374301746> <:voice:1169684588315029534> **Voice Channels:** {voice_channels}\n"
-                f"<:design:1169686174374301746> <:category:1169684586666663999> **Categories:** {categories}\n"
-                f"<:design:1169688944502378536> <:thread:1169685355423866963> **Threads:** {threads}\n\n"
-            ),
+            value=f"<:owner:1169684595697004616> **Owner:** {interaction.guild.owner.mention} ({interaction.guild.owner.id})\n"
+            f"<:created_at:1169684592006017034> **Created at:** {format_dt(interaction.guild.created_at, style='f')}\n"
+            f"<:boost:1169685353515462697> **Boosts:** {interaction.guild.premium_subscription_count}\n"
+            f"<:star:1169685347576336385> **Emojis:** {emoji_count}\n"
+            f"<:link:1169685349409226893> **Icon:** [click]({interaction.guild.icon})\n"
+            f"<:channels:1169684589640429599> **Channels:** {len(interaction.guild.channels)}\n"
+            f"<:design:1169686174374301746> <:channels:1169684589640429599> **Text Channels:** {len(interaction.guild.text_channels)}\n"
+            f"<:design:1169686174374301746> <:voice:1169684588315029534> **Voice Channels:** {len(interaction.guild.voice_channels)}\n"
+            f"<:design:1169686174374301746> <:category:1169684586666663999> **Categories:** {len(interaction.guild.categories)}\n"
+            f"<:design:1169688944502378536> <:thread:1169685355423866963> **Threads:** {len(interaction.guild.threads)}\n\n",
             inline=False,
         )
         embed.add_field(
@@ -184,7 +172,7 @@ class Utility(commands.Cog):
             description="The channel to clear messages from",
             default=None,
         ),
-    ) -> None:
+    ):
         if channel is None:
             channel = interaction.channel
 
@@ -238,10 +226,11 @@ class Utility(commands.Cog):
     @commands.slash_command(
         name="botinfo", description="Display information about the bot."
     )
-    async def bot_info(self, interaction: disnake.MessageCommandInteraction):
-        channels = set(self.bot.get_all_channels())
-        big_builds = len([g for g in self.bot.guilds if g.member_count >= 1000])
-
+    async def botinfo(self, interaction: disnake.MessageCommandInteraction):
+        ch = []
+        for guild in self.bot.guilds:
+            for channel in guild.channels:
+                ch.append(channel.name)
         embed = disnake.Embed(
             title="Information about Synth",
             description="**Synth** - is a multi-functional Discord bot.",
@@ -257,9 +246,9 @@ class Utility(commands.Cog):
         embed.add_field(
             name="Popularity",
             value=f"<:info:1169685342077583480> Servers: **{len(self.bot.guilds)}**\n"
-            f"<:globe:1169690501063123065> Big servers (1000+): **{big_builds}**\n"
+            f"<:globe:1169690501063123065> Big servers (1000+): **{len([g for g in self.bot.guilds if g.member_count >= 1000])}**\n"
             f"<:members:1169684583369949285> Users: **{len(set(self.bot.get_all_members()))}**\n"
-            f"<:channels:1169684589640429599> Channels: **{len(channels)}**\n",
+            f"<:channels:1169684589640429599> Channels: **{len(ch)}**\n",
             inline=False,
         )
         embed.add_field(
@@ -275,13 +264,11 @@ class Utility(commands.Cog):
         embed.set_footer(
             text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
         )
+        support = "Support server"
+        website = "Website"
 
-        support = disnake.ui.Button(
-            label="Support server", url="https://discord.gg/7vT3H3tVYp"
-        )
-        website = disnake.ui.Button(
-            label="Documentation", url="https://synth.gitbook.io/"
-        )
+        support = disnake.ui.Button(label=support, url="https://discord.gg/7vT3H3tVYp")
+        website = disnake.ui.Button(label=website, url="https://synth.xyz/")
 
         await interaction.send(embed=embed, components=[support, website])
 
@@ -294,7 +281,7 @@ class Utility(commands.Cog):
             description="The user you want to view the avatar",
             default=None,
         ),
-    ) -> None:
+    ):
         user = user or interaction.author
         embed = disnake.Embed(color=0x2F3236)
         embed.set_author(name=user, icon_url=str(user.display_avatar))
@@ -313,9 +300,7 @@ class Utility(commands.Cog):
         embed.set_image(url=str(user.display_avatar))
         await interaction.send(embed=embed)
 
-    async def send_processing_message(
-        self, interaction: disnake.MessageCommandInteraction, action: str, role
-    ) -> None:
+    async def send_processing_message(self, interaction, action, role):
         message = await interaction.send(
             embed=disnake.Embed(
                 title=f"<a:loading:1168599537682755584> Please wait...",
@@ -328,13 +313,7 @@ class Utility(commands.Cog):
         )
         return message
 
-    async def process_role_action(
-        self,
-        interaction: disnake.MessageCommandInteraction,
-        role: disnake.Role,
-        action_func: Any,
-        action_str: str,
-    ):
+    async def process_role_action(self, interaction, role, action_func, action_str):
         total_members = len(interaction.guild.members)
         failed_members = []
 
@@ -390,7 +369,7 @@ class Utility(commands.Cog):
         role: disnake.Role = commands.Param(
             name="role", description="The role to add to all users"
         ),
-    ) -> None:
+    ):
         await self.process_role_action(
             interaction, role, disnake.Member.add_roles, "Adding"
         )
@@ -404,7 +383,7 @@ class Utility(commands.Cog):
         role: disnake.Role = commands.Param(
             name="role", description="The role to remove from all users"
         ),
-    ) -> None:
+    ):
         await self.process_role_action(
             interaction, role, disnake.Member.remove_roles, "Removing"
         )
@@ -420,7 +399,7 @@ class Utility(commands.Cog):
             description="The channel to lock",
             default=None,
         ),
-    ) -> None:
+    ):
         channel = channel or interaction.channel
 
         await channel.set_permissions(
@@ -441,7 +420,7 @@ class Utility(commands.Cog):
             description="The channel to unlock",
             default=None,
         ),
-    ) -> None:
+    ):
         channel = channel or interaction.channel
 
         await channel.set_permissions(
