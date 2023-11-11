@@ -24,11 +24,7 @@ class Bot(commands.Bot):
             command_prefix=misc.bot_get_guild_prefix,
             intents=disnake.Intents.all(),
             reload=True,
-            owner_ids=[
-                419159175009009675,
-                999682446675161148,
-                1167458549132181668,
-            ],
+            owner_ids={419159175009009675, 999682446675161148, 1167458549132181668},
         )
 
         # self.ipc = Server(self, secret_key=config.SECRET_IPC_KEY)  # well... need talk about config

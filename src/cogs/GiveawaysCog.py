@@ -16,7 +16,7 @@ class Giveaway(commands.Cog):  # Need rewrite
 
     EMOJI = "<:tada:1169690533719986297>"
 
-    def __init__(self, bot) -> None:
+    def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
         self.giveaway_db = giveaway
 

@@ -7,7 +7,7 @@ from src.utils.misc import check_channel
 
 
 class InviteTracker(commands.Cog):
-    """Helper commands to setup invite tracker system."""
+    """Helper commands to set up invite a tracker system."""
 
     EMOJI = "<:link:1169685349409226893>"
 
@@ -15,7 +15,7 @@ class InviteTracker(commands.Cog):
         self.bot = bot
         self.invites = invites
 
-    async def cog_load(self):
+    async def cog_load(self) -> None:
         await self.invites.fetch_and_cache_all()
 
     @commands.slash_command(
@@ -24,7 +24,7 @@ class InviteTracker(commands.Cog):
             "Setup invite tracker system", key="INVITE_TRACKER_COMMAND_DESC"
         ),
     )
-    async def _invites(self, _: disnake.ApplicationCommandInteraction):
+    async def _invites(self, _: disnake.ApplicationCommandInteraction) -> None:
         pass
 
     @_invites.sub_command(name="set_channel")
@@ -37,7 +37,7 @@ class InviteTracker(commands.Cog):
                 "Invite tracker channel", key="INVITE_TRACKER_SET_CHANNEL_DESC"
             ),
         ),
-    ):
+    ) -> None:
         invite_channel = await check_channel(channel=channel, interaction=interaction)
         await self.invites.update_invite_info(
             guild_id=interaction.guild.id, inviter=interaction.user, invited=[]

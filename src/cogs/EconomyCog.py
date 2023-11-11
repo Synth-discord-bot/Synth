@@ -1,16 +1,17 @@
 from typing import Any
 
-import disnake
 from disnake import (
     Embed,
     Localized,
     CommandInteraction,
-    ui,
     ButtonStyle,
     MessageInteraction,
     Color,
+    HTTPException,
+    Forbidden,
     Member,
     MessageCommandInteraction,
+    ui,
 )
 from disnake.ext import commands
 
@@ -58,7 +59,7 @@ class Buttons(ui.View):
                     color=Color.green(),
                 ),
             )
-        except (Exception, BaseException):
+        except (HTTPException, Forbidden, TypeError, ValueError):
             await interaction.edit_original_response(
                 content="",
                 embed=Embed(
@@ -68,7 +69,7 @@ class Buttons(ui.View):
                 ),
             )
 
-    @disnake.ui.button(
+    @ui.button(
         emoji="❌",
         style=ButtonStyle.secondary,
         custom_id="danger",
@@ -101,7 +102,7 @@ class Economy(commands.Cog):
         await self.economy.fetch_and_cache_all()
 
     @commands.slash_command(description=Localized("test", key="test"))
-    async def balance(self, interaction: CommandInteraction):
+    async def balance(self, interaction: CommandInteraction) -> None:
         if await self.economy.find_one({"id": interaction.author.id}) is None:
             await self.economy.add_to_db(
                 {"id": interaction.author.id, "balance": 0, "bank": 0}
@@ -128,7 +129,7 @@ class Economy(commands.Cog):
     )
     async def bank(
         self,
-        interaction: disnake.MessageCommandInteraction,
+        interaction: MessageCommandInteraction,
         money: Any = "all",
     ) -> None:
         """Send money to the bank
@@ -196,11 +197,11 @@ class Economy(commands.Cog):
     )
     async def pay(
         self,
-        interaction: disnake.MessageCommandInteraction,
-        user: disnake.Member,
+        interaction: MessageCommandInteraction,
+        user: Member = None,
         money: int = 0,
-    ):
-        if user is None:
+    ) -> None:
+        if not user:
             return await interaction.send("Please specify the user (mention or id)")
 
         if money == 0:

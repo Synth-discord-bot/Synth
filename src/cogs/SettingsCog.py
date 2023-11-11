@@ -48,10 +48,10 @@ class Settings(commands.Cog):
     #     }
 
     @commands.command()
-    async def set_prefix(self, ctx: commands.Context, prefix: str) -> Message:
+    async def set_prefix(self, ctx: commands.Context, prefix: str = None) -> Message:
         """Set the current prefix to another one"""
         if prefix is None or prefix == "":
-            return await ctx.reply("Please enter a prefix!")
+            return await ctx.reply("Please enter a prefix to set!")
         elif len(prefix) >= 5:
             return await ctx.reply("Your prefix is too long!")
         else:
@@ -59,8 +59,17 @@ class Settings(commands.Cog):
             return await ctx.reply(f"Successfully set prefix to {prefix}")
 
     @commands.command()
-    async def command_disable(self, ctx: commands.Context, command: str) -> Message:
+    async def command_disable(
+        self, ctx: commands.Context, command: str = None
+    ) -> Message:
         """Disable command for this guild (required administrator privileges)"""
+
+        if command is None:
+            return await ctx.reply(
+                embed=Embed(
+                    title="Error", description="Please specify a command to disable"
+                )
+            )
 
         # first, try to get command from name
         command_name = ctx.bot.get_command(command)
@@ -83,16 +92,14 @@ class Settings(commands.Cog):
             return await ctx.reply(
                 embed=Embed(
                     title="Information",
-                    description=f"Successfully disabled command "
+                    description="Successfully disabled command "
                     f"{'group' if isinstance(command_name, commands.Group) else ''} "
                     f"{command_name.name}",
                 )
             )
         elif command_name == ctx.command:
             return await ctx.reply(
-                embed=Embed(
-                    title="Error", description=f"You can't disable this command"
-                )
+                embed=Embed(title="Error", description="You can't disable this command")
             )
         else:
             return await ctx.reply(

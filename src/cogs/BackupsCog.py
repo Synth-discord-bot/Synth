@@ -12,7 +12,7 @@ from src.utils.misc import save_file_to_memory, ConfirmEnum
 
 
 class BackupsView(disnake.ui.View):
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: commands.Bot) -> None:
         super().__init__(timeout=None)
         self.bot = bot
         self.backups = backups

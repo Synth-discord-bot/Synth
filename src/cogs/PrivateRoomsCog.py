@@ -1,6 +1,7 @@
 import disnake
 import disnake.ui
 from disnake.ext import commands
+from disnake.ui import ActionRow
 
 from src.utils import private_rooms, PrivateRoomsDatabase
 
@@ -19,34 +20,36 @@ class SetOwnerSelect(disnake.ui.UserSelect):
 
     async def callback(self, inter: disnake.MessageInteraction):
         await inter.response.send_message(f"{self.values[0]}")
-        # self.values.pop(0)
         if selected_users := self.values:
-            """
-             if info := self.voices.get_items_in_cache({"guild_id": self.channel.guild.id}):
-            for channel in info.get("channels"):
-                if channel.get("channel_id") == self.channel.id:
-                    if interaction.author.id != channel.get("owner_id"):
-                        await interaction.response.send_message(
-                            "You are not allowed to use this buttons!", ephemeral=True
-                        )
-                        return False
-            return True
-            """
             result = self.voices.get_items_in_cache({"guild_id": inter.guild_id})
             for channel in result.get("channels"):
                 if channel.get("channel_id") == self.channel.id:
                     if selected_users[0].id != channel.get("owner_id"):
-                        await inter.channel.send(
-                            f"Successfully transferred ownership to {selected_users[0]}"
+                        embed = disnake.Embed(
+                            title="Ownership transfer",
+                            description=f"Successfully transferred ownership to {selected_users[0]}",
+                            color=0x2F3236,
                         )
+                        embed.set_footer(
+                            text=f"Synth © 2023 | All Rights Reserved",
+                            icon_url=self.bot.user.avatar,
+                        )
+                        await inter.channel.send(embed=embed)
                         return await self.voices.set_owner(
                             guild_id=inter.guild_id,
                             voice_channel=self.channel,
                             member=selected_users[0],
                         )
-                    return await inter.channel.send(
-                        "You are already the owner of the room"
+                    embed = disnake.Embed(
+                        title="Ownership transfer",
+                        description=f"<a:error:1168599839899144253> You are already the owner of the room",
+                        color=disnake.Color.red(),
                     )
+                    embed.set_footer(
+                        text=f"Synth © 2023 | All Rights Reserved",
+                        icon_url=self.bot.user.avatar,
+                    )
+                    return await inter.channel.send(embed=embed)
 
 
 class AccessToChannelSelect(disnake.ui.UserSelect):
@@ -63,19 +66,7 @@ class AccessToChannelSelect(disnake.ui.UserSelect):
 
     async def callback(self, inter: disnake.MessageInteraction):
         # await inter.response.send_message(f"{self.values[0]}")
-        # self.values.pop(0)
         if selected_users := self.values:
-            """
-             if info := self.voices.get_items_in_cache({"guild_id": self.channel.guild.id}):
-            for channel in info.get("channels"):
-                if channel.get("channel_id") == self.channel.id:
-                    if interaction.author.id != channel.get("owner_id"):
-                        await interaction.response.send_message(
-                            "You are not allowed to use this buttons!", ephemeral=True
-                        )
-                        return False
-            return True
-            """
             result = self.voices.get_items_in_cache({"guild_id": inter.guild_id})
             for channel in result.get("channels"):
                 if channel.get("channel_id") == self.channel.id:
@@ -85,17 +76,189 @@ class AccessToChannelSelect(disnake.ui.UserSelect):
                                 user, connect=True if not perms.connect else False
                             )
 
-                    await inter.send("Successfully", ephemeral=True)
-                    # await self.channel.set_permissions(user, speak=False)
-                    # print(channel.get("owner_id"))
-                    # if selected_users[0].id != channel.get("owner_id"):
-                    #     await inter.channel.send(f"Successfully transferred ownership to {selected_users[0]}")
-                    #     return await self.voices.set_owner(
-                    #         guild_id=inter.guild_id,
-                    #         voice_channel=self.channel,
-                    #         member=selected_users[0],
-                    #     )
-                    # await inter.channel.send("You are already the owner of the room")
+                        embed = disnake.Embed(
+                            title="Muted members",
+                            description=f"Successfully {'gave' if not perms.connect else 'removed'} access to room "
+                            f"for: **{user.mention}**",
+                            color=0x2F3236,
+                        )
+                        embed.set_footer(
+                            text=f"Synth © 2023 | All Rights Reserved",
+                            icon_url=self.bot.user.avatar,
+                        )
+                        await inter.send(embed=embed, ephemeral=True)
+
+
+class MuteUnmuteSelect(disnake.ui.Select):
+    def __init__(
+        self,
+        bot: commands.Bot,
+        channel: disnake.VoiceChannel,
+        voices: PrivateRoomsDatabase = private_rooms,
+    ):
+        self.bot = bot
+        self.voices = voices
+        self.channel = channel
+
+        options = []
+
+        for member in channel.members:
+            options.append(
+                disnake.SelectOption(
+                    label=member.name,
+                    value=str(member.id),
+                    emoji="<:unmute:1169690521472614500>"
+                    if not member.voice.mute
+                    else "<:mute:1170712518725992529>",
+                )
+            )
+
+        super().__init__(
+            placeholder="Choose members",
+            min_values=1,
+            max_values=len(channel.members),
+            options=options,
+        )
+
+    async def callback(self, inter: disnake.MessageInteraction):
+        result = self.voices.get_items_in_cache({"guild_id": inter.guild_id})
+        for channel in result.get("channels"):
+            if channel.get("channel_id") == self.channel.id:
+                for member_id in self.values:
+                    member = inter.guild.get_member(int(member_id))
+
+                    await member.edit(
+                        voice_channel=self.channel,
+                        mute=True if not member.voice.mute else False,
+                    )
+
+                    mute_unmute = "unmuted" if not member.voice.mute else "muted"
+                    embed = disnake.Embed(
+                        title=f"{mute_unmute} members",
+                        description=f"Successfully {mute_unmute}: **{member.mention}**",
+                        color=0x2F3236,
+                    )
+                    embed.set_footer(
+                        text=f"Synth © 2023 | All Rights Reserved",
+                        icon_url=self.bot.user.avatar,
+                    )
+                    await inter.send(embed=embed, ephemeral=True)
+
+
+class KickUsersSelect(disnake.ui.Select):
+    def __init__(
+        self,
+        bot: commands.Bot,
+        channel: disnake.VoiceChannel,
+        voices: PrivateRoomsDatabase = private_rooms,
+    ):
+        self.bot = bot
+        self.voices = voices
+        self.channel = channel
+
+        options = []
+
+        for member in channel.members:
+            options.append(
+                disnake.SelectOption(
+                    label=member.name,
+                    value=str(member.id),
+                    emoji="<:kick:1170712514288435271>",
+                )
+            )
+
+        super().__init__(
+            placeholder="Choose members",
+            min_values=1,
+            max_values=len(channel.members),
+            options=options,
+        )
+
+    async def callback(self, inter: disnake.MessageInteraction):
+        result = self.voices.get_items_in_cache({"guild_id": inter.guild_id})
+        for channel in result.get("channels"):
+            if channel.get("channel_id") == self.channel.id:
+                for _ in self.values:
+                    member = inter.guild.get_member(int(self.values[0]))
+                    if member.voice.channel == self.channel:
+                        await member.move_to(channel=None)  # type: ignore
+                await inter.send("Successfully", ephemeral=True)
+
+
+class SetChannelName(disnake.ui.Modal):
+    def __init__(
+        self,
+        bot: commands.Bot,
+        channel: disnake.VoiceChannel,
+    ):
+        self.bot = bot
+        self.channel = channel
+        self.values = {}
+
+        super().__init__(
+            title="Enter the new room name",
+            components=[
+                disnake.ui.TextInput(
+                    label="Room name",
+                    custom_id="channel_name",
+                    placeholder="Enter the new room name",
+                    required=True,
+                ),
+            ],
+        )
+
+    async def callback(self, inter: disnake.MessageInteraction):
+        new_channel_name = inter.data["components"][0]["components"][0]["value"]
+        await self.channel.edit(name=new_channel_name)
+
+        embed = disnake.Embed(
+            title="Changing the room name",
+            description=f"Successfully changed the room name to: **{new_channel_name}**",
+            color=0x2F3236,
+        )
+        embed.set_footer(
+            text=f"Synth © 2023 | All Rights Reserved",
+            icon_url=self.bot.user.avatar,
+        )
+        await inter.send(embed=embed, ephemeral=True)
+
+
+class SetUserLimit(disnake.ui.Modal):
+    def __init__(
+        self,
+        bot: commands.Bot,
+        channel: disnake.VoiceChannel,
+    ):
+        self.bot = bot
+        self.channel = channel
+        self.values = {}
+
+        super().__init__(
+            title="Enter the new room user limit",
+            components=[
+                disnake.ui.TextInput(
+                    label="Room user limit",
+                    custom_id="channel_limit",
+                    placeholder="Enter the new room user limit",
+                    required=True,
+                ),
+            ],
+        )
+
+    async def callback(self, inter: disnake.MessageInteraction):
+        new_channel_limit = inter.data["components"][0]["components"][0]["value"]
+        await self.channel.edit(user_limit=int(new_channel_limit))
+
+        embed = disnake.Embed(
+            title="Changing the user limit",
+            description=f"Successfully changed the room user limit to: **{new_channel_limit}**",
+            color=0x2F3236,
+        )
+        embed.set_footer(
+            text=f"Synth © 2023 | All Rights Reserved",
+            icon_url=self.bot.user.avatar,
+        )
+        await inter.send(embed=embed, ephemeral=True)
 
 
 class Buttons(disnake.ui.View):
@@ -106,7 +269,7 @@ class Buttons(disnake.ui.View):
         channel: disnake.VoiceChannel,
         voices: PrivateRoomsDatabase = private_rooms,
     ):
-        super().__init__(timeout=0)
+        super().__init__()
         self.bot = bot
         self.author = author
         self.voices = voices
@@ -116,198 +279,192 @@ class Buttons(disnake.ui.View):
     async def pen_callback(
         self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
-        await interaction.response.send_message(
-            content="Enter the new channel name:", ephemeral=True
-        )
-        msg = await self.bot.wait_for(
-            "message", check=lambda x: x.author == interaction.author, timeout=15
-        )
-        await self.channel.edit(name=msg.content)
-        await msg.delete()
-        await interaction.edit_original_message(f"New channel name: {msg.content}")
+        modal = SetChannelName(bot=self.bot, channel=self.channel)
+        await interaction.response.send_modal(modal)
 
-    @disnake.ui.button(emoji="<:members:1169684583369949285>")
+    @disnake.ui.button(emoji="<:members:1169684583369949285>", row=0)
     async def _users(
         self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
-        await interaction.response.send_message(
-            content="Enter the new channel limit:", ephemeral=True
-        )
-        msg = await self.bot.wait_for(
-            "message", check=lambda x: x.author == interaction.author, timeout=15
-        )
-        if msg.content.isdigit():
-            await self.channel.edit(user_limit=int(msg.content))
-        await msg.delete()
-        await interaction.delete_original_message()
+        modal = SetUserLimit(bot=self.bot, channel=self.channel)
+        await interaction.response.send_modal(modal)
 
-    @disnake.ui.button(emoji="<:created_at:1169684592006017034>️")
+    @disnake.ui.button(emoji="<:list:1169690529643114547>", row=0)
     async def _unlock_slot(
         self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
         await self.channel.edit(user_limit=0)
-        await interaction.response.send_message(
-            content="Successfully removed the user limit for this channel.",
-            ephemeral=True,
+        embed = disnake.Embed(
+            title="Removing the user limit",
+            description="Successfully removed the user limit for this channel.",
+            color=0x2F3236,
         )
+        embed.set_footer(
+            text=f"Synth © 2023 | All Rights Reserved",
+            icon_url=self.bot.user.avatar,
+        )
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @disnake.ui.button(emoji="<:kick:1170712514288435271>")
-    async def _lock(
+    @disnake.ui.button(emoji="<:invite:1169690514430382160>", row=0)
+    async def _lock_unlock(
         self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
-        await self.channel.set_permissions(
-            interaction.guild.default_role, connect=False
-        )
-        await interaction.response.send_message(
-            content="Successfully locked this channel for everyone.", ephemeral=True
-        )
+        if perms := self.channel.permissions_for(interaction.guild.default_role):
+            embed = disnake.Embed(
+                title="Lock/Unlock the room",
+                description=f"Successfully {'locked' if perms.connect else 'unlocked'} this channel for everyone.",
+                color=0x2F3236,
+            )
+            embed.set_footer(
+                text=f"Synth © 2023 | All Rights Reserved",
+                icon_url=self.bot.user.avatar,
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+            result = await self.voices.get_owner_id(interaction.guild.id, self.channel)
+            owner = interaction.guild.get_member(result)
 
-    @disnake.ui.button(emoji="<:invite:1169690514430382160>")
-    async def _unlock(
+            await self.channel.set_permissions(
+                interaction.guild.default_role, connect=False if perms.connect else True
+            )
+            await self.channel.set_permissions(owner, connect=True)
+
+    # noinspection SqlNoDataSourceInspection
+    @disnake.ui.button(emoji="<:ban:1170712517308317756>", row=1)
+    async def _kick(
         self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
-        await self.channel.set_permissions(interaction.guild.default_role, connect=True)
-        await interaction.response.send_message(
-            content="Successfully unlocked this channel for everyone.", ephemeral=True
+        view = disnake.ui.View()
+
+        view.add_item(
+            KickUsersSelect(self.bot, channel=self.channel, voices=self.voices)
         )
 
-    @disnake.ui.button(emoji="<:ban:1170712517308317756>")
-    async def _door(
-        self, _: disnake.ui.button, interaction: disnake.MessageInteraction
-    ):
-        await interaction.response.send_message(
-            content="Mention users, for disconnecting:",
-            ephemeral=True,
-        )
-        msg = await self.bot.wait_for(
-            "message",
-            check=lambda x: x.author == interaction.author and x.mentions,
-            timeout=15,
-        )
-        for user in msg.mentions:
-            if user.voice.channel == self.channel:
-                await user.move_to(channel=None)
-        await msg.delete()
-        await interaction.delete_original_message()
+        result = await self.voices.get_owner_id(interaction.guild.id, self.channel)
+        owner = interaction.guild.get_member(result)
 
-    @disnake.ui.button(emoji="<:allow:1171111639664300143>")
+        embed = disnake.Embed(
+            title="Disconnecting users",
+            description="Select users for disconnecting from your private room",
+            color=0x2F3236,
+        )
+        embed.add_field(
+            name="Settings",
+            value=(
+                f"Owner: {owner.mention}\n"
+                f"Name: **{self.channel.name}** ({self.channel.mention})\n"
+                f"Limit: **{self.channel.user_limit}**\n"
+                f"Bitrate: **{self.channel.bitrate}**"
+            ),
+        )
+        embed.set_footer(
+            text=f"Synth © 2023 | All Rights Reserved",
+            icon_url=self.bot.user.avatar,
+        )
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+
+    @disnake.ui.button(emoji="<:hammer:1169685339720384512>", row=1)
     async def _access(
         self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
-        # await interaction.response.send_message(
-        #     content="Mention users, you allow to join the room:",
-        #     ephemeral=True,
-        # )
-        # msg = await self.bot.wait_for(
-        #     "message",
-        #     check=lambda x: x.author == interaction.author and x.mentions,
-        #     timeout=15,
-        # )
-        # for user in msg.mentions:
-        #     await self.channel.set_permissions(user, connect=True)
-        # await msg.delete()
-        # await interaction.delete_original_message()
         view = disnake.ui.View()
 
         view.add_item(
             AccessToChannelSelect(self.bot, channel=self.channel, voices=self.voices)
         )
-        await interaction.response.send_message(
-            "Select a users to allow/disallow to join the room:",
-            view=view,
-            ephemeral=True,
-        )
 
-    @disnake.ui.button(emoji="<:disallow:1171111636573093929>")
-    async def _do_not_access(
-        self, _: disnake.ui.button, interaction: disnake.MessageInteraction
-    ):
-        await interaction.response.send_message(
-            content="Mention users, you don't allow to join the room:",
-            ephemeral=True,
-        )
-        msg = await self.bot.wait_for(
-            "message",
-            check=lambda x: x.author == interaction.author and x.mentions,
-            timeout=15,
-        )
-        for user in msg.mentions:
-            await self.channel.set_permissions(user, connect=False)
-        await msg.delete()
-        await interaction.delete_original_message()
+        result = await self.voices.get_owner_id(interaction.guild.id, self.channel)
+        owner = interaction.guild.get_member(result)
 
-    @disnake.ui.button(emoji="<:unmute:1169690521472614500>")
-    async def _unmute(
-        self, _: disnake.ui.button, interaction: disnake.MessageInteraction
-    ):
-        await interaction.response.send_message(
-            content="Mention users, you want to unmute in te room:", ephemeral=True
+        embed = disnake.Embed(
+            title="Toggle users joining",
+            description="Select users to allow/disallow to join the room",
+            color=0x2F3236,
         )
-        msg = await self.bot.wait_for(
-            "message",
-            check=lambda x: x.author == interaction.author and x.mentions,
-            timeout=15,
+        embed.add_field(
+            name="Settings",
+            value=(
+                f"Owner: {owner.mention}\n"
+                f"Name: **{self.channel.name}** ({self.channel.mention})\n"
+                f"Limit: **{self.channel.user_limit}**\n"
+                f"Bitrate: **{self.channel.bitrate}**"
+            ),
         )
-        for u in msg.mentions:
-            await self.channel.set_permissions(u, speak=True)
-        await msg.delete()
-        await interaction.delete_original_message()
+        embed.set_footer(
+            text=f"Synth © 2023 | All Rights Reserved",
+            icon_url=self.bot.user.avatar,
+        )
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
-    @disnake.ui.button(emoji="<:mute:1170712518725992529>")
+    @disnake.ui.button(emoji="<:mute:1170712518725992529>", row=1)
     async def _mute(
         self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
-        await interaction.response.send_message(
-            content="Mention users, you want to mute in te room:", ephemeral=True
-        )
-        msg = await self.bot.wait_for(
-            "message",
-            check=lambda x: x.author == interaction.author and x.mentions,
-            timeout=15,
-        )
-        for u in msg.mentions:
-            await self.channel.set_permissions(u, speak=False)
-        await msg.delete()
-        await interaction.delete_original_message()
+        view = disnake.ui.View()
+        view.add_item(MuteUnmuteSelect(self.bot, channel=self.channel))
 
-    @disnake.ui.button(emoji="<:owner:1169684595697004616>")
+        result = await self.voices.get_owner_id(interaction.guild.id, self.channel)
+        owner = interaction.guild.get_member(result)
+
+        embed = disnake.Embed(
+            title="Toggle users microphone",
+            description="Select users to mute/unmute in your room",
+            color=0x2F3236,
+        )
+        embed.add_field(
+            name="Settings",
+            value=(
+                f"Owner: {owner.mention}\n"
+                f"Name: **{self.channel.name}** ({self.channel.mention})\n"
+                f"Limit: **{self.channel.user_limit}**\n"
+                f"Bitrate: **{self.channel.bitrate}**"
+            ),
+        )
+        embed.set_footer(
+            text=f"Synth © 2023 | All Rights Reserved",
+            icon_url=self.bot.user.avatar,
+        )
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
+
+    @disnake.ui.button(emoji="<:owner:1169684595697004616>", row=1)
     async def transfer_ownership(
         self, _: disnake.ui.button, interaction: disnake.MessageInteraction
     ):
-        # user_select = disnake.ui.UserSelect(placeholder="Select a user...")
-        #
         view = disnake.ui.View()
 
         view.add_item(SetOwnerSelect(self.bot, channel=self.channel))
-        await interaction.response.send_message(
-            "Select a user:", view=view, ephemeral=True
-        )
-        # тут робимо спочатку для теста
 
-        # await interaction.response.send_message(
-        #     content="Enter te user, you want to transfer te ownership:",
-        #     ephemeral=True,
-        # )
-        # msg = await self.bot.wait_for(
-        #     "message",
-        #     check=lambda x: x.author == interaction.author and x.mentions,
-        #     timeout=15,
-        # )
-        # await msg.delete()
-        # await self.voices.set_owner(
-        #     guild_id=interaction.guild_id,
-        #     voice_channel=self.channel,
-        #     member=msg.mentions[0],
-        # )
-        # await interaction.edit_original_response("Successfully...")
+        result = await self.voices.get_owner_id(interaction.guild.id, self.channel)
+        owner = interaction.guild.get_member(result)
+
+        embed = disnake.Embed(
+            title="Transfer ownership",
+            description="Select a user to transfer the ownership of the room",
+            color=0x2F3236,
+        )
+        embed.add_field(
+            name="Settings",
+            value=f"Owner: {owner.mention}\n"
+            f"Name: **{self.channel.name}** ({self.channel.mention})\n"
+            f"Limit: **{self.channel.user_limit}**\n"
+            f"Bitrate: **{self.channel.bitrate}**",
+        )
+        embed.set_footer(
+            text=f"Synth © 2023 | All Rights Reserved",
+            icon_url=self.bot.user.avatar,
+        )
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
     async def interaction_check(self, interaction: disnake.MessageInteraction) -> bool:
         if info := self.voices.get_items_in_cache({"guild_id": self.channel.guild.id}):
             for channel in info.get("channels"):
                 if channel.get("channel_id") == self.channel.id:
                     if interaction.author.id != channel.get("owner_id"):
+                        embed = disnake.Embed(
+                            description="<a:error:1168599839899144253> You are not allowed to use this buttons",
+                            color=disnake.Color.red(),
+                        )
                         await interaction.response.send_message(
-                            "You are not allowed to use this buttons!", ephemeral=True
+                            embed=embed, ephemeral=True
                         )
                         return False
             return True
@@ -326,22 +483,26 @@ class PrivateRoom(commands.Cog):
     )
     async def setup_voice(self, ctx: commands.Context):
         message = await ctx.send(
-            embed=disnake.Embed(title="Voice Setup", description="Please, wait...")
+            embed=disnake.Embed(
+                title="Voice Setup", description="Please, wait...", color=0x2F3236
+            )
         )
         voice = await ctx.guild.create_voice_channel(
-            name="Create private room", reason="Voice Setup"
+            name="Create a private room", reason="Voice Setup"
         )
         await message.edit(
             embed=disnake.Embed(
                 title="Voice Setup",
-                description="Successfully created the private room Finalizing...",
+                description="Successfully created the private room\nFinalizing...",
+                color=0x2F3236,
             )
         )
         await self.private_rooms.create_main_room(ctx.guild.id, voice)
         await message.edit(
             embed=disnake.Embed(
-                title="Voice Setup",
+                title="Voice Rooms Setup",
                 description=f"Successfully created the private room. Channel: {voice.mention}",
+                color=0x2F3236,
             )
         )
 
@@ -363,25 +524,24 @@ class PrivateRoom(commands.Cog):
                 await member.move_to(channel=channel)
 
                 embed = disnake.Embed(
-                    title="Private Room",
-                    description="Choose action:",
+                    title="Private Rooms Settings",
                     colour=0x2F3136,
                 )
                 embed.description += """\n
-                            <:store:1169690541986959464> - edit channel name
-                            <:members:1169684583369949285> - change user count
-                            <:created_at:1169684592006017034> - Remove the slot limit
-                            <:invite:1169690514430382160> - open the room to everyone
-                            <:kick:1170712514288435271> - close the room to everyone
-                            <:ban:1170712517308317756> - kick user from the room
-                            <:allow:1171111639664300143> - allow user access to the room
-                            <:disallow:1171111636573093929> - disallow user access to the room
-                            <:mute:1170712518725992529> - mute user
-                            <:unmute:1169690521472614500> - unmute user
-                            <:owner:1169684595697004616> - transfer ownership of the room
-                                            """
-                view = Buttons(bot=self.bot, author=member, channel=channel)
-                await channel.send(content=member.mention, embed=embed, view=view)
+                    <:store:1169690541986959464> - edit channel name
+                    <:members:1169684583369949285> - change user count
+                    <:list:1169690529643114547> - remove the slot limit
+                    <:invite:1169690514430382160> - open/close the room for everyone
+                    <:ban:1170712517308317756> - kick user from the room
+                    <:hammer:1169685339720384512> - give/remove access for the room
+                    <:mute:1170712518725992529> - mute/unmute user
+                    <:owner:1169684595697004616> - transfer ownership of the room
+                """
+                await channel.send(
+                    content=member.mention,
+                    embed=embed,
+                    view=Buttons(bot=self.bot, author=member, channel=channel),
+                )
                 await self.private_rooms.create_private_room(member, channel)
                 return
         elif before.channel and len(before.channel.members) == 0:
@@ -396,6 +556,9 @@ class PrivateRoom(commands.Cog):
                                 member, before.channel
                             )
                             break
+
+        elif after.channel != before.channel and member.voice.mute:
+            await member.edit(mute=False)
 
     @commands.Cog.listener()
     async def on_message(self, message):
