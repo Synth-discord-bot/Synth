@@ -1,5 +1,7 @@
 ## The Synth Discord Bot
 
+### **Synth** -  is a multi-functional Discord bot with a wide range of features to help you customize your guild. It includes everything from basic utility commands and fun commands to more advanced features. 
+
 # TODO:
 
 - [x] Basic Utility commands 
@@ -8,7 +10,7 @@
 - [x] Private Rooms
 - [ ] Starboard system (custom setting)
 - [ ] Welcome/goodbye messages
-- [ ] Music player (spotify, youtube, your files, etc.)
+- [ ] Music player (spotify && your files)
 - [ ] Eval system (without internet connection && unrelated to the bot)
 - [ ] Ticket system
 - [x] Backup system 
