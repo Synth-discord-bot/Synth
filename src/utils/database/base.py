@@ -72,6 +72,7 @@ class BaseDatabase:
             or _id
         )
 
+        print(self.collection_cache)
         del self.collection_cache[id_to_delete]
         return
 
