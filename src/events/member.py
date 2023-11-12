@@ -2,7 +2,6 @@ import logging
 
 from disnake import Member
 from disnake.ext import commands
-
 from src.utils import economy, invites
 
 

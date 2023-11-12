@@ -10,6 +10,7 @@ from disnake import (
     Attachment,
     Message,
     Embed,
+    Guild,
     MessageCommandInteraction,
     TextChannel,
     HTTPException,
@@ -29,11 +30,13 @@ async def bot_get_guild_prefix(bot: commands.Bot, message: Message) -> List[str]
 
 
 # get prefix for commands, events etc..
-async def get_prefix(message: Message) -> Union[List[str], str]:
-    if not message.guild or await main_db.get_prefix(message.guild.id) is None:
+async def get_prefix(message: Union[Message, Guild]) -> Union[List[str], str]:
+    guild = message.guild if isinstance(message, Message) else message
+
+    if not guild or await main_db.get_prefix(guild.id) is None:
         return "s."
 
-    prefix = await main_db.get_prefix(message.guild.id)
+    prefix = await main_db.get_prefix(guild.id)
     return prefix
 
 

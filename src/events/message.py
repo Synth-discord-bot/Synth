@@ -3,6 +3,7 @@ from datetime import datetime
 
 import disnake
 from disnake.ext import commands
+from src.utils import logger
 
 from src.utils import logger
 
@@ -178,7 +179,9 @@ class EventMessages(commands.Cog):
             await channel.send(files=files[file : file + 10])
 
     @commands.Cog.listener()
-    async def on_message_edit(self, before, after):
+    async def on_message_edit(
+        self, before: disnake.Message, after: disnake.Message
+    ) -> None:
         if before.author == before.guild.me:
             return
 

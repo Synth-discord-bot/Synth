@@ -21,6 +21,8 @@ class BaseDatabase:
             param_filter.pop("id")
         elif _id := param_filter.get("guild_id", None):
             param_filter.pop("guild_id")
+        elif _id := param_filter.get("channel_id", None):
+            param_filter.pop("channel_id")
         elif _id := param_filter.get("_id", None):
             param_filter.pop("_id")
 
@@ -63,12 +65,14 @@ class BaseDatabase:
         """
 
         id_to_delete = (
-            _id.get("id", None)
+            _id.get("channel_id", None)
             or _id.get("guild_id", None)
+            or _id.get("id", None)
             or _id.get("_id", None)
             or _id
         )
 
+        print(self.collection_cache)
         del self.collection_cache[id_to_delete]
         return
 
@@ -144,6 +148,7 @@ class BaseDatabase:
         for data in results:
             _id = (
                 data.get("guild_id", None)
+                or data.get("channel_id", None)
                 or data.get("id", None)
                 or data.get("_id", None)
             )

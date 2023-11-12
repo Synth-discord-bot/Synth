@@ -10,7 +10,6 @@ from src.cogs.TicketsCog import SetupTicketSettings
 from .utils import misc
 from .utils.help import CustomHelpCommand
 from .utils.misc import get_prefix, is_command_disabled
-import mafic
 
 
 # from disnake.ext.ipc import Server
@@ -25,21 +24,11 @@ class Bot(commands.Bot):
             command_prefix=misc.bot_get_guild_prefix,
             intents=disnake.Intents.all(),
             reload=True,
-            owner_ids=[
-                419159175009009675,
-                999682446675161148,
-                1167458549132181668,
-            ],
+            owner_ids={419159175009009675, 999682446675161148, 1167458549132181668},
         )
+
+        # self.ipc = Server(self, secret_key=config.SECRET_IPC_KEY)  # well... need talk about config
         self.i18n.load("src/utils/locale")
-
-        self.pool = mafic.NodePool(self)
-        self.loop.create_task(self.add_nodes())
-
-    async def add_nodes(self):
-        await self.pool.create_node(
-            label="MAIN", host='localhost', port=2333, password='youshallnotpass',
-        )
 
     def view_add(self):
         views = [SetupTicketSettings()]
@@ -54,10 +43,10 @@ class Bot(commands.Bot):
             # TODO: blacklist
 
             # check if command is disabled
-            command = message.content.split()[0][len(prefix):]
+            command = message.content.split()[0][len(prefix) :]
             result = await is_command_disabled(message=message, command=command)
             if result:
-                return True
+                return
 
         return await self.process_commands(message=message)
 
@@ -76,10 +65,10 @@ class Bot(commands.Bot):
                     event_name = extension[:-3]
                     self.load_extension(f"src.cogs.{event_name}")
                 except (
-                        commands.ExtensionNotFound,
-                        commands.NoEntryPointError,
-                        commands.ExtensionFailed,
-                        commands.ExtensionError,
+                    commands.ExtensionNotFound,
+                    commands.NoEntryPointError,
+                    commands.ExtensionFailed,
+                    commands.ExtensionError,
                 ) as e:
                     logging.error(
                         f"\n\nFailed to load {extension}!\n{traceback.print_exception(e)}"
@@ -95,10 +84,10 @@ class Bot(commands.Bot):
             try:
                 self.load_extension(f"src.events.{event[:-3]}")
             except (
-                    commands.ExtensionNotFound,
-                    commands.NoEntryPointError,
-                    commands.ExtensionFailed,
-                    commands.ExtensionError,
+                commands.ExtensionNotFound,
+                commands.NoEntryPointError,
+                commands.ExtensionFailed,
+                commands.ExtensionError,
             ) as e:
                 exc_type = e.__class__.__name__
                 exc_line = sys.exc_info()[2].tb_lineno
