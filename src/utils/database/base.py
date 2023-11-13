@@ -3,6 +3,8 @@ from typing import Any, List, Union, Dict, Mapping
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCursor
 
+from os import getenv
+
 
 class BaseDatabase:
     def __init__(self, database_name: str) -> None:
@@ -11,6 +13,8 @@ class BaseDatabase:
         self.collection = self._database[database_name]
         self.collection_cache: Dict[Any, Any] = {}
         self.name = database_name
+
+        self.debug: bool = getenv("DEBUG", False) == "true"
 
     def _add_to_cache(self, param_filter: Dict[str, Any]) -> Any:
         """
@@ -27,6 +31,12 @@ class BaseDatabase:
             param_filter.pop("_id")
 
         self.collection_cache[_id] = param_filter
+
+        if self.debug:
+            logging.info(
+                f"[{self.name}]: Added {id_to_update} to cache\nValue: {param_filter}"
+            )
+
         return param_filter
 
     def _update_cache(
@@ -48,11 +58,20 @@ class BaseDatabase:
             or _id
         )
 
-        # self.collection_cache.setdefault(id_to_update, {}).update(new_value)
         if self.collection_cache.get(id_to_update, None) is None:
             self.collection_cache[id_to_update] = _id
+
+            if self.debug:
+                logging.info(
+                    f"[{self.name}]: Updated {id_to_update} by inserting a new item"
+                )
         else:
             self.collection_cache.get(id_to_update, None).update(new_value)
+
+            if self.debug:
+                logging.info(
+                    f"[{self.name}]: Updated {id_to_update} with get and update functions"
+                )
 
         return
 
@@ -60,7 +79,7 @@ class BaseDatabase:
         """
         Remove an item from the cache based on the provided filter.
 
-        :param param_filter: Filter criteria for finding the item to remove from the cache.
+        :param _id: Id of the item to remove
         :return: The removed item, or None if not found.
         """
 
@@ -72,7 +91,6 @@ class BaseDatabase:
             or _id
         )
 
-        print(self.collection_cache)
         del self.collection_cache[id_to_delete]
         return
 
@@ -96,6 +114,7 @@ class BaseDatabase:
 
         Args:
             query (Dict[int, Any]): Query to search
+            to_return (str, optional): Value to return.
 
         Returns:
             List[Dict[int, Dict[str, Any]]]: List of items in query
@@ -108,8 +127,19 @@ class BaseDatabase:
             query.pop("_id")
 
         if result := self.collection_cache.get(_id, {}):
+            if self.debug:
+                logging.info(f"[{self.name}]: Found {id_to_update} in cache")
+
             if to_return:
-                return result.get(to_return, None)
+                if self.debug:
+                    logging.info(
+                        (
+                            f"[{self.name}]: Returning "
+                            f"{to_return} from cache\nValue: {result.get(to_return, None)}"
+                        )
+                    )
+
+                    return result.get(to_return, None)
             return result
 
     async def find_one_from_cache(self, value: Dict[str, Any]) -> Any:
@@ -144,7 +174,9 @@ class BaseDatabase:
 
     async def fetch_and_cache_all(self) -> None:
         results = await self.get_items_in_db({}, to_list=True)
-        logging.info(f"[{self.name}]: Found {len(results)} items in database")
+        if self.debug:
+            logging.info(f"[{self.name}]: Found {len(results)} items in database")
+
         for data in results:
             _id = (
                 data.get("guild_id", None)
@@ -153,6 +185,8 @@ class BaseDatabase:
                 or data.get("_id", None)
             )
             self.collection_cache[_id] = data
+
+        logging.info(f"[{self.name}]: Successfully loaded all items to cache")
 
     async def update_db(self, data: Dict[str, Any], new_value: Dict[str, Any]) -> None:
         await self.collection.update_one(data, {"$set": new_value}, upsert=True)

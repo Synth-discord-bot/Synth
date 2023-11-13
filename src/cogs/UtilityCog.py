@@ -238,7 +238,7 @@ class Utility(commands.Cog):
     @commands.slash_command(
         name="botinfo", description="Display information about the bot."
     )
-    async def bot_info(self, interaction: disnake.MessageCommandInteraction):
+    async def _bot_info(self, interaction: disnake.MessageCommandInteraction):
         channels = set(self.bot.get_all_channels())
         big_builds = len([g for g in self.bot.guilds if g.member_count >= 1000])
 
