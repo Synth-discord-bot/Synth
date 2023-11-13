@@ -55,7 +55,7 @@ async def is_command_disabled(message: Message, command: str) -> bool:
                 colour=0xFF0000,
             )
         )
-        return False
+        return True
 
 
 async def check_channel(

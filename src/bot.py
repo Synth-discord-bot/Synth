@@ -1,6 +1,5 @@
 import logging
 import os
-import sys
 import traceback
 
 import disnake
@@ -17,7 +16,7 @@ from .utils.misc import get_prefix, is_command_disabled
 class Bot(commands.Bot):
     """The base class of Synth bot."""
 
-    def __init__(self) -> None:
+    def __init__(self, debug: bool) -> None:
         super(Bot, self).__init__(
             help_command=CustomHelpCommand(),
             command_prefix=misc.bot_get_guild_prefix,
@@ -25,33 +24,35 @@ class Bot(commands.Bot):
             reload=True,
             owner_ids={419159175009009675, 999682446675161148, 1167458549132181668},
         )
+        self.debug = debug
 
         # self.ipc = Server(self, secret_key=config.SECRET_IPC_KEY)  # well... need talk about config
         self.i18n.load("src/utils/locale")
 
-    async def on_message(self, message: disnake.Message):
+    async def on_message(self, message: disnake.Message) -> None:
         prefix = await get_prefix(message)
+        prefix_len = len(prefix)
 
         if message.content.startswith(prefix):
             # TODO: blacklist
 
             # check if command is disabled
-            command = message.content.split()[0][len(prefix) :]
+            command = message.content.split()[0][prefix_len:]
+            if self.debug:
+                logging.debug(f"{message.author} has executed the command {command}")
             result = await is_command_disabled(message=message, command=command)
             if result:
                 return
 
         return await self.process_commands(message=message)
 
-    # async def setup_hook(self):
-    #     await self.ipc.start()
-
     async def on_ready(self) -> None:
-        logging.info(
-            f"Invite link: https://discord.com/api/oauth2/authorize?client_id="
-            f"{self.user.id}&permissions=980937982&scope=bot%20applications.commands"
-        )
-        logging.debug(f"Connected to {self.user}")
+        if self.debug:
+            logging.info(
+                f"Invite link: https://discord.com/api/oauth2/authorize?client_id="
+                f"{self.user.id}&permissions=980937982&scope=bot%20applications.commands"
+            )
+            logging.debug(f"Connected to {self.user}")
         for extension in os.listdir("src\\cogs"):
             if extension.endswith(".py"):
                 try:
