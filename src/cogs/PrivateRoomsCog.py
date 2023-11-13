@@ -28,7 +28,7 @@ class SetOwnerSelect(disnake.ui.UserSelect):
                         embed = disnake.Embed(
                             title="Ownership transfer",
                             description=f"Successfully transferred ownership to {selected_users[0]}",
-                            color=0x2F3236,
+                            color=self.settings_db.get_embed_color(inter.guild.id),
                         )
                         embed.set_footer(
                             text=f"Synth © 2023 | All Rights Reserved",
@@ -80,7 +80,7 @@ class AccessToChannelSelect(disnake.ui.UserSelect):
                             title="Muted members",
                             description=f"Successfully {'gave' if not perms.connect else 'removed'} access to room "
                             f"for: **{user.mention}**",
-                            color=0x2F3236,
+                            color=self.settings_db.get_embed_color(inter.guild.id),
                         )
                         embed.set_footer(
                             text=f"Synth © 2023 | All Rights Reserved",
@@ -136,7 +136,7 @@ class MuteUnmuteSelect(disnake.ui.Select):
                     embed = disnake.Embed(
                         title=f"{mute_unmute} members",
                         description=f"Successfully {mute_unmute}: **{member.mention}**",
-                        color=0x2F3236,
+                        color=self.settings_db.get_embed_color(inter.guild.id),
                     )
                     embed.set_footer(
                         text=f"Synth © 2023 | All Rights Reserved",
@@ -214,7 +214,7 @@ class SetChannelName(disnake.ui.Modal):
         embed = disnake.Embed(
             title="Changing the room name",
             description=f"Successfully changed the room name to: **{new_channel_name}**",
-            color=0x2F3236,
+            color=self.settings_db.get_embed_color(inter.guild.id),
         )
         embed.set_footer(
             text=f"Synth © 2023 | All Rights Reserved",
@@ -252,7 +252,7 @@ class SetUserLimit(disnake.ui.Modal):
         embed = disnake.Embed(
             title="Changing the user limit",
             description=f"Successfully changed the room user limit to: **{new_channel_limit}**",
-            color=0x2F3236,
+            color=self.settings_db.get_embed_color(inter.guild.id),
         )
         embed.set_footer(
             text=f"Synth © 2023 | All Rights Reserved",
@@ -297,7 +297,7 @@ class Buttons(disnake.ui.View):
         embed = disnake.Embed(
             title="Removing the user limit",
             description="Successfully removed the user limit for this channel.",
-            color=0x2F3236,
+            color=self.settings_db.get_embed_color(interaction.guild.id),
         )
         embed.set_footer(
             text=f"Synth © 2023 | All Rights Reserved",
@@ -313,7 +313,7 @@ class Buttons(disnake.ui.View):
             embed = disnake.Embed(
                 title="Lock/Unlock the room",
                 description=f"Successfully {'locked' if perms.connect else 'unlocked'} this channel for everyone.",
-                color=0x2F3236,
+                color=self.settings_db.get_embed_color(interaction.guild.id),
             )
             embed.set_footer(
                 text=f"Synth © 2023 | All Rights Reserved",
@@ -345,7 +345,7 @@ class Buttons(disnake.ui.View):
         embed = disnake.Embed(
             title="Disconnecting users",
             description="Select users for disconnecting from your private room",
-            color=0x2F3236,
+            color=self.settings_db.get_embed_color(interaction.guild.id),
         )
         embed.add_field(
             name="Settings",
@@ -378,7 +378,7 @@ class Buttons(disnake.ui.View):
         embed = disnake.Embed(
             title="Toggle users joining",
             description="Select users to allow/disallow to join the room",
-            color=0x2F3236,
+            color=self.settings_db.get_embed_color(interaction.guild.id),
         )
         embed.add_field(
             name="Settings",
@@ -408,7 +408,7 @@ class Buttons(disnake.ui.View):
         embed = disnake.Embed(
             title="Toggle users microphone",
             description="Select users to mute/unmute in your room",
-            color=0x2F3236,
+            color=self.settings_db.get_embed_color(interaction.guild.id),
         )
         embed.add_field(
             name="Settings",
@@ -439,7 +439,7 @@ class Buttons(disnake.ui.View):
         embed = disnake.Embed(
             title="Transfer ownership",
             description="Select a user to transfer the ownership of the room",
-            color=0x2F3236,
+            color=self.settings_db.get_embed_color(interaction.guild.id),
         )
         embed.add_field(
             name="Settings",
@@ -471,6 +471,7 @@ class Buttons(disnake.ui.View):
 
 
 class PrivateRoom(commands.Cog):
+    """Set up a private room"""
     def __init__(self, bot):
         self.bot = bot
         self.private_rooms = private_rooms
@@ -484,7 +485,7 @@ class PrivateRoom(commands.Cog):
     async def setup_voice(self, ctx: commands.Context):
         message = await ctx.send(
             embed=disnake.Embed(
-                title="Voice Setup", description="Please, wait...", color=0x2F3236
+                title="Voice Setup", description="Please, wait...", color=self.settings_db.get_embed_color(ctx.guild.id)
             )
         )
         voice = await ctx.guild.create_voice_channel(
@@ -494,7 +495,7 @@ class PrivateRoom(commands.Cog):
             embed=disnake.Embed(
                 title="Voice Setup",
                 description="Successfully created the private room\nFinalizing...",
-                color=0x2F3236,
+                color=self.settings_db.get_embed_color(ctx.guild.id),
             )
         )
         await self.private_rooms.create_main_room(ctx.guild.id, voice)
@@ -502,7 +503,7 @@ class PrivateRoom(commands.Cog):
             embed=disnake.Embed(
                 title="Voice Rooms Setup",
                 description=f"Successfully created the private room. Channel: {voice.mention}",
-                color=0x2F3236,
+                color=self.settings_db.get_embed_color(ctx.guild.id),
             )
         )
 
@@ -525,7 +526,7 @@ class PrivateRoom(commands.Cog):
 
                 embed = disnake.Embed(
                     title="Private Rooms Settings",
-                    colour=0x2F3136,
+                    colour=self.settings_db.get_embed_color(member.guild.id),
                 )
                 embed.description += """\n
                     <:store:1169690541986959464> - edit channel name

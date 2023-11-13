@@ -4,7 +4,7 @@ import disnake
 from disnake import InteractionMessage
 from disnake.ext import commands
 
-from src.utils import logger
+from src.utils import logger, main_db
 from src.utils.misc import check_channel
 
 
@@ -16,6 +16,7 @@ class Logger(commands.Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
         self.logger = logger
+        self.settings_db = main_db
 
     async def cog_load(self) -> None:
         await self.logger.fetch_and_cache_all()
@@ -70,6 +71,7 @@ class Logger(commands.Cog):
                 embed=disnake.Embed(
                     title="Logger",
                     description="Successfully setup loggers to channel(s)!",
+                    color = self.settings_db.get_embed_color(interaction.guild.id)
                 )
             )
         return

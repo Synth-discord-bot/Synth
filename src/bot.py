@@ -6,7 +6,6 @@ import traceback
 import disnake
 from disnake.ext import commands
 
-from src.cogs.TicketsCog import SetupTicketSettings
 from .utils import misc
 from .utils.help import CustomHelpCommand
 from .utils.misc import get_prefix, is_command_disabled
@@ -30,11 +29,11 @@ class Bot(commands.Bot):
         # self.ipc = Server(self, secret_key=config.SECRET_IPC_KEY)  # well... need talk about config
         self.i18n.load("src/utils/locale")
 
-    def view_add(self):
-        views = [SetupTicketSettings()]
-        for view in views:
-            self.add_view(view)
-            logging.info(f"Loaded {view.id} view")
+    # def view_add(self):
+    #     views = [SetupTicketSettings()]
+    #     for view in views:
+    #         self.add_view(view)
+    #         logging.info(f"Loaded {view.id} view")
 
     async def on_message(self, message: disnake.Message):
         prefix = await get_prefix(message)
@@ -102,7 +101,7 @@ class Bot(commands.Bot):
         await self.change_presence(
             activity=disnake.Activity(
                 type=disnake.ActivityType.competing,
-                name=f">>help | v1.0.",
+                name=f">>help | v1.0",
                 status=disnake.Status.idle,
             )
         )

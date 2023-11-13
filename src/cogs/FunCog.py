@@ -4,6 +4,7 @@ from typing import Optional
 import disnake
 from disnake import Localized
 from disnake.ext import commands
+from src.utils import main_db
 
 
 class Fun(commands.Cog):
@@ -13,11 +14,13 @@ class Fun(commands.Cog):
 
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
+        self.settings_db = main_db
 
     @commands.slash_command(
         name=Localized("roll", key="ROLL_COMMAND_NAME"),
         description=Localized("Roll a dice", key="ROLL_COMMAND_DESC"),
     )
+    @commands.CooldownMapping.from_cooldown(1, 5, commands.BucketType.user)
     async def roll(
         self,
         interaction: disnake.MessageCommandInteraction,
@@ -29,7 +32,7 @@ class Fun(commands.Cog):
     ) -> None:
         roll = random.randint(1, number)
         embed = disnake.Embed(
-            title="Rolled", color=0x2B2D31, description=f"You rolled a `{roll}`"
+            title="Rolled", color=self.settings_db.get_embed_color(interaction.guild.id), description=f"You rolled a `{roll}`"
         )
         await interaction.send(embed=embed)
 
@@ -40,7 +43,7 @@ class Fun(commands.Cog):
     async def coin(self, interaction: disnake.MessageCommandInteraction) -> None:
         embed = disnake.Embed(
             title="Flip coin",
-            color=0x2B2D31,
+            color=self.settings_db.get_embed_color(interaction.guild.id),
             description=random.choice(["Heads", "Tails"]),
         )
 
@@ -130,31 +133,31 @@ class Fun(commands.Cog):
         match random.randint(1, 5):
             case 1:
                 embed = disnake.Embed(
-                    title="Yes", description=f"{question}", color=0x2B2D31
+                    title="Yes", description=f"{question}", color=self.settings_db.get_embed_color(interaction.guild.id)
                 ).set_image(
                     url="https://c.tenor.com/R_itimARcLAAAAAC/talking-ben-yes.gif"
                 )
             case 2:
                 embed = disnake.Embed(
-                    title="No", description=f"{question}", color=0x2B2D31
+                    title="No", description=f"{question}", color=self.settings_db.get_embed_color(interaction.guild.id)
                 ).set_image(
                     url="https://c.tenor.com/3ZLujiiPc4YAAAAC/talking-ben-no.gif"
                 )
             case 3:
                 embed = disnake.Embed(
-                    title="Hohoho", description=f"{question}", color=0x2B2D31
+                    title="Hohoho", description=f"{question}", color=self.settings_db.get_embed_color(interaction.guild.id)
                 ).set_image(
                     url="https://c.tenor.com/agrQMQjQTzgAAAAd/talking-ben-laugh.gif"
                 )
             case 4:
                 embed = disnake.Embed(
-                    title="Ugh...", description=f"{question}", color=0x2B2D31
+                    title="Ugh...", description=f"{question}", color=self.settings_db.get_embed_color(interaction.guild.id)
                 ).set_image(
                     url="https://c.tenor.com/fr6i8VzKJuEAAAAd/talking-ben-ugh.gif"
                 )
             case 5:
                 embed = disnake.Embed(
-                    title=f"Bye...", description=f"{question}", color=0x2B2D31
+                    title=f"Bye...", description=f"{question}", color=self.settings_db.get_embed_color(interaction.guild.id)
                 ).set_image(
                     url="https://c.tenor.com/7j3yFGeMMgIAAAAd/talking-ben-ben.gif"
                 )

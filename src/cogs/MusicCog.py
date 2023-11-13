@@ -29,6 +29,7 @@ class QueueView(View):
     ) -> None:
         player: MusicPlayer
 
+
         if player := interaction.guild.voice_client:  # type: ignore
             if not player.queue:
                 return await interaction.response.send_message(
@@ -69,7 +70,7 @@ class QueueView(View):
         description = ""
 
         if player := interaction.guild.voice_client:  # type: ignore
-            embed = disnake.Embed(title="Music Queue", color=0x2F3136)
+            embed = disnake.Embed(title="Music Queue", color=self.settings_db.get_embed_color(interaction.guild.id))
 
             if len(player.queue) > 0:
                 for index, music in enumerate(player.queue, start=1):
@@ -92,7 +93,7 @@ class QueueView(View):
                 embed=disnake.Embed(
                     title="Disconnecting...",
                     description="I have disconnected from voice channel",
-                    color=0x2F3136,
+                    color=self.settings_db.get_embed_color(interaction.guild.id),
                 ), ephemeral=True
             )
 
@@ -137,7 +138,7 @@ class Music(commands.Cog):
             embed = disnake.Embed(
                 title=f"Now playing - {event.track.title}",
                 description=f"[{event.track.title}]({str(event.track.uri)})",
-                color=0x2F3136,
+                color=self.settings_db.get_embed_color(event.guild.id),
             )
             embed.add_field(
                 name="Artist:", value=f"**`{event.track.author}`**", inline=True
@@ -176,7 +177,7 @@ class Music(commands.Cog):
         #print(type(tracks))
         # print(type(tracks[0]))
 
-        embed = disnake.Embed(color=0x2F3136)
+        embed = disnake.Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
 
         if player.current:
             embed.title = "Queue"

@@ -52,7 +52,7 @@ async def is_command_disabled(message: Message, command: str) -> bool:
                 colour=0xFF0000,
             )
         )
-        return False
+        return True
 
 
 async def check_channel(
@@ -95,7 +95,7 @@ def is_owner():
 
         return True
 
-    return commands.check(predicate)
+    return commands.check(predicate) # type: ignore
 
 
 def has_bot_permissions():
@@ -113,7 +113,7 @@ def has_bot_permissions():
 
         return True
 
-    return commands.check(predicate)
+    return commands.check(predicate) # type: ignore
 
 
 def emoji(name: Literal["loading", "success", "error", "users"]):

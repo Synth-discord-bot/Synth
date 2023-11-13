@@ -7,7 +7,6 @@ from .database.private_rooms import PrivateRoomsDatabase
 from .database.warns import WarnDatabase
 from .database.giveaway import GiveawayDatabase
 
-economy = EconomyDatabase("economy")
 main_db = MainDatabase("bot")
 forms = FormsDatabase("form")
 logger = LoggerDatabase("logger")

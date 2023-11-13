@@ -6,7 +6,7 @@ import disnake
 import ujson
 from disnake.ext import commands
 
-from src.utils import backups
+from src.utils import backups, main_db
 from src.utils.backup import Backup as BackupGuild
 from src.utils.misc import save_file_to_memory, ConfirmEnum
 
@@ -16,6 +16,7 @@ class BackupsView(disnake.ui.View):
         super().__init__(timeout=None)
         self.bot = bot
         self.backups = backups
+        self.settings_db = main_db
 
     async def confirm(
         self, interaction: disnake.MessageInteraction, embed: disnake.Embed = None
@@ -33,7 +34,7 @@ class BackupsView(disnake.ui.View):
 
         if not embed:
             embed = disnake.Embed(
-                title="Confirmation", description="Are you sure?", color=0x2F3136
+                title="Confirmation", description="Are you sure?", color=self.settings_db.get_embed_color(interaction.guild.id)
             )
 
         await interaction.send(embed=embed, ephemeral=True, components=buttons)
@@ -51,12 +52,12 @@ class BackupsView(disnake.ui.View):
     async def create_backup(
         self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ) -> None:
-        embed = disnake.Embed(color=0x2F3136)
+        embed = disnake.Embed(color=self.settings_db.get_embed_color(interaction.guild.id))
 
         confirm_embed = disnake.Embed(
             title="Confirmation",
             description="Are you sure you want to **create** server backup?",
-            color=0x2F3136,
+            color=self.settings_db.get_embed_color(interaction.guild.id),
         )
         response = await self.confirm(interaction=interaction, embed=confirm_embed)
         if response == ConfirmEnum.OK:
@@ -106,12 +107,12 @@ class BackupsView(disnake.ui.View):
     async def load_backup(
         self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ) -> None:
-        embed = disnake.Embed(color=0x2F3136)
+        embed = disnake.Embed(color=self.settings_db.get_embed_color(interaction.guild.id))
 
         confirm_embed = disnake.Embed(
             title="Confirmation",
             description="Are you sure you want to **load** server backup?",
-            color=0x2F3136,
+            color=self.settings_db.get_embed_color(interaction.guild.id),
         )
         response = await self.confirm(interaction=interaction, embed=confirm_embed)
         if response == ConfirmEnum.OK:
@@ -170,7 +171,7 @@ class BackupsView(disnake.ui.View):
             embed = disnake.Embed(
                 title="An error occurred",
                 description="There is no backup for this server",
-                color=0x2F3136,
+                color=self.settings_db.get_embed_color(interaction.guild.id),
             )
             await interaction.send(embed=embed)
             return
@@ -178,7 +179,7 @@ class BackupsView(disnake.ui.View):
         embed = disnake.Embed(
             title="Confirmation",
             description="Are you sure you want to **delete** the current server backup?",
-            color=0x2F3136,
+            color=self.settings_db.get_embed_color(interaction.guild.id),
         )
         response = await self.confirm(interaction=interaction, embed=embed)
         if response == ConfirmEnum.OK:
@@ -225,6 +226,7 @@ class Backup(commands.Cog):
         super(Backup, self).__init__()
         self.bot = bot
         self.backups = backups
+        self.settings_db = main_db
 
     async def cog_load(self) -> None:
         await self.backups.fetch_and_cache_all()
@@ -233,7 +235,7 @@ class Backup(commands.Cog):
     @commands.has_permissions(administrator=True)
     @commands.cooldown(1, 5, commands.BucketType.guild)
     async def backup(self, ctx: commands.Context) -> None:
-        embed = disnake.Embed(color=0x2F3136)
+        embed = disnake.Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
         embed.title = "Backup system"
         embed.add_field(
             name="Information",

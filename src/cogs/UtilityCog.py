@@ -66,7 +66,7 @@ class Utility(commands.Cog):
         )
         embed = disnake.Embed(
             title=f"@{user.name} / {user.id} {is_dev}",
-            color=0x2B2D31,
+            color=self.settings_db.get_embed_color(interaction.guild.id),
             description=f"[Link to DM](discord://discord.com/users/{user.id})",
         )
         embed.add_field(
@@ -145,7 +145,7 @@ class Utility(commands.Cog):
         owner = interaction.guild.owner
 
         embed = disnake.Embed(
-            title=f"{interaction.guild.name}'s information", color=0x2B2D31
+            title=f"{interaction.guild.name}'s information", color=self.settings_db.get_embed_color(interaction.guild.id)
         )
         embed.add_field(
             name="Main Information",
@@ -227,7 +227,7 @@ class Utility(commands.Cog):
             )
             return
 
-        embed = disnake.Embed(color=0x2F3236)
+        embed = disnake.Embed(color=self.settings_db.get_embed_color(interaction.guild.id))
         embed.title = "<a:loading:1168599537682755584> Cleaning messages..."
         embed.description = f"Deleted **{len(deleted)}** messages"
         embed.set_footer(
@@ -245,7 +245,7 @@ class Utility(commands.Cog):
         embed = disnake.Embed(
             title="Information about Synth",
             description="**Synth** - is a multi-functional Discord bot.",
-            color=0x2F3236,
+            color=self.settings_db.get_embed_color(interaction.guild.id),
         ).set_thumbnail(url=self.bot.user.avatar)
         embed.add_field(
             name="Main",
@@ -296,7 +296,7 @@ class Utility(commands.Cog):
         ),
     ) -> None:
         user = user or interaction.author
-        embed = disnake.Embed(color=0x2F3236)
+        embed = disnake.Embed(color=self.settings_db.get_embed_color(interaction.guild.id))
         embed.set_author(name=user, icon_url=str(user.display_avatar))
         if user.avatar is not None:
             embed.description = (
@@ -321,7 +321,7 @@ class Utility(commands.Cog):
                 title=f"<a:loading:1168599537682755584> Please wait...",
                 description=f"{action} {role.mention} to all members in this server.\n"
                 f"Please do not delete this message until the process is completed.",
-                color=0x2F3236,
+                color=self.settings_db.get_embed_color(interaction.guild.id),
             ).set_footer(
                 text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
             )
@@ -356,7 +356,7 @@ class Utility(commands.Cog):
                         description=f"Successfully {action_str} role for "
                         f"**{total_members - failed_count}/{total_members}** members. "
                         f"Failed to {action_str} role for **{failed_count}** members.",
-                        color=0x2F3236,
+                        color=self.settings_db.get_embed_color(interaction.guild.id),
                     ).set_footer(
                         text="Synth © 2023 | All Rights Reserved",
                         icon_url=self.bot.user.avatar,
@@ -366,7 +366,7 @@ class Utility(commands.Cog):
                 await processing_message.edit(
                     embed=disnake.Embed(
                         description=f"Successfully {action_str} role for all **{total_members}** members.",
-                        color=0x2F3236,
+                        color=self.settings_db.get_embed_color(interaction.guild.id),
                     ).set_footer(
                         text="Synth © 2023 | All Rights Reserved",
                         icon_url=self.bot.user.avatar,

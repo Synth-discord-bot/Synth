@@ -15,6 +15,72 @@ class EventMessages(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
+    async def on_thread_create(self, thread: disnake.Thread) -> None:
+        logger_channel = await self.logger.get_loggers(
+            guild_id=thread.guild.id, to_return="message"
+        )
+
+        if not logger_channel:
+            return
+        
+        if thread.author == thread.guild.me:
+            return
+        
+        embed = disnake.Embed(
+            color=self.settings_db.get_embed_color(thread.guild.id),
+            title="Synth | Thread created",
+            description=""
+        )
+        embed.add_field(
+            name = "Thread name",
+            value = thread.name
+        )
+        embed.add_field(
+            name = "Thread channel",
+            value = thread
+        )
+        embed.add_field(
+            name = "Thread author",
+            value = f"{thread.author.mention} (`{thread.author}` `ID: {thread.author.id}`)"
+        )
+
+        if channel := await thread.guild.fetch_channel(int(logger_channel)):
+            await channel.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_thread_delete(self, thread: disnake.Thread) -> None:
+        logger_channel = await self.logger.get_loggers(
+            guild_id=thread.guild.id, to_return="message"
+        )
+
+        if not logger_channel:
+            return
+        
+        if thread.author == thread.guild.me:
+            return
+        
+        embed = disnake.Embed(
+            color=self.settings_db.get_embed_color(thread.guild.id),
+            title="Synth | Thread deleted",
+            description=""
+        )
+        embed.add_field(
+            name = "Thread name",
+            value = thread.name
+        )
+        embed.add_field(
+            name = "Thread channel",
+            value = thread
+        )
+        embed.add_field(
+            name = "Thread author",
+            value = f"{thread.author.mention} (`{thread.author}` `ID: {thread.author.id}`)"
+        )
+
+        if channel := await thread.guild.fetch_channel(int(logger_channel)):
+            await channel.send(embed=embed)
+
+    @commands.Cog.listener()
     async def on_message_delete(self, message: disnake.Message) -> None:
         logger_channel = await self.logger.get_loggers(
             guild_id=message.guild.id, to_return="message"
@@ -28,7 +94,7 @@ class EventMessages(commands.Cog):
 
         files = []
         embeds = []
-        embed = disnake.Embed(color=0x2F3136, title="Deleted Message", description=None)
+        embed = disnake.Embed(color=self.settings_db.get_embed_color(message.guild.id), title="Synth | Deleted Message", description=None)
         embed.add_field(name="Additional information", value="No information")
         field_dop_index = next(
             index
@@ -115,7 +181,7 @@ class EventMessages(commands.Cog):
         files = []
         embeds = []
         embed = disnake.Embed(
-            color=0x2F3136, title="Synth | Deleted Messages", description=None
+            color=self.settings_db.get_embed_color(payload.guild.id), title="Synth | Deleted Messages", description=None
         )
         embed.add_field(name="Additional information", value="No information")
         embeds.append(embed)
@@ -212,7 +278,7 @@ class EventMessages(commands.Cog):
                 if len(after.content) <= 1900
                 else after.content
             ),
-            color=0x2F3136,
+            color=self.settings_db.get_embed_color(before.guild.id),
         )
         embed.add_field(
             name="Author",
