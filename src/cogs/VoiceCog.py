@@ -113,13 +113,13 @@ class QueueView(View):
             )
 
 
-class Music(commands.Cog, name="Voice Commands"):
+class VoiceCog(commands.Cog, name="Voice Commands"):
     """Music commands"""
 
     EMOJI = "🎶"
 
     def __init__(self, bot: commands.Bot):
-        super(Music, self).__init__()
+        super(VoiceCog, self).__init__()
         self.bot = bot
         self.pool = mafic.NodePool(self.bot)
         self.bot.loop.create_task(self.add_nodes())
@@ -319,7 +319,7 @@ class Music(commands.Cog, name="Voice Commands"):
                     title="Private Rooms Settings",
                     colour=0x2F3136,
                 )
-                embed.description += """\n
+                embed.description = """
                     <:store:1169690541986959464> - edit channel name
                     <:members:1169684583369949285> - change user count
                     <:list:1169690529643114547> - remove the slot limit
@@ -386,4 +386,4 @@ class Music(commands.Cog, name="Voice Commands"):
 
 
 def setup(bot: commands.Bot) -> None:
-    bot.add_cog(Music(bot))
+    bot.add_cog(VoiceCog(bot))
