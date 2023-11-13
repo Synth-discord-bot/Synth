@@ -6,7 +6,6 @@ import traceback
 import disnake
 from disnake.ext import commands
 
-from src.cogs.TicketsCog import SetupTicketSettings
 from .utils import misc
 from .utils.help import CustomHelpCommand
 from .utils.misc import get_prefix, is_command_disabled
@@ -29,12 +28,6 @@ class Bot(commands.Bot):
 
         # self.ipc = Server(self, secret_key=config.SECRET_IPC_KEY)  # well... need talk about config
         self.i18n.load("src/utils/locale")
-
-    def view_add(self):
-        views = [SetupTicketSettings()]
-        for view in views:
-            self.add_view(view)
-            logging.info(f"Loaded {view.id} view")
 
     async def on_message(self, message: disnake.Message):
         prefix = await get_prefix(message)
@@ -89,10 +82,8 @@ class Bot(commands.Bot):
                 commands.ExtensionFailed,
                 commands.ExtensionError,
             ) as e:
-                exc_type = e.__class__.__name__
-                exc_line = sys.exc_info()[2].tb_lineno
                 logging.error(
-                    f"Failed to load {event}! {exc_type}: {str(e)}, line {exc_line}"
+                    f"Failed to load {event}!\n{traceback.print_exception(e)}"
                 )
                 continue
             finally:
