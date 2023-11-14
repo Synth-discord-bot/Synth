@@ -20,7 +20,7 @@ class Fun(commands.Cog):
         name=Localized("roll", key="ROLL_COMMAND_NAME"),
         description=Localized("Roll a dice", key="ROLL_COMMAND_DESC"),
     )
-    @commands.CooldownMapping.from_cooldown(1, 5, commands.BucketType.user)
+    #@commands.CooldownMapping.from_cooldown(1, 5, commands.BucketType.user)
     async def roll(
         self,
         interaction: disnake.MessageCommandInteraction,

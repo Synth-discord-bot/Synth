@@ -1,41 +1,39 @@
 import disnake
 from disnake.ext import commands
-from disnake.ext.commands import TextChannelConverter, BadArgument
-from typing import Optional, List
 
 from src.utils import forms, FormsDatabase
 
 
-class ConfigureModal(disnake.ui.Modal):
-    def __init__(
-            self,
-            bot: commands.Bot,
-            embed_part: str,
-            required: bool = True,
-            placeholder: str = None,
-    ):
-        self.bot = bot
-        self.embed_part = embed_part
-        self.required = required
-        self.placeholder = placeholder
-        self.value = None
-
-        super().__init__(
-            title=f"Enter the new form {embed_part}",
-            components=[
-                disnake.ui.TextInput(
-                    label=f"Form {embed_part}",
-                    custom_id=f"{embed_part}",
-                    placeholder=placeholder if placeholder else f"Enter the new form {embed_part}",
-                    required=required,
-                ),
-            ],
-        )
-
-    async def callback(self, inter: disnake.ModalInteraction):
-        self.value = inter.text_values.get(self.embed_part)
-        await inter.response.edit_message(content=f"You entered {self.value}")
-        return self.value
+# class ConfigureModal(disnake.ui.Modal):
+#     def __init__(
+#             self,
+#             bot: commands.Bot,
+#             embed_part: str,
+#             required: bool = True,
+#             placeholder: str = None,
+#     ):
+#         self.bot = bot
+#         self.embed_part = embed_part
+#         self.required = required
+#         self.placeholder = placeholder
+#         self.value = None
+#
+#         super().__init__(
+#             title=f"Enter the new form {embed_part}",
+#             components=[
+#                 disnake.ui.TextInput(
+#                     label=f"Form {embed_part}",
+#                     custom_id=f"{embed_part}",
+#                     placeholder=placeholder if placeholder else f"Enter the new form {embed_part}",
+#                     required=required,
+#                 ),
+#             ],
+#         )
+#
+#     async def callback(self, inter: disnake.ModalInteraction):
+#         self.value = inter.text_values.get(self.embed_part)
+#         await inter.response.edit_message(content=f"You entered {self.value}")
+#         return self.value
 
 
 class SelectFormChannel(disnake.ui.ChannelSelect):
@@ -46,12 +44,12 @@ class SelectFormChannel(disnake.ui.ChannelSelect):
         self.bot = bot
         self.value = None
 
+        # Convert the channel_types parameter to a list of ChannelType objects
+        channel_types = [disnake.ChannelType.text]
         super().__init__(
-            placeholder="Select channel to send the form"
+            placeholder="Select channel to send the form",
+            channel_types=channel_types
         )
-
-    async def callback(self, inter: disnake.MessageInteraction):
-        return inter.guild.fetch_channel(self.values[0])
 
 
 class ConfigureForm(disnake.ui.Select):
@@ -82,37 +80,69 @@ class ConfigureForm(disnake.ui.Select):
 
         selected_option = interaction.values[0]
         if selected_option == "embed_title":
-            modal = ConfigureModal(self.bot, "title")
-            await interaction.response.send_modal(modal)
-            new_title = modal.value
-            print(new_title)
+            modal = disnake.ui.Modal(
+                title="Write new embed title",
+                custom_id="embed_title",
+                components=[
+                    disnake.ui.TextInput(
+                        label="New form title:",
+                        custom_id="new_embed_title",
+                        placeholder="Title"
+                    )
+                ]
+            )
+            await interaction.response.send_modal(modal=modal)
+            modal_response = await self.bot.wait_for("modal_submit", check=lambda
+                i: i.custom_id == "embed_title" and i.user == interaction.user)
+            await modal_response.response.send_message(
+                f"New form title is `{modal_response.text_values['new_embed_title']}`", ephemeral=True)  # type: ignore
+            new_title=modal_response.text_values['new_embed_title']
 
         elif selected_option == "embed_description":
-            modal = ConfigureModal(self.bot, "description")
-            new_description = await interaction.response.send_modal(modal)
+            modal = disnake.ui.Modal(
+                title="Write new embed description",
+                custom_id="embed_description",
+                components=[
+                    disnake.ui.TextInput(
+                        label="New form description:",
+                        custom_id="new_embed_description",
+                        style=disnake.TextInputStyle.long,
+                        placeholder="Description"
+                    )
+                ]
+            )
+            await interaction.response.send_modal(modal=modal)
+            modal_response = await self.bot.wait_for("modal_submit", check=lambda
+                i: i.custom_id == "embed_description" and i.user == interaction.user)
+            await modal_response.response.send_message(
+                f"New form description is `{modal_response.text_values['new_embed_description']}`", ephemeral=True)  # type: ignore
+            new_description = modal_response.text_values['new_embed_description']
+            print(new_description)
 
-        if (new_title or new_description) is not None:
-            channel = SelectFormChannel(self.bot)
+        if (new_title or new_description) != "":
             view = disnake.ui.View()
+            select_form_channel = SelectFormChannel(self.bot)
+            view.add_item(select_form_channel)
+            await interaction.channel.send("Select a channel:", view=view)
 
-            view.add_item(SelectFormChannel(self.bot))
-            embed = disnake.Embed(
-                title="SelectFormChannel",
-                description="Select a Channel",
-                color=0x2F3236,
-            )
-            await interaction.channel.send(embed=embed, view=view)
-            await self.forms.update_form_info(
-                guild_id=interaction.guild.id,
-                form_name=new_title,
-                form_description=new_description,
-                form_channel_id=channel.id
-            )
+            channel = await self.bot.wait_for("on_dropdown", check=lambda x: x.author == interaction.author)
+            print(channel)
 
-            embed = disnake.Embed(title=new_title,
-                                  description=new_description,
-                                  color=0x2F3136)
-            await channel.send(embed=embed)
+            if channel is not None:
+                # Add the selected channel to the database
+                await self.forms.update_form_info(
+                    guild_id=interaction.guild.id,
+                    form_name=new_title,
+                    form_description=new_description,
+                    form_channel_id=channel.id
+                )
+
+                # Create an embed and send it to the selected channel
+                embed = disnake.Embed(title=new_title,
+                                      description=new_description,
+                                      color=0x2F3136)
+                await channel.send(embed=embed)
+
 
 
 class FormsView(disnake.ui.View):
