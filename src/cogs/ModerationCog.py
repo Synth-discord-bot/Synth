@@ -9,7 +9,7 @@ from disnake.ext import commands
 from disnake.ext.commands import UserConverter, MemberConverter
 from disnake.ui import ActionRow
 
-from src.utils import warns
+from src.utils import warns, main_db
 from src.utils.misc import emoji, str_to_seconds, hms, common_checks
 
 
@@ -22,6 +22,7 @@ class Moderation(commands.Cog):
         super().__init__()
         self.bot = bot
         self.warns = warns
+        self.settings_db = main_db
 
     async def cog_load(self) -> None:
         await self.warns.fetch_and_cache_all()
@@ -32,7 +33,7 @@ class Moderation(commands.Cog):
     async def ban(
         self, ctx, user: Union[int, str, disnake.Member], *, reason: str = None
     ) -> None:
-        embed = Embed(color=0x2F3236)
+        embed = Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
 
         member = (
             user.id
@@ -84,7 +85,7 @@ class Moderation(commands.Cog):
         if not check_result:
             return await ctx.send(embed=error_embed)
 
-        embed = Embed(color=0x2F3236)
+        embed = Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
         embed.title = "<:invite:1169690514430382160> Successfully unbanned"
         embed.description = (
             f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
@@ -107,7 +108,7 @@ class Moderation(commands.Cog):
         *,
         reason: str = None,
     ) -> Message:
-        embed = Embed(color=0x2F3236)
+        embed = Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
 
         if isinstance(user, disnake.Member):
             member = user.id
@@ -158,7 +159,7 @@ class Moderation(commands.Cog):
         *,
         reason: str = None,
     ) -> Message:
-        embed = Embed(color=0x2F3236)
+        embed = Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
         error_embed = Embed(color=disnake.Color.red())
 
         member = (
@@ -221,7 +222,7 @@ class Moderation(commands.Cog):
     @commands.cooldown(1, 5, commands.BucketType.guild)
     @commands.has_permissions(kick_members=True, ban_members=True)
     async def unmute(self, ctx, member: Union[int, str, disnake.Member]):
-        embed = Embed(color=0x2F3236)
+        embed = Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
 
         member = (
             member
@@ -286,7 +287,7 @@ class Moderation(commands.Cog):
 
         if not pages:
             embed = disnake.Embed(
-                color=0x2F3136,
+                color=self.settings_db.get_embed_color(ctx.guild.id),
                 description="There are currently no mutes on this server.",
             )
             embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar)
@@ -332,7 +333,7 @@ class Moderation(commands.Cog):
 
         async def refresh_embed():
             mutes_embed: Embed = disnake.Embed(
-                title="<:calendar:1169690539168366712> Active mutes", color=0x2F3136
+                title="<:calendar:1169690539168366712> Active mutes", color=self.settings_db.get_embed_color(ctx.guild.id)
             )
 
             if total_pages <= 1:
@@ -392,7 +393,7 @@ class Moderation(commands.Cog):
 
         if not pages:
             embed = disnake.Embed(
-                color=0x2F3136,
+                color=self.settings_db.get_embed_color(ctx.guild.id),
                 description="There are currently no bans on this server.",
             )
             embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar)
@@ -438,7 +439,7 @@ class Moderation(commands.Cog):
 
         async def refresh_embed():
             bans_embed: Embed = disnake.Embed(
-                title="<:calendar:1169690539168366712> Active bans", color=0x2F3136
+                title="<:calendar:1169690539168366712> Active bans", color=self.settings_db.get_embed_color(ctx.guild.id)
             )
             if total_pages > 1:
                 bans_embed.set_footer(
@@ -499,7 +500,7 @@ class Moderation(commands.Cog):
 
         embed = Embed(
             title=f"<:icons_warning:1170751866905296978> Warned {member} (Case #{case})",
-            color=0x2F3136,
+            color=self.settings_db.get_embed_color(ctx.guild.id),
         )
         embed.add_field(
             name="**Administrator:**",
@@ -565,7 +566,7 @@ class Moderation(commands.Cog):
             warns_embed = Embed(
                 title=f"Warns of {user}",
                 description=f"**Total warns count:** {len(warns_list)}",
-                color=0x2F3136,
+                color=self.settings_db.get_embed_color(ctx.guild.id),
             )
             warns_embed.set_thumbnail(url=user.avatar)
 
@@ -637,7 +638,7 @@ class Moderation(commands.Cog):
                 title=f"Removed {count_deleted} warns",
                 description=f"Administrator: {ctx.author.mention} ({ctx.author})\n"
                 f"Member: {ctx.guild.get_member(user.id).mention} ({ctx.guild.get_member(user.id)})",
-                color=0x2F3136,
+                color=self.settings_db.get_embed_color(ctx.guild.id),
             )
             embed.set_thumbnail(
                 url=str(ctx.guild.get_member(user.id).display_avatar.url)
@@ -663,7 +664,7 @@ class Moderation(commands.Cog):
     async def cross_ban(
         self, ctx, member: Union[int, str, disnake.Member], reason: str = None
     ):
-        embed = Embed(color=0x2F3236)
+        embed = Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
         success_servers = []
 
         member = (
@@ -737,7 +738,7 @@ class Moderation(commands.Cog):
         self, ctx, member: Union[int, disnake.Member], reason: str = None
     ):
         ErrorEmbed = Embed(color=disnake.Color.red())
-        embed = Embed(color=0x2F3236)
+        embed = Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
         success_servers = []
 
         if not member:
@@ -817,7 +818,7 @@ class Moderation(commands.Cog):
         *,
         reason: str = None,
     ):
-        embed = Embed(color=0x2F3236)
+        embed = Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
         success_servers = []
 
         if not member:
@@ -907,7 +908,7 @@ class Moderation(commands.Cog):
     async def crosswarn(
         self, ctx, member: Union[int, disnake.Member], *, reason: str = None
     ):
-        embed = Embed(color=0x2F3236)
+        embed = Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
         success_servers = []
 
         if not member:

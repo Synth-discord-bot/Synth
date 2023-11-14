@@ -6,7 +6,7 @@ import disnake
 from disnake import Localized
 from disnake.ext import commands, tasks
 
-from src.utils import giveaway
+from src.utils import giveaway, main_db
 
 time_units = {"d": "days", "h": "hours", "m": "minutes", "s": "seconds"}
 
@@ -19,6 +19,7 @@ class Giveaway(commands.Cog):  # Need rewrite
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
         self.giveaway_db = giveaway
+        self.settings_db = main_db
 
     async def cog_load(self) -> None:
         await self.check_gw.start()
@@ -97,7 +98,7 @@ class Giveaway(commands.Cog):  # Need rewrite
                 duration_delta += datetime.timedelta(**{time_unit: int(value)})
 
         end_time = datetime.datetime.now() + duration_delta
-        embed = disnake.Embed(title="Giveaway", description=None, color=0x2B2D31)
+        embed = disnake.Embed(title="Giveaway", description=None, color=self.settings_db.get_embed_color(interaction.guild.id))
         embed.add_field(name="Prize", value=f"```\n{prize}\n```", inline=True)
         embed.add_field(name="Winners", value=f"```\n{winners}\n```", inline=True)
         embed.add_field(

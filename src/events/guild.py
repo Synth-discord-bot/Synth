@@ -4,7 +4,7 @@ from os import getenv
 import disnake
 from disnake.ext import commands
 
-from src.utils import logger
+from src.utils import logger, main_db
 from src.utils.misc import get_prefix
 
 
@@ -13,10 +13,136 @@ class EventGuild(commands.Cog):
         super(EventGuild, self).__init__()
         self.logger = logger
         self.bot = bot
+        self.settings_db = main_db
+
+    @commands.Cog.listener()
+    async def on_guild_role_create(self, role: disnake.Role) -> None:
+        embed = disnake.Embed(title="Synth | Created Role", color= self.settings_db.get_embed_color(role.guild_id))
+        logger_channel = await self.logger.get_loggers(
+            guild_id=role.guild.id, to_return="guild"
+        )
+
+        if not logger_channel:
+            return
+
+
+        embed.add_field(
+            name="Role", 
+            value=f"`{role.name}` / `{role.id}` / {role.mention}", 
+            inline=False
+        )
+        
+        embed.add_field(
+            name="Role position",
+            value=role.position,
+            inline=False,
+        )
+
+        embed.add_field(
+            name="Created at",
+            value=disnake.utils.format_dt(datetime.now(), style="f"),
+            inline=False,
+        )
+
+        if channel := channel.guild.get_channel(int(logger_channel)):
+            await channel.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_guild_role_delete(self, role: disnake.Role) -> None:
+        embed = disnake.Embed(title="Synth | Deleted Role", color=self.settings_db.get_embed_color(role.guild_id))
+        logger_channel = await self.logger.get_loggers(
+            guild_id=role.guild.id, to_return="guild"
+        )
+
+        if not logger_channel:
+            return
+        
+        embed.add_field(
+            name="Role", 
+            value=f"`{role.name}`", 
+            inline=False
+        )
+        
+        embed.add_field(
+            name="Role position",
+            value=role.position,
+            inline=False,
+        )
+        
+        embed.add_field(
+            name="Role created at",
+            value=disnake.utils.format_dt(role.created_at, style="f"),
+            inline=False,
+        )
+
+        embed.add_field(
+            name="Deleted at",
+            value=disnake.utils.format_dt(datetime.now(), style="f"),
+            inline=False,
+        ) 
+        
+        if channel := role.guild.get_channel(int(logger_channel)):
+            await channel.send(embed=embed)
+
+    @commands.Cog.listener()
+    async def on_guild_role_update(self, before: disnake.Role, after: disnake.Role):
+        embed = disnake.Embed(title="Synth | Updated Role", color=self.settings_db.get_embed_color(before.guild_id))
+        logger_channel = await self.logger.get_loggers(
+            guild_id=before.guild.id, to_return="guild"
+        )
+
+        if not logger_channel:
+            return
+
+        if before.name != after.name:
+            embed.add_field(
+                name="Role",
+                value=f"`{before.name} -> {after.name}`",
+            )
+
+        if before.mentionable != after.mentionable:
+            embed.add_field(
+                name="Role",
+                value=f"`{before.mentionable} -> {after.mentionable}`",
+            )
+
+        if before.color != after.color:
+            embed.add_field(
+                name="Role",
+                value=f"`{before.color} -> {after.color}`",
+            )
+
+        if before.hoist != after.hoist:
+            embed.add_field(
+                name="Role",
+                value=f"`{before.hoist} -> {after.hoist}`",
+            )
+
+        if before.position != after.position:
+            embed.add_field(
+                name="Role",
+                value=f"`{before.position} -> {after.position}`",
+            )
+
+        if before.permissions != after.permissions:
+            embed.add_field(
+                name="Role",
+                value=f"`{before.permissions} -> {after.permissions}`",
+            )
+
+        if before.managed != after.managed:
+            embed.add_field(
+                name="Role",
+                value=f"`{before.managed} -> {after.managed}`",
+            )
+        
+        if channel := before.guild.get_channel(int(logger_channel)):
+            await channel.send(embed=embed)
+
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: disnake.Guild) -> None:
-        embed = disnake.Embed(title="Joined Guild", color=0x2F3136)
+        embed = disnake.Embed(title="Synth | Joined Guild", color=0x2F3236)
         embed.add_field(
             name="Guild", value=f"`{guild.name}` / `{guild.id}`", inline=False
         )
@@ -51,7 +177,7 @@ Hey :wave_tone1:. Thanks for adding our multi-functional bot, Synth.
 
 Finally, if you have any issues with the bot, you can take a look at the website. You can also join the [Synth Community](https://discord.gg/7vT3H3tVYp) and ask for help.
             """,
-                color=0x2F3136,
+                color=0x2F3236,
             )
             .set_thumbnail(url=self.bot.user.avatar)
             .set_image(
@@ -62,16 +188,20 @@ Finally, if you have any issues with the bot, you can take a look at the website
                 )
             )
         )
-
+        url_button = disnake.ui.Button(
+                label = "Support Server",
+                url = "https://discord.gg/7vT3H3tVYp",
+                emoji="<:synth:1173688715529420850>"
+        )
         try:
-            await guild.text_channels[0].send(embed=join_embed)
+            await guild.text_channels[0].send(embed=join_embed, components = [disnake.ui.ActionRow(url_button)])
         except (disnake.HTTPException, disnake.Forbidden, TypeError, ValueError):
-            await guild.system_channel.send(embed=join_embed)
+            await guild.system_channel.send(embed=join_embed, components = [disnake.ui.ActionRow(url_button)])
         await channel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild: disnake.Guild):
-        embed = disnake.Embed(title="Left Guild", color=0x2F3136)
+        embed = disnake.Embed(title="Synth | Left Guild", color=0x2F3236)
         embed.add_field(
             name="Guild", value=f"`{guild.name}` / `{guild.id}`", inline=False
         )
@@ -99,7 +229,7 @@ Finally, if you have any issues with the bot, you can take a look at the website
         if not logger_channel:
             return
 
-        embed = disnake.Embed(title="Deleted Channel", color=0x2F3136)
+        embed = disnake.Embed(title="Synth | Deleted Channel", color=self.settings_db.get_embed_color(channel.guild_id))
 
         match channel.type:
             case disnake.ChannelType.text:
@@ -140,7 +270,7 @@ Finally, if you have any issues with the bot, you can take a look at the website
         if not logger_channel:
             return
 
-        embed = disnake.Embed(title="Created Channel", color=0x2F3136)
+        embed = disnake.Embed(title="Synth | Created Channel", color=self.settings_db.get_embed_color(channel.guild_id))
 
         match channel.type:
             case disnake.ChannelType.text:
@@ -184,7 +314,7 @@ Finally, if you have any issues with the bot, you can take a look at the website
         if not logger_channel:
             return
 
-        embed = disnake.Embed(title="Updated Channel", description=None, color=0x2F3136)
+        embed = disnake.Embed(title="Synth | Updated Channel", description=None, color=self.settings_db.get_embed_color(before.guild_id))
         embed.add_field(
             name="Additional information", value="Unknown error ❓", inline=False
         )

@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 import traceback
 
 import disnake
@@ -16,7 +17,7 @@ from .utils.misc import get_prefix, is_command_disabled
 class Bot(commands.Bot):
     """The base class of Synth bot."""
 
-    def __init__(self, debug: bool) -> None:
+    def __init__(self) -> None:
         super(Bot, self).__init__(
             help_command=CustomHelpCommand(),
             command_prefix=misc.bot_get_guild_prefix,
@@ -24,35 +25,39 @@ class Bot(commands.Bot):
             reload=True,
             owner_ids={419159175009009675, 999682446675161148, 1167458549132181668},
         )
-        self.debug = debug
 
         # self.ipc = Server(self, secret_key=config.SECRET_IPC_KEY)  # well... need talk about config
         self.i18n.load("src/utils/locale")
 
-    async def on_message(self, message: disnake.Message) -> None:
+    # def view_add(self):
+    #     views = [SetupTicketSettings()]
+    #     for view in views:
+    #         self.add_view(view)
+    #         logging.info(f"Loaded {view.id} view")
+
+    async def on_message(self, message: disnake.Message):
         prefix = await get_prefix(message)
-        prefix_len = len(prefix)
 
         if message.content.startswith(prefix):
             # TODO: blacklist
 
             # check if command is disabled
-            command = message.content.split()[0][prefix_len:]
-            if self.debug:
-                logging.debug(f"{message.author} has executed the command {command}")
+            command = message.content.split()[0][len(prefix) :]
             result = await is_command_disabled(message=message, command=command)
             if result:
                 return
 
         return await self.process_commands(message=message)
 
+    # async def setup_hook(self):
+    #     await self.ipc.start()
+
     async def on_ready(self) -> None:
-        if self.debug:
-            logging.info(
-                f"Invite link: https://discord.com/api/oauth2/authorize?client_id="
-                f"{self.user.id}&permissions=980937982&scope=bot%20applications.commands"
-            )
-            logging.debug(f"Connected to {self.user}")
+        logging.info(
+            f"Invite link: https://discord.com/api/oauth2/authorize?client_id="
+            f"{self.user.id}&permissions=980937982&scope=bot%20applications.commands"
+        )
+        logging.debug(f"Connected to {self.user}")
         for extension in os.listdir("src\\cogs"):
             if extension.endswith(".py"):
                 try:
@@ -83,8 +88,10 @@ class Bot(commands.Bot):
                 commands.ExtensionFailed,
                 commands.ExtensionError,
             ) as e:
+                exc_type = e.__class__.__name__
+                exc_line = sys.exc_info()[2].tb_lineno
                 logging.error(
-                    f"Failed to load {event}!\n{traceback.print_exception(e)}"
+                    f"Failed to load {event}! {exc_type}: {str(e)}, line {exc_line}"
                 )
                 continue
             finally:
@@ -94,7 +101,7 @@ class Bot(commands.Bot):
         await self.change_presence(
             activity=disnake.Activity(
                 type=disnake.ActivityType.competing,
-                name=f">>help | v1.0.",
+                name=f">>help | v1.0",
                 status=disnake.Status.idle,
             )
         )

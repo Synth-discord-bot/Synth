@@ -2,7 +2,7 @@ import disnake
 from disnake import Localized
 from disnake.ext import commands
 
-from src.utils import invites
+from src.utils import invites, main_db
 from src.utils.misc import check_channel
 
 
@@ -14,6 +14,7 @@ class InviteTracker(commands.Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
         self.invites = invites
+        self.settings_db = main_db
 
     async def cog_load(self) -> None:
         await self.invites.fetch_and_cache_all()
@@ -47,6 +48,7 @@ class InviteTracker(commands.Cog):
             embed=disnake.Embed(
                 title="Invite Tracker",
                 description="Successfully setup invite tracker to channel!",
+                color = self.settings_db.get_embed_color(interaction.guild.id)
             ),
         )
 

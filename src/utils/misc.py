@@ -98,7 +98,7 @@ def is_owner():
 
         return True
 
-    return commands.check(predicate)
+    return commands.check(predicate) # type: ignore
 
 
 def has_bot_permissions():
@@ -116,7 +116,7 @@ def has_bot_permissions():
 
         return True
 
-    return commands.check(predicate)
+    return commands.check(predicate) # type: ignore
 
 
 def emoji(name: Literal["loading", "success", "error", "users"]):
