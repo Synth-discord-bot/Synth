@@ -225,7 +225,7 @@ class CommandsSettings(disnake.ui.View):
             for name, cog in self.bot.cogs.items(): # ну создаем ещё один select (disnake.ui.StringSelect) и всё создавай ты
                 if not name.startswith("Event") and not name.startswith("Settings"):
                     slash_settings.add_option(label=name, description=cog.description, emoji=getattr(cog, "EMOJI", None))
-                    
+
             view = disnake.ui.View()
             view.add_item(slash_settings)
 
