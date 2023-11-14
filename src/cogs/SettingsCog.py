@@ -12,7 +12,7 @@ class LanguageSettings(disnake.ui.View):
         self.settings_db = main_db
 
     @disnake.ui.string_select(
-        cls = disnake.ui.StringSelect,
+        cls = disnake.ui.StringSelect, # type: ignore
         options=[
             disnake.SelectOption(label="Russian", value="russian_language", emoji="🇷🇺"),
             disnake.SelectOption(label="English", value="english_language", emoji="🇬🇧"),
@@ -189,7 +189,7 @@ class CommandsSettings(disnake.ui.View):
         self.settings_db = main_db
 
     @disnake.ui.string_select(
-        cls = disnake.ui.StringSelect,
+        cls = disnake.ui.StringSelect, # type: ignore
         options=[
             disnake.SelectOption(label="Slash commands", value="slash", emoji="📖"),
             disnake.SelectOption(label="Context commands", value="context", emoji="✏️")
@@ -201,7 +201,7 @@ class CommandsSettings(disnake.ui.View):
             
             
             #     cogs.get(slash_command.cog_name).append(f"`{slash_command.name}`\n")
-            for name, cog in self.bot.cogs.items(): #ну создаем ещё один select (disnake.ui.StringSelect) и всё создавай ты
+            for name, cog in self.bot.cogs.items(): # ну создаем ещё один select (disnake.ui.StringSelect) и всё создавай ты
                 if not name.startswith("Event") and not name.startswith("Settings"):
                     slash_settings.add_option(label=name, description=cog.description, emoji=getattr(cog, "EMOJI", None))
                     
@@ -222,7 +222,7 @@ class CommandsSettings(disnake.ui.View):
             
             
             #     cogs.get(slash_command.cog_name).append(f"`{slash_command.name}`\n")
-            for name, cog in self.bot.cogs.items(): #ну создаем ещё один select (disnake.ui.StringSelect) и всё создавай ты
+            for name, cog in self.bot.cogs.items(): # ну создаем ещё один select (disnake.ui.StringSelect) и всё создавай ты
                 if not name.startswith("Event") and not name.startswith("Settings"):
                     slash_settings.add_option(label=name, description=cog.description, emoji=getattr(cog, "EMOJI", None))
                     
@@ -247,7 +247,8 @@ class SettingsView(disnake.ui.View):
         self.bot = bot
         self.settings_db = main_db
 
-    @disnake.ui.string_select(cls = disnake.ui.StringSelect, options=[
+    @disnake.ui.string_select(cls = disnake.ui.StringSelect, # type: ignore
+                              options=[
         disnake.SelectOption(label="Language", value="language", emoji="🌍"),
         disnake.SelectOption(label="Prefix", value="prefix", emoji="✏️"),
         disnake.SelectOption(label="Commands", value="commands", emoji="⌨️"),
