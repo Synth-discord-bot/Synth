@@ -325,7 +325,7 @@ class Music(commands.Cog, name="Voice Commands"):
                     title="Private Rooms Settings",
                     colour=0x2F3136,
                 )
-                embed.description += """\n
+                embed.description = """
                     <:store:1169690541986959464> - edit channel name
                     <:members:1169684583369949285> - change user count
                     <:list:1169690529643114547> - remove the slot limit
