@@ -48,7 +48,7 @@ class InviteTracker(commands.Cog):
             embed=disnake.Embed(
                 title="Invite Tracker",
                 description="Successfully setup invite tracker to channel!",
-                color = self.settings_db.get_embed_color(interaction.guild.id)
+                color=self.settings_db.get_embed_color(interaction.guild.id),
             ),
         )
 

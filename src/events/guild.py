@@ -17,7 +17,10 @@ class EventGuild(commands.Cog):
 
     @commands.Cog.listener()
     async def on_guild_role_create(self, role: disnake.Role) -> None:
-        embed = disnake.Embed(title="Synth | Created Role", color= self.settings_db.get_embed_color(role.guild_id))
+        embed = disnake.Embed(
+            title="Synth | Created Role",
+            color=self.settings_db.get_embed_color(role.guild_id),
+        )
         logger_channel = await self.logger.get_loggers(
             guild_id=role.guild.id, to_return="guild"
         )
@@ -25,13 +28,12 @@ class EventGuild(commands.Cog):
         if not logger_channel:
             return
 
-
         embed.add_field(
-            name="Role", 
-            value=f"`{role.name}` / `{role.id}` / {role.mention}", 
-            inline=False
+            name="Role",
+            value=f"`{role.name}` / `{role.id}` / {role.mention}",
+            inline=False,
         )
-        
+
         embed.add_field(
             name="Role position",
             value=role.position,
@@ -49,26 +51,25 @@ class EventGuild(commands.Cog):
 
     @commands.Cog.listener()
     async def on_guild_role_delete(self, role: disnake.Role) -> None:
-        embed = disnake.Embed(title="Synth | Deleted Role", color=self.settings_db.get_embed_color(role.guild_id))
+        embed = disnake.Embed(
+            title="Synth | Deleted Role",
+            color=self.settings_db.get_embed_color(role.guild_id),
+        )
         logger_channel = await self.logger.get_loggers(
             guild_id=role.guild.id, to_return="guild"
         )
 
         if not logger_channel:
             return
-        
-        embed.add_field(
-            name="Role", 
-            value=f"`{role.name}`", 
-            inline=False
-        )
-        
+
+        embed.add_field(name="Role", value=f"`{role.name}`", inline=False)
+
         embed.add_field(
             name="Role position",
             value=role.position,
             inline=False,
         )
-        
+
         embed.add_field(
             name="Role created at",
             value=disnake.utils.format_dt(role.created_at, style="f"),
@@ -79,14 +80,17 @@ class EventGuild(commands.Cog):
             name="Deleted at",
             value=disnake.utils.format_dt(datetime.now(), style="f"),
             inline=False,
-        ) 
-        
+        )
+
         if channel := role.guild.get_channel(int(logger_channel)):
             await channel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_guild_role_update(self, before: disnake.Role, after: disnake.Role):
-        embed = disnake.Embed(title="Synth | Updated Role", color=self.settings_db.get_embed_color(before.guild_id))
+        embed = disnake.Embed(
+            title="Synth | Updated Role",
+            color=self.settings_db.get_embed_color(before.guild_id),
+        )
         logger_channel = await self.logger.get_loggers(
             guild_id=before.guild.id, to_return="guild"
         )
@@ -135,10 +139,9 @@ class EventGuild(commands.Cog):
                 name="Role",
                 value=f"`{before.managed} -> {after.managed}`",
             )
-        
+
         if channel := before.guild.get_channel(int(logger_channel)):
             await channel.send(embed=embed)
-
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild: disnake.Guild) -> None:
@@ -189,14 +192,18 @@ Finally, if you have any issues with the bot, you can take a look at the website
             )
         )
         url_button = disnake.ui.Button(
-                label = "Support Server",
-                url = "https://discord.gg/7vT3H3tVYp",
-                emoji="<:synth:1173688715529420850>"
+            label="Support Server",
+            url="https://discord.gg/7vT3H3tVYp",
+            emoji="<:synth:1173688715529420850>",
         )
         try:
-            await guild.text_channels[0].send(embed=join_embed, components = [disnake.ui.ActionRow(url_button)])
+            await guild.text_channels[0].send(
+                embed=join_embed, components=[disnake.ui.ActionRow(url_button)]
+            )
         except (disnake.HTTPException, disnake.Forbidden, TypeError, ValueError):
-            await guild.system_channel.send(embed=join_embed, components = [disnake.ui.ActionRow(url_button)])
+            await guild.system_channel.send(
+                embed=join_embed, components=[disnake.ui.ActionRow(url_button)]
+            )
         await channel.send(embed=embed)
 
     @commands.Cog.listener()
@@ -229,7 +236,10 @@ Finally, if you have any issues with the bot, you can take a look at the website
         if not logger_channel:
             return
 
-        embed = disnake.Embed(title="Synth | Deleted Channel", color=self.settings_db.get_embed_color(channel.guild_id))
+        embed = disnake.Embed(
+            title="Synth | Deleted Channel",
+            color=self.settings_db.get_embed_color(channel.guild_id),
+        )
 
         match channel.type:
             case disnake.ChannelType.text:
@@ -270,7 +280,10 @@ Finally, if you have any issues with the bot, you can take a look at the website
         if not logger_channel:
             return
 
-        embed = disnake.Embed(title="Synth | Created Channel", color=self.settings_db.get_embed_color(channel.guild_id))
+        embed = disnake.Embed(
+            title="Synth | Created Channel",
+            color=self.settings_db.get_embed_color(channel.guild_id),
+        )
 
         match channel.type:
             case disnake.ChannelType.text:
@@ -314,7 +327,11 @@ Finally, if you have any issues with the bot, you can take a look at the website
         if not logger_channel:
             return
 
-        embed = disnake.Embed(title="Synth | Updated Channel", description=None, color=self.settings_db.get_embed_color(before.guild_id))
+        embed = disnake.Embed(
+            title="Synth | Updated Channel",
+            description=None,
+            color=self.settings_db.get_embed_color(before.guild_id),
+        )
         embed.add_field(
             name="Additional information", value="Unknown error ❓", inline=False
         )

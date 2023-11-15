@@ -37,7 +37,7 @@ async def get_prefix(message: Union[Message, Guild]) -> Union[List[str], str]:
     guild = message.guild if isinstance(message, Message) else message
 
     if not guild or await main_db.get_prefix(guild.id) is None:
-        return "s."
+        return ">>"
 
     prefix = await main_db.get_prefix(guild.id)
     return prefix
@@ -98,7 +98,7 @@ def is_owner():
 
         return True
 
-    return commands.check(predicate) # type: ignore
+    return commands.check(predicate)  # type: ignore
 
 
 def has_bot_permissions():
@@ -116,7 +116,7 @@ def has_bot_permissions():
 
         return True
 
-    return commands.check(predicate) # type: ignore
+    return commands.check(predicate)  # type: ignore
 
 
 def emoji(name: Literal["loading", "success", "error", "users"]):

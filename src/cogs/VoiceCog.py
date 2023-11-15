@@ -5,7 +5,7 @@ import mafic
 from disnake.ext import commands
 from disnake.ui import View
 
-from src.utils import private_rooms
+from src.utils import private_rooms, main_db
 from src.utils.misc import EmbedPaginator
 from src.utils.rooms import Buttons
 
@@ -25,6 +25,7 @@ class MusicPlayer(mafic.Player[commands.Bot]):
 class QueueView(View):
     def __init__(self, message_id: int, *, timeout: float | None = None) -> None:
         self.message_id = message_id
+        self.settings_db = main_db
         super().__init__(timeout=timeout)
 
     @disnake.ui.button(label="Skip", style=disnake.ButtonStyle.green)
@@ -73,7 +74,11 @@ class QueueView(View):
         player: MusicPlayer
 
         if player := interaction.guild.voice_client:  # type: ignore
-            embed = disnake.Embed(title="Music Queue", description="", color=0x2F3136)
+            embed = disnake.Embed(
+                title="Music Queue",
+                description="",
+                color=self.settings_db.get_embed_color(ctx.guild.id),
+            )
 
             if len(player.queue) > 0:
                 for index, music in enumerate(player.queue, start=1):
@@ -107,7 +112,7 @@ class QueueView(View):
                 embed=disnake.Embed(
                     title="Disconnecting...",
                     description="I have disconnected from voice channel",
-                    color=0x2F3136,
+                    color=self.settings_db.get_embed_color(ctx.guild.id),
                 ),
                 ephemeral=True,
             )
@@ -124,6 +129,7 @@ class Music(commands.Cog, name="Voice Commands"):
         self.pool = mafic.NodePool(self.bot)
         self.bot.loop.create_task(self.add_nodes())
         self.private_rooms = private_rooms
+        self.settings_db = main_db
 
     async def cog_load(self) -> None:
         await self.private_rooms.fetch_and_cache_all()
@@ -170,7 +176,7 @@ class Music(commands.Cog, name="Voice Commands"):
         if not tracks:
             return await ctx.send("No tracks found.")
 
-        embed = disnake.Embed(color=0x2F3136)
+        embed = disnake.Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
 
         if player.current:
             embed.title = "Queue"
@@ -258,7 +264,7 @@ class Music(commands.Cog, name="Voice Commands"):
             embed = disnake.Embed(
                 title=f"Now playing - {track.title}",
                 description=f"[{track.title}]({str(track.uri)})",
-                color=0x2F3136,
+                color=self.settings_db.get_embed_color(event.guild.id),
             )
             embed.add_field(name="Artist:", value=f"**`{track.author}`**", inline=True)
             embed.add_field(

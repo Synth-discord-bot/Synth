@@ -333,7 +333,8 @@ class Moderation(commands.Cog):
 
         async def refresh_embed():
             mutes_embed: Embed = disnake.Embed(
-                title="<:calendar:1169690539168366712> Active mutes", color=self.settings_db.get_embed_color(ctx.guild.id)
+                title="<:calendar:1169690539168366712> Active mutes",
+                color=self.settings_db.get_embed_color(ctx.guild.id),
             )
 
             if total_pages <= 1:
@@ -439,7 +440,8 @@ class Moderation(commands.Cog):
 
         async def refresh_embed():
             bans_embed: Embed = disnake.Embed(
-                title="<:calendar:1169690539168366712> Active bans", color=self.settings_db.get_embed_color(ctx.guild.id)
+                title="<:calendar:1169690539168366712> Active bans",
+                color=self.settings_db.get_embed_color(ctx.guild.id),
             )
             if total_pages > 1:
                 bans_embed.set_footer(
