@@ -27,24 +27,19 @@ class MainDatabase(BaseDatabase):
         return (await self.find_one_from_db({"id": guild_id})).get(
             "disabled_commands", []
         )
-    
-    async def add_embed_color(
-        self,
-        guild_id: int,
-        embed_color: hex
-    ) -> Optional[int]:
+
+    async def add_embed_color(self, guild_id: int, embed_color: hex) -> Optional[int]:
         if await self.find_one_from_db({"id": guild_id}) is None:
             return await self.add_to_db({"id": guild_id, "embed_color": embed_color})
 
         return await self.update_db({"id": guild_id}, {"embed_color": embed_color})
-    
-    async def get_embed_color(
-            self,
-            guild_id: int
-    ) -> Optional[int]:
+
+    async def get_embed_color(self, guild_id: int) -> Optional[int]:
         if await self.find_one_from_db({"id": guild_id}) is None:
             return None
-        return (await self.find_one_from_db({"id": guild_id})).get("embed_color", 0x2F3236)
+        return (await self.find_one_from_db({"id": guild_id})).get(
+            "embed_color", 0x2F3236
+        )
 
     async def check_command(
         self, guild_id: int, command: str, add_if_not_exists: bool = True
@@ -68,11 +63,9 @@ class MainDatabase(BaseDatabase):
 
     async def delete_command(self, guild_id: int, command: str) -> None:
         if await self.find_one_from_db({"id": guild_id}) is None:
-            return await self.update_db(
-                {"id": guild_id}, {"disabled_commands": []}
-            )
-            
+            return await self.update_db({"id": guild_id}, {"disabled_commands": []})
+
         commands = await self._get_commands_list(guild_id=guild_id)
         commands.remove(command)
-        
+
         await self.update_db({"id": guild_id}, {"disabled_commands": commands})

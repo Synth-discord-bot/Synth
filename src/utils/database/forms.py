@@ -28,7 +28,7 @@ class FormsDatabase(BaseDatabase):
         guild_id: Union[int, str, disnake.Guild],
         form_name: str,
         form_description: str,
-        form_channel_id: int
+        form_channel_id: int,
     ) -> int:
         if await self.find_one_from_db({"guild_id": guild_id}) is None:
             await self.add_to_db(

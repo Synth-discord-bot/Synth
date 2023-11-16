@@ -22,7 +22,9 @@ class EventInvites(commands.Cog):
             return
 
         embed = disnake.Embed(
-            title="Synth | Created Invite", description=None, color=self.settings_db.get_embed_color(invite.guild.id)
+            title="Synth | Created Invite",
+            description=None,
+            color=self.settings_db.get_embed_color(invite.guild.id),
         )
         embed.add_field(
             name="Channel",
@@ -67,7 +69,9 @@ class EventInvites(commands.Cog):
             return
 
         embed = disnake.Embed(
-            title="Synth | Deleted Invite", description=None, color=self.settings_db.get_embed_color(invite.guild.id)
+            title="Synth | Deleted Invite",
+            description=None,
+            color=self.settings_db.get_embed_color(invite.guild.id),
         )
         embed.add_field(
             name="Channel",

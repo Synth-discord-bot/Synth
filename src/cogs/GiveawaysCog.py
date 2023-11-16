@@ -98,7 +98,11 @@ class Giveaway(commands.Cog):  # Need rewrite
                 duration_delta += datetime.timedelta(**{time_unit: int(value)})
 
         end_time = datetime.datetime.now() + duration_delta
-        embed = disnake.Embed(title="Giveaway", description=None, color=self.settings_db.get_embed_color(interaction.guild.id))
+        embed = disnake.Embed(
+            title="Giveaway",
+            description=None,
+            color=self.settings_db.get_embed_color(interaction.guild.id),
+        )
         embed.add_field(name="Prize", value=f"```\n{prize}\n```", inline=True)
         embed.add_field(name="Winners", value=f"```\n{winners}\n```", inline=True)
         embed.add_field(

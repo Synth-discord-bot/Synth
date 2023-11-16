@@ -17,7 +17,7 @@ class EventMember(commands.Cog):
     async def on_member_join(self, member: Member) -> None:
         if member.bot:
             return
-        
+
         await self.invites.update_invite_info(
             guild_id=member.guild.id,
             # inviter=
@@ -30,18 +30,19 @@ class EventMember(commands.Cog):
         )
         if not logger_channel:
             return
-        
-        embed = disnake.Embed(color = self.settings_db.get_embed_color(member.guild_id), title = "Synth | Member Banned")
+
+        embed = disnake.Embed(
+            color=self.settings_db.get_embed_color(member.guild_id),
+            title="Synth | Member Banned",
+        )
 
         embed.add_field(
             name="Member",
             value=f"`{member.name}` / `{member.id}` / {member.mention}",
-            inline=False
+            inline=False,
         )
 
-        embed.set_thumbnail(
-            url = member.avatar.url
-        )
+        embed.set_thumbnail(url=member.avatar.url)
 
         if channel := logger_channel:
             await channel.send(embed=embed)
@@ -53,18 +54,19 @@ class EventMember(commands.Cog):
         )
         if not logger_channel:
             return
-        
-        embed = disnake.Embed(color = self.settings_db.get_embed_color(member.guild_id), title = "Synth | Member Unbanned")
+
+        embed = disnake.Embed(
+            color=self.settings_db.get_embed_color(member.guild_id),
+            title="Synth | Member Unbanned",
+        )
 
         embed.add_field(
             name="Member",
             value=f"`{member.name}` / `{member.id}` / {member.mention}",
-            inline=False
+            inline=False,
         )
 
-        embed.set_thumbnail(
-            url = member.avatar.url
-        )
+        embed.set_thumbnail(url=member.avatar.url)
 
         if channel := logger_channel:
             await channel.send(embed=embed)
@@ -76,28 +78,26 @@ class EventMember(commands.Cog):
         )
         if not logger_channel:
             return
-        
-        embed = disnake.Embed(color = self.settings_db.get_embed_color(before.guild_id), title = "Synth | Member Updated")
-        embed.set_thumbnail(
-            url = before.avatar.url
+
+        embed = disnake.Embed(
+            color=self.settings_db.get_embed_color(before.guild_id),
+            title="Synth | Member Updated",
         )
+        embed.set_thumbnail(url=before.avatar.url)
 
         if before.nick != after.nick:
             embed.add_field(
-                name="Nickname",
-                value=f"`{before.nick} -> {after.nick}`",
-                inline=False
+                name="Nickname", value=f"`{before.nick} -> {after.nick}`", inline=False
             )
 
         if before.roles != after.roles:
             embed.add_field(
-                name="Role",
-                value=f"`{before.roles} -> {after.roles}`",
-                inline=False
+                name="Role", value=f"`{before.roles} -> {after.roles}`", inline=False
             )
 
         if channel := logger_channel:
             await channel.send(embed=embed)
+
 
 def setup(bot: commands.Bot) -> None:
     bot.add_cog(EventMember(bot=bot))

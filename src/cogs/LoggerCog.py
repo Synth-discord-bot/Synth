@@ -71,7 +71,7 @@ class Logger(commands.Cog):
                 embed=disnake.Embed(
                     title="Logger",
                     description="Successfully setup loggers to channel(s)!",
-                    color = self.settings_db.get_embed_color(interaction.guild.id)
+                    color=self.settings_db.get_embed_color(interaction.guild.id),
                 )
             )
         return

@@ -37,10 +37,7 @@ from src.utils import forms, FormsDatabase
 
 
 class SelectFormChannel(disnake.ui.ChannelSelect):
-    def __init__(
-            self,
-            bot: commands.Bot
-    ):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.value = None
 
@@ -48,7 +45,8 @@ class SelectFormChannel(disnake.ui.ChannelSelect):
         channel_types = [disnake.ChannelType.text]
         super().__init__(
             placeholder="Select channel to send the form",
-            channel_types=channel_types
+            channel_types=channel_types,
+            custom_id="form_channel",
         )
 
 
@@ -73,11 +71,10 @@ class ConfigureForm(disnake.ui.Select):
         )
         self.bot = bot
         self.forms = forms_db
+        self.new_title = None
+        self.new_description = None
 
-    async def callback(self, interaction: disnake.MessageInteraction) -> None:
-        new_title = ""
-        new_description = ""
-
+    async def callback(self, interaction: disnake.Interaction) -> None:
         selected_option = interaction.values[0]
         if selected_option == "embed_title":
             modal = disnake.ui.Modal(
@@ -87,16 +84,21 @@ class ConfigureForm(disnake.ui.Select):
                     disnake.ui.TextInput(
                         label="New form title:",
                         custom_id="new_embed_title",
-                        placeholder="Title"
+                        placeholder="Title",
                     )
-                ]
+                ],
             )
             await interaction.response.send_modal(modal=modal)
-            modal_response = await self.bot.wait_for("modal_submit", check=lambda
-                i: i.custom_id == "embed_title" and i.user == interaction.user)
+            modal_response = await self.bot.wait_for(
+                "modal_submit",
+                check=lambda i: i.custom_id == "embed_title"
+                and i.user == interaction.user,
+            )
             await modal_response.response.send_message(
-                f"New form title is `{modal_response.text_values['new_embed_title']}`", ephemeral=True)  # type: ignore
-            new_title=modal_response.text_values['new_embed_title']
+                f"New form title is `{modal_response.text_values['new_embed_title']}`",
+                ephemeral=True,
+            )  # type: ignore
+            self.new_title = modal_response.text_values["new_embed_title"]
 
         elif selected_option == "embed_description":
             modal = disnake.ui.Modal(
@@ -107,42 +109,50 @@ class ConfigureForm(disnake.ui.Select):
                         label="New form description:",
                         custom_id="new_embed_description",
                         style=disnake.TextInputStyle.long,
-                        placeholder="Description"
+                        placeholder="Description",
                     )
-                ]
+                ],
             )
             await interaction.response.send_modal(modal=modal)
-            modal_response = await self.bot.wait_for("modal_submit", check=lambda
-                i: i.custom_id == "embed_description" and i.user == interaction.user)
+            modal_response = await self.bot.wait_for(
+                "modal_submit",
+                check=lambda i: i.custom_id == "embed_description"
+                and i.user == interaction.user,
+            )
             await modal_response.response.send_message(
-                f"New form description is `{modal_response.text_values['new_embed_description']}`", ephemeral=True)  # type: ignore
-            new_description = modal_response.text_values['new_embed_description']
-            print(new_description)
+                f"New form description is `{modal_response.text_values['new_embed_description']}`",
+                ephemeral=True,
+            )  # type: ignore
+            self.new_description = modal_response.text_values["new_embed_description"]
+            print(self.new_description)
 
-        if (new_title or new_description) != "":
+        if self.new_title and self.new_description:  # type: ignore
             view = disnake.ui.View()
             select_form_channel = SelectFormChannel(self.bot)
             view.add_item(select_form_channel)
-            await interaction.channel.send("Select a channel:", view=view)
+            await interaction.send("Select a channel:", view=view)
 
-            channel = await self.bot.wait_for("on_dropdown", check=lambda x: x.author == interaction.author)
-            print(channel)
+            channel = await self.bot.wait_for(
+                "dropdown",
+                check=lambda x: x.data.custom_id == "form_channel"
+                and x.author == interaction.author
+                and x.data.values,
+            )
+            
+            
+            await self.forms.update_form_info(
+                guild_id=interaction.guild.id,
+                form_name=self.new_title,
+                form_description=self.new_description,
+                form_channel_id=channel.id,
+            )
 
-            if channel is not None:
-                # Add the selected channel to the database
-                await self.forms.update_form_info(
-                    guild_id=interaction.guild.id,
-                    form_name=new_title,
-                    form_description=new_description,
-                    form_channel_id=channel.id
-                )
-
-                # Create an embed and send it to the selected channel
-                embed = disnake.Embed(title=new_title,
-                                      description=new_description,
-                                      color=0x2F3136)
-                await channel.send(embed=embed)
-
+            embed = disnake.Embed(
+                title=self.new_title,
+                description=self.new_description,
+                color=0x2F3136,
+            )
+            await channel.send(embed=embed)
 
 
 class FormsView(disnake.ui.View):
@@ -152,7 +162,7 @@ class FormsView(disnake.ui.View):
 
     @disnake.ui.button(label="Create", style=disnake.ButtonStyle.green)
     async def create_form(
-            self, _: disnake.ui.Button, __: disnake.Interaction, ___: str
+        self, _: disnake.ui.Button, __: disnake.Interaction, ___: str
     ) -> None:
         form_embed = disnake.Embed(
             title="Creating Form",
@@ -167,7 +177,7 @@ class FormsView(disnake.ui.View):
 
     @disnake.ui.button(label="Edit", style=disnake.ButtonStyle.gray)
     async def edit_form(
-            self, _: disnake.ui.Button, interaction: disnake.Interaction
+        self, _: disnake.ui.Button, interaction: disnake.Interaction
     ) -> None:
         await interaction.send(
             "Form has been edited", ephemeral=True, view=FormsView(self.bot)
@@ -175,7 +185,7 @@ class FormsView(disnake.ui.View):
 
     @disnake.ui.button(label="Delete", style=disnake.ButtonStyle.red)
     async def delete_form(
-            self, _: disnake.ui.Button, interaction: disnake.Interaction
+        self, _: disnake.ui.Button, interaction: disnake.Interaction
     ) -> None:
         await interaction.send(
             "Form has been deleted", ephemeral=True, view=FormsView(self.bot)
@@ -192,7 +202,7 @@ class EditFormView(disnake.ui.View):
         label="Title", custom_id="title_button", style=disnake.ButtonStyle.gray
     )
     async def title_button(
-            self, _: disnake.ui.Button, interaction: disnake.MessageCommandInteraction
+        self, _: disnake.ui.Button, interaction: disnake.MessageCommandInteraction
     ) -> None:
         await interaction.send("Write new title:")
         msg = await self.bot.wait_for(
@@ -228,8 +238,9 @@ class Forms(commands.Cog):
         await interaction.send(
             f"Create a form. Please choose one of the options below. Setup form:",
             view=select,
+            embed=setup_form_embed,
         )
-        await interaction.channel.send(embed=setup_form_embed)
+
 
     @form.sub_command()
     async def edit(self, interaction: disnake.MessageCommandInteraction) -> None:
@@ -237,7 +248,7 @@ class Forms(commands.Cog):
 
     @form.sub_command()
     async def delete(
-            self, interaction: disnake.MessageCommandInteraction, name: str
+        self, interaction: disnake.MessageCommandInteraction, name: str
     ) -> None:
         await interaction.send(
             f"Nigga `{name}`", ephemeral=True, view=FormsView(self.bot)

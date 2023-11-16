@@ -34,7 +34,9 @@ class BackupsView(disnake.ui.View):
 
         if not embed:
             embed = disnake.Embed(
-                title="Confirmation", description="Are you sure?", color=self.settings_db.get_embed_color(interaction.guild.id)
+                title="Confirmation",
+                description="Are you sure?",
+                color=self.settings_db.get_embed_color(interaction.guild.id),
             )
 
         await interaction.send(embed=embed, ephemeral=True, components=buttons)
@@ -52,7 +54,9 @@ class BackupsView(disnake.ui.View):
     async def create_backup(
         self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ) -> None:
-        embed = disnake.Embed(color=self.settings_db.get_embed_color(interaction.guild.id))
+        embed = disnake.Embed(
+            color=self.settings_db.get_embed_color(interaction.guild.id)
+        )
 
         confirm_embed = disnake.Embed(
             title="Confirmation",
@@ -107,7 +111,9 @@ class BackupsView(disnake.ui.View):
     async def load_backup(
         self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ) -> None:
-        embed = disnake.Embed(color=self.settings_db.get_embed_color(interaction.guild.id))
+        embed = disnake.Embed(
+            color=self.settings_db.get_embed_color(interaction.guild.id)
+        )
 
         confirm_embed = disnake.Embed(
             title="Confirmation",
