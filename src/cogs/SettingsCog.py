@@ -3,306 +3,15 @@ from disnake.ext import commands
 from disnake.interactions import MessageInteraction
 from typing import Dict, List, Optional
 
-from src.utils import main_db
-
-
-class LanguageSettings(disnake.ui.View):
-    def __init__(self, bot: commands.Bot):
-        super().__init__(timeout=None)
-        self.bot = bot
-        self.settings_db = main_db
-
-    @disnake.ui.string_select(
-        cls=disnake.ui.StringSelect,  # type: ignore
-        options=[
-            disnake.SelectOption(label="Russian", value="russian_language", emoji="🇷🇺"),
-            disnake.SelectOption(label="English", value="english_language", emoji="🇬🇧"),
-            disnake.SelectOption(
-                label="Ukrainian", value="ukrainian_language", emoji="🇺🇦"
-            ),
-            disnake.SelectOption(label="German", value="german_language", emoji="🇩🇪"),
-        ],
-        placeholder="Choice a language for bot",
-    )
-    async def callback(
-        self, _: disnake.ui.StringSelect, interaction: disnake.MessageInteraction
-    ):
-        if _.values[0] == "russian_language":
-            await interaction.response.send_message(
-                "Вы выбрали Русский язык", ephemeral=True
-            )
-        elif _.values[0] == "english_language":
-            await interaction.response.send_message(
-                "You selected English", ephemeral=True
-            )
-        elif _.values[0] == "ukrainian_language":
-            await interaction.response.send_message(
-                "Ви обрали Українську мову", ephemeral=True
-            )
-        elif _.values[0] == "german_language":
-            await interaction.response.send_message(
-                "Du hast Deutsch ausgewaehlt", ephemeral=True
-            )
-
-
-class PrefixSettings(disnake.ui.View):
-    def __init__(self, bot: commands.Bot):
-        super().__init__(timeout=None)
-        self.bot = bot
-        self.settings_db = main_db
-
-    @disnake.ui.button(
-        label="Change",
-        custom_id="prefix_button",
-        style=disnake.ButtonStyle.green,
-    )
-    async def callback(
-        self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
-    ):
-        modal = disnake.ui.Modal(
-            title="Write new prefix",
-            custom_id="prefix",
-            components=[
-                disnake.ui.TextInput(
-                    label="New prefix:",
-                    custom_id="new_prefix",
-                    style=disnake.TextInputStyle.short,
-                    max_length=3,
-                    min_length=1,
-                )
-            ],
-        )
-        await interaction.response.send_modal(modal=modal)
-        response_modal = await self.bot.wait_for(
-            "modal_submit",
-            check=lambda i: i.custom_id == "prefix" and i.user == interaction.user,
-        )
-        await self.settings_db.set_prefix(
-            interaction.guild.id, response_modal.text_values["new_prefix"]
-        )
-        await response_modal.response.send_message(f"New prefix is `{response_modal.text_values['new_prefix']}`", ephemeral=True)  # type: ignore
-
-
-class EmbedColorSettings(disnake.ui.View):
-    def __init__(self, bot: commands.Bot):
-        super().__init__(timeout=None)
-        self.bot = bot
-        self.settings_db = main_db
-
-    @disnake.ui.button(
-        label="Change",
-        custom_id="embed_color_button",
-        style=disnake.ButtonStyle.green,
-    )
-    async def callback(
-        self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
-    ):
-        modal = disnake.ui.Modal(
-            title="Write new embed color",
-            custom_id="embed_color",
-            components=[
-                disnake.ui.TextInput(
-                    label="New embed color (hex):",
-                    custom_id="new_embed_color",
-                    style=disnake.TextInputStyle.short,
-                    max_length=8,
-                    min_length=8,
-                    placeholder="0x2F3236",
-                )
-            ],
-        )
-        await interaction.response.send_modal(modal=modal)
-        modal_response = await self.bot.wait_for(
-            "modal_submit",
-            check=lambda i: i.custom_id == "embed_color" and i.user == interaction.user,
-        )
-        if not modal_response.text_values["new_embed_color"].startswith("0x"):
-            return await modal_response.response.send_message("Embed color must start with `0x`", ephemeral=True)  # type: ignore
-        await self.settings_db.add_embed_color(
-            interaction.guild.id, modal_response.text_values["new_embed_color"]
-        )
-        await modal_response.response.send_message(f"New embed color is `{modal_response.text_values['new_embed_color']}`", ephemeral=True)  # type: ignore
-
-
-class CommandsSlashCommands(disnake.ui.StringSelect):
-    def __init__(self, bot: commands.Bot):
-        super().__init__()
-        self.bot = bot
-        self.settings_db = main_db
-
-    async def callback(self, inter: disnake.MessageInteraction):
-        # command = self.bot.get_slash_command(name=inter.values[0])
-        await inter.response.defer()
-        is_disabled = await self.settings_db.check_command(
-            inter.guild_id, command=inter.values[0], add_if_not_exists=False
-        )
-
-        if is_disabled:
-            await self.settings_db.delete_command(inter.guild_id, inter.values[0])
-            await inter.edit_original_message(
-                f"Command `{inter.values[0]}` is now enabled", view=None
-            )
-        else:
-            await self.settings_db.add_command(inter.guild_id, inter.values[0])
-            await inter.edit_original_message(
-                f"Command `{inter.values[0]}` is now disabled", view=None
-            )
-
-
-class CommandsContextCommands(disnake.ui.StringSelect):
-    def __init__(self, bot: commands.Bot):
-        super().__init__()
-        self.bot = bot
-        self.settings_db = main_db
-
-    async def callback(self, inter: disnake.MessageInteraction):
-        # command = self.bot.get_slash_command(name=inter.values[0])
-        await inter.response.defer()
-        is_disabled = await self.settings_db.check_command(
-            inter.guild_id, command=inter.values[0], add_if_not_exists=False
-        )
-
-        if is_disabled:
-            await self.settings_db.delete_command(inter.guild_id, inter.values[0])
-            await inter.edit_original_message(
-                f"Command `{inter.values[0]}` is now enabled", view=None
-            )
-        else:
-            await self.settings_db.add_command(inter.guild_id, inter.values[0])
-            await inter.edit_original_message(
-                f"Command `{inter.values[0]}` is now disabled", view=None
-            )
-
-
-class CommandsContextSettings(disnake.ui.StringSelect):
-    def __init__(self, bot: commands.Bot):
-        super().__init__()
-        self.bot = bot
-
-    async def callback(self, inter: disnake.MessageInteraction):
-        if inter.values[0] in self.bot.cogs.keys():
-            cog: Optional[commands.Cog] = self.bot.get_cog(inter.values[0])
-
-            slash_commands = CommandsContextCommands(bot=self.bot)
-
-            if s_commands := cog.get_commands():
-                for command in s_commands:
-                    slash_commands.add_option(label=command.name)
-
-            view = disnake.ui.View()
-            view.add_item(slash_commands)
-            await inter.response.defer()
-            await inter.edit_original_message(view=view)
-
-
-class CommandsSlashSettings(disnake.ui.StringSelect):
-    def __init__(self, bot: commands.Bot):
-        super().__init__()
-        self.bot = bot
-
-    async def callback(self, inter: disnake.MessageInteraction):
-        if inter.values[0] in self.bot.cogs.keys():
-            cog: Optional[commands.Cog] = self.bot.get_cog(inter.values[0])
-
-            slash_commands = CommandsSlashCommands(bot=self.bot)
-
-            if s_commands := cog.get_slash_commands():
-                for command in s_commands:
-                    slash_commands.add_option(label=command.name)
-
-            view = disnake.ui.View()
-            view.add_item(slash_commands)
-            await inter.response.defer()
-            await inter.edit_original_message(view=view)
-            # print(command.name)
-            # command_list.append(f"`{command.name}`\n")
-
-            # await inter.send(f"Commands: {command_list}\n")
-
-
-class CommandsSettings(disnake.ui.View):
-    def __init__(self, bot: commands.Bot):
-        super().__init__(timeout=None)
-        self.bot = bot
-        self.settings_db = main_db
-
-    @disnake.ui.string_select(
-        cls=disnake.ui.StringSelect,  # type: ignore
-        options=[
-            disnake.SelectOption(label="Slash commands", value="slash", emoji="📖"),
-            disnake.SelectOption(label="Context commands", value="context", emoji="✏️"),
-        ],
-    )
-    async def select_callback(
-        self, select: disnake.ui.StringSelect, interaction: MessageInteraction
-    ):
-        if select.values[0] == "context":
-            slash_settings = CommandsContextSettings(bot=self.bot)
-
-            #     cogs.get(slash_command.cog_name).append(f"`{slash_command.name}`\n")
-            for (
-                name,
-                cog,
-            ) in (
-                self.bot.cogs.items()
-            ):  # ну создаем ещё один select (disnake.ui.StringSelect) и всё создавай ты
-                if not name.startswith("Event") and not name.startswith("Settings"):
-                    slash_settings.add_option(
-                        label=name,
-                        description=cog.description,
-                        emoji=getattr(cog, "EMOJI", None),
-                    )
-
-            view = disnake.ui.View()
-            view.add_item(slash_settings)
-
-            await interaction.response.send_message(view=view, ephemeral=True)
-
-        elif select.values[0] == "slash":
-            # embed = disnake.Embed(title="Slash commands", color=0x2F3236, description="")
-            cogs: Dict[str, List[str]] = {}
-            #
-            # for slash_command in self.bot.slash_commands:
-            #     if cogs.get(slash_command.cog_name) is None:
-            #         cogs[slash_command.cog_name] = []
-
-            slash_settings = CommandsSlashSettings(bot=self.bot)
-
-            #     cogs.get(slash_command.cog_name).append(f"`{slash_command.name}`\n")
-            for (
-                name,
-                cog,
-            ) in (
-                self.bot.cogs.items()
-            ):  # ну создаем ещё один select (disnake.ui.StringSelect) и всё создавай ты
-                if not name.startswith("Event") and not name.startswith("Settings"):
-                    slash_settings.add_option(
-                        label=name,
-                        description=cog.description,
-                        emoji=getattr(cog, "EMOJI", None),
-                    )
-
-            view = disnake.ui.View()
-            view.add_item(slash_settings)
-
-            await interaction.response.send_message(view=view, ephemeral=True)
-
-            # чек серв наш
-            # values = [f"**{key}**\n{''.join(value)}" for key, value in text.items()]
-            # embed.description += "\n".join(values)
-            # await interaction.send(embed=embed, ephemeral=True)
-
-            # for cog in self.bot.cogs:
-            #     cogs[cog] = []
-            #     for command in self.bot.get_cog(cog).get_commands():
-            #         cogs[cog].append(f"`{command.name}`\n") #нихуя себе 🤓
-
+from src.utils import main_db, commands_db
+from src.utils.settingsviews import CommandsContextCommands, CommandsSlashCommands, CommandsSlashSettings, EmbedColorSettings, LanguageSettings, PrefixSettings, CommandsSettings
 
 class SettingsView(disnake.ui.View):
     def __init__(self, bot: commands.Bot):
         super().__init__(timeout=None)
         self.bot = bot
         self.settings_db = main_db
+        self.commands_db = commands_db
 
     @disnake.ui.string_select(
         cls=disnake.ui.StringSelect,  # type: ignore
@@ -343,7 +52,6 @@ class SettingsView(disnake.ui.View):
                 view=EmbedColorSettings(self.bot),
             )
 
-
 class Settings(commands.Cog):
     """Helper commands to set up the bot."""
 
@@ -352,13 +60,57 @@ class Settings(commands.Cog):
     def __init__(self, bot) -> None:
         self.bot = bot
         self.settings_db = main_db
+        self.command_db = commands_db
 
     async def cog_load(self) -> None:
         await self.settings_db.fetch_and_cache_all()
+        await self.command_db.fetch_and_cache_all()
 
     @commands.command(name="settings", description="Get or set the bot's prefix")
     async def settings(self, ctx):
         await ctx.send("Choice a module", view=SettingsView(self.bot))
+        
+    @staticmethod
+    def custom_cooldown(message: disnake.Message):
+        prefix = main_db.get_prefix_from_cache(message.guild.id)
+        len_prefix = len(prefix)
+
+        if message.content.startswith(prefix):
+            command = message.content.split()[0][len_prefix:]
+
+            if cooldown := commands_db.get_command_cooldown(message.guild.id, command):
+                return commands.Cooldown(1, cooldown)
+        
+        
+        # return commands.Cooldown(1, 5)
+
+        # role = disnake.utils.get(message.guild.roles, id=999682446675161148)
+        # if role in message.author.roles:
+        #     return commands.Cooldown(1, 5) 
+        # elif message.author.id in [123, 1234, 12345, 123456]:
+        #     return commands.Cooldown(1, 1)
+        # else:
+        #     if command == "dmcheck":
+        #         return commands.Cooldown(1, 30)
+        #     elif command == "help":
+        #         return commands.Cooldown(1, 15)
+        #     elif command == "ping":
+        #         return commands.Cooldown(1, 20)
+        #     elif command == "spam":
+        #         return commands.Cooldown(1, 30)
+        #     elif command == "spam_custom":
+        #         return commands.Cooldown(1, 30)
+        #     elif command == "join_spam":
+        #         return commands.Cooldown(1, 30)
+        #     else:
+        #         return commands.Cooldown(1, 15)
+
+    # @commands.check(CustomCooldown(1, 300, 1, 0, commands.BucketT., elements=[999682446675161148]))
+    @commands.dynamic_cooldown(custom_cooldown, commands.BucketType.user)
+    @commands.command()
+    async def test(self, ctx: commands.Context):
+        # await self.command_db.set_cooldown(ctx.guild.id, ctx.command.name, 10)
+        await ctx.send(await self.get_cooldown(ctx.message))
 
     # @Server.route()
     # async def get_prefix(self, data: ClientPayload) -> Dict[str, str]:
@@ -374,7 +126,8 @@ class Settings(commands.Cog):
     # async def set_prefix(self, data: ClientPayload) -> Dict[str, str]:
     #     current_prefix = await self.settings_db.get_prefix(data.guild_id)
     #
-    #     if current_prefix == data.prefix:
+    #     if current_prefix == data.prefix: z>>test
+
     #         return {
     #             "message": f"Prefix already set to {data.prefix}",
     #             "prefix": current_prefix,

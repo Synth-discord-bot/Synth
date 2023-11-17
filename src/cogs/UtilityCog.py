@@ -37,10 +37,6 @@ class Utility(commands.Cog):
             133172312: "<:synthdev:1169689479452311582>",
         }
 
-    @commands.command()
-    async def test(self, ctx: commands.Context) -> None:
-        await ctx.send(f"Test emoji: ")
-
     @commands.slash_command(
         name=Localized("user", key="USER_COMMAND_NAME"),
         description=Localized(

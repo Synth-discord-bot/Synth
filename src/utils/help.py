@@ -122,7 +122,7 @@ class CustomHelpCommand(commands.MinimalHelpCommand):
                             if cog and cog.description
                             else cmd_list
                         )
-                        embed.add_field(name=cog_label, value=value, inline = False)
+                        embed.add_field(name=cog_label, value=value, inline=False)
 
         return embed
 

@@ -6,6 +6,7 @@ from .database.logger import LoggerDatabase
 from .database.private_rooms import PrivateRoomsDatabase
 from .database.warns import WarnDatabase
 from .database.giveaway import GiveawayDatabase
+from .database.commands import CommandsDatabase
 
 main_db = MainDatabase("bot")
 forms = FormsDatabase("form")
@@ -15,3 +16,4 @@ invites = InviteTrackerDatabase("invites")
 private_rooms = PrivateRoomsDatabase("private_rooms")
 warns = WarnDatabase("warns")
 giveaway = GiveawayDatabase("giveaway")
+commands_db = CommandsDatabase("commands")

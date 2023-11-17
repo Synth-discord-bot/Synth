@@ -77,7 +77,7 @@ class QueueView(View):
             embed = disnake.Embed(
                 title="Music Queue",
                 description="",
-                color=self.settings_db.get_embed_color(ctx.guild.id),
+                color=self.settings_db.get_embed_color(interaction.guild.id),
             )
 
             if len(player.queue) > 0:
@@ -112,7 +112,7 @@ class QueueView(View):
                 embed=disnake.Embed(
                     title="Disconnecting...",
                     description="I have disconnected from voice channel",
-                    color=self.settings_db.get_embed_color(ctx.guild.id),
+                    color=self.settings_db.get_embed_color(interaction.guild.id),
                 ),
                 ephemeral=True,
             )
@@ -294,15 +294,15 @@ class Music(commands.Cog, name="Voice Commands"):
     #####################
 
     @commands.Cog.listener()
-    async def on_message(self, message):
-        rooms = await self.private_rooms.get_private_room(
-            message.guild.id, to_return="channels"
-        )
-        if rooms:
-            for room in rooms:
-                if message.channel.id == room and message.author.id != self.bot.user.id:
-                    await message.delete()
-                    break
+    async def on_message(self, message: disnake.Message):
+        if message.guild:
+            if rooms := await self.private_rooms.get_private_room(
+                message.guild.id, to_return="channels"
+            ):
+                for room in rooms:
+                    if message.channel.id == room and message.author.id != self.bot.user.id:
+                        await message.delete()
+                        break
 
     @commands.Cog.listener()
     async def on_voice_state_update(

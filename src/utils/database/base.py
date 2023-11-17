@@ -108,7 +108,7 @@ class BaseDatabase:
 
     def get_items_in_cache(
         self, query: Dict[Any, Any], to_return: str = None
-    ) -> Union[List[Dict[Union[int, str], Dict[str, Any]]], Dict[str, Any]]:
+    ) -> Union[List[Dict[Union[int, str], Dict[str, Any]]], Dict[str, Any], Dict[str, Any]]:
         """
         Get items from cache by search query
 
@@ -128,7 +128,7 @@ class BaseDatabase:
 
         if result := self.collection_cache.get(_id, {}):
             if self.debug:
-                logging.info(f"[{self.name}]: Found {id_to_update} in cache")
+                logging.info(f"[{self.name}]: Found {_id} in cache")
 
             if to_return:
                 if self.debug:
@@ -139,7 +139,7 @@ class BaseDatabase:
                         )
                     )
 
-                    return result.get(to_return, None)
+                return result.get(to_return, None)
             return result
 
     async def find_one_from_cache(self, value: Dict[str, Any]) -> Any:
