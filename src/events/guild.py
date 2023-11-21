@@ -86,7 +86,9 @@ class EventGuild(commands.Cog):
             await channel.send(embed=embed)
 
     @commands.Cog.listener()
-    async def on_guild_role_update(self, before: disnake.Role, after: disnake.Role) -> None:
+    async def on_guild_role_update(
+        self, before: disnake.Role, after: disnake.Role
+    ) -> None:
         embed = disnake.Embed(
             title="Synth | Updated Role",
             color=self.settings_db.get_embed_color(before.guild.id),

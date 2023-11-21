@@ -346,7 +346,7 @@ class Moderation(commands.Cog):
                 )
 
             start = index * per_page
-            for page in pages[start:(index + 1) * per_page]:
+            for page in pages[start : (index + 1) * per_page]:
                 mutes_embed.add_field(name="", value=page, inline=False)
             return mutes_embed
 
@@ -453,7 +453,7 @@ class Moderation(commands.Cog):
                 bans_embed.set_footer(text=f"{ctx.author}", icon_url=ctx.author.avatar)
 
             start = index * per_page
-            for page in pages[start: (index + 1) * per_page]:
+            for page in pages[start : (index + 1) * per_page]:
                 bans_embed.add_field(name="", value=page, inline=False)
             return bans_embed
 
@@ -565,9 +565,7 @@ class Moderation(commands.Cog):
             )
             return [prev_button, next_button, delete_button]
 
-        async def refresh_embed(
-            context: commands.Context, warns_list: List[Any], i, _
-        ):
+        async def refresh_embed(context: commands.Context, warns_list: List[Any], i, _):
             warns_embed = Embed(
                 title=f"Warns of {user}",
                 description=f"**Total warns count:** {len(warns_list)}",

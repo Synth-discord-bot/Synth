@@ -13,9 +13,9 @@ from src.utils.rooms import Buttons
 
 class MusicPlayer(mafic.Player[commands.Bot]):
     def __init__(
-            self,
-            client: commands.Bot,
-            channel: disnake.VoiceChannel,
+        self,
+        client: commands.Bot,
+        channel: disnake.VoiceChannel,
     ) -> None:
         super().__init__(client, channel)
 
@@ -31,7 +31,7 @@ class QueueView(View):
 
     @disnake.ui.button(label="Skip", style=disnake.ButtonStyle.green)
     async def skip(
-            self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
+        self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ) -> None:
         player: MusicPlayer
 
@@ -56,7 +56,7 @@ class QueueView(View):
 
     @disnake.ui.button(label="Resume/Pause", style=disnake.ButtonStyle.gray)
     async def resume_and_pause(
-            self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
+        self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ):
         player: MusicPlayer
 
@@ -70,7 +70,7 @@ class QueueView(View):
 
     @disnake.ui.button(label="Queue", style=disnake.ButtonStyle.blurple)
     async def queue(
-            self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
+        self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ):
         player: MusicPlayer
 
@@ -298,22 +298,22 @@ class Music(commands.Cog, name="Voice Commands"):
     async def on_message(self, message: disnake.Message):
         if message.guild:
             if rooms := await self.private_rooms.get_private_room(
-                    message.guild.id, to_return="channels"
+                message.guild.id, to_return="channels"
             ):
                 for room in rooms:
                     if (
-                            message.channel.id == room
-                            and message.author.id != self.bot.user.id
+                        message.channel.id == room
+                        and message.author.id != self.bot.user.id
                     ):
                         await message.delete()
                         break
 
     @commands.Cog.listener()
     async def on_voice_state_update(
-            self,
-            member: disnake.Member,
-            before: disnake.VoiceState,
-            after: disnake.VoiceState,
+        self,
+        member: disnake.Member,
+        before: disnake.VoiceState,
+        after: disnake.VoiceState,
     ):
         if after.channel and len(after.channel.members) != 0:
             is_main_room = await self.private_rooms.get_private_room(
@@ -348,7 +348,7 @@ class Music(commands.Cog, name="Voice Commands"):
                 return
         elif before.channel and len(before.channel.members) == 0:
             if room_channels := await self.private_rooms.get_private_room(
-                    member.guild.id, to_return="channels"
+                member.guild.id, to_return="channels"
             ):
                 for room in room_channels:
                     if room_id := room.get("channel_id", None):

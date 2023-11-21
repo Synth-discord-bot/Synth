@@ -33,9 +33,7 @@ class BaseDatabase:
         self.collection_cache[_id] = param_filter
 
         if self.debug:
-            logging.info(
-                f"[{self.name}]: Added {_id} to cache\nValue: {param_filter}"
-            )
+            logging.info(f"[{self.name}]: Added {_id} to cache\nValue: {param_filter}")
 
         return param_filter
 
@@ -107,7 +105,11 @@ class BaseDatabase:
     def get_items_in_cache(
         self, query: Dict[Any, Any], to_return: str = None
     ) -> Union[
-        List[Dict[Union[int, str], Dict[str, Any]]], Dict[str, Any], Dict[str, Any], int, str
+        List[Dict[Union[int, str], Dict[str, Any]]],
+        Dict[str, Any],
+        Dict[str, Any],
+        int,
+        str,
     ]:
         """
         Get items from cache by search query

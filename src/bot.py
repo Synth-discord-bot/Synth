@@ -30,7 +30,6 @@ class Bot(commands.Bot):
         self.i18n.load("src/utils/locale")
         self.debug = debug
 
-
     async def on_message(self, message: disnake.Message):
         prefix = await get_prefix(message)
         prefix_len = len(prefix)
@@ -61,10 +60,10 @@ class Bot(commands.Bot):
                     event_name = extension[:-3]
                     self.load_extension(f"src.cogs.{event_name}")
                 except (
-                        commands.ExtensionNotFound,
-                        commands.NoEntryPointError,
-                        commands.ExtensionFailed,
-                        commands.ExtensionError,
+                    commands.ExtensionNotFound,
+                    commands.NoEntryPointError,
+                    commands.ExtensionFailed,
+                    commands.ExtensionError,
                 ) as e:
                     logging.error(
                         f"\n\nFailed to load {extension}!\n{traceback.print_exception(e)}"
@@ -80,10 +79,10 @@ class Bot(commands.Bot):
             try:
                 self.load_extension(f"src.events.{event[:-3]}")
             except (
-                    commands.ExtensionNotFound,
-                    commands.NoEntryPointError,
-                    commands.ExtensionFailed,
-                    commands.ExtensionError,
+                commands.ExtensionNotFound,
+                commands.NoEntryPointError,
+                commands.ExtensionFailed,
+                commands.ExtensionError,
             ) as e:
                 logging.error(
                     f"\n\nFailed to load {extension}!\n{traceback.print_exception(e)}"

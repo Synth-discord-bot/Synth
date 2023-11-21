@@ -236,9 +236,7 @@ class EventMessages(commands.Cog):
         await channel.send(embeds=embeds)
 
         for file in range(0, len(files), 10):
-            await channel.send(
-                files=files[file: file + 10]
-            )
+            await channel.send(files=files[file : file + 10])
 
     @commands.Cog.listener()
     async def on_message_edit(

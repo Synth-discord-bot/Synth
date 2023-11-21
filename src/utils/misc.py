@@ -59,8 +59,8 @@ async def is_command_disabled(message: Message, command: str) -> bool:
 
 
 async def check_channel(
-        channel: TextChannel,
-        interaction: Union[MessageCommandInteraction, commands.Context],
+    channel: TextChannel,
+    interaction: Union[MessageCommandInteraction, commands.Context],
 ) -> bool:
     await interaction.send(
         f"Checking access to channel {channel.mention}...", ephemeral=True
@@ -218,12 +218,12 @@ async def hms(sec):
 
 
 async def common_checks(
-        ctx: commands.Context,
-        member: Union[int, str, disnake.Member, disnake.User],
-        check_bot=False,
-        for_unban=False,
-        for_mute=False,
-        str_time=None,
+    ctx: commands.Context,
+    member: Union[int, str, disnake.Member, disnake.User],
+    check_bot=False,
+    for_unban=False,
+    for_mute=False,
+    str_time=None,
 ):
     error_embed = Embed(color=disnake.Colour.red())
 
@@ -242,10 +242,10 @@ async def common_checks(
         return False, error_embed
 
     elif (
-            not for_unban
-            and isinstance(member, disnake.Member)
-            and check_bot
-            and member.bot
+        not for_unban
+        and isinstance(member, disnake.Member)
+        and check_bot
+        and member.bot
     ):
         error_embed.description = (
             f"{emoji('error')} | You can't perform this action on a bot."
@@ -253,9 +253,9 @@ async def common_checks(
         return False, error_embed
 
     elif (
-            not for_unban
-            and isinstance(member, disnake.Member)
-            and member.top_role >= ctx.author.top_role
+        not for_unban
+        and isinstance(member, disnake.Member)
+        and member.top_role >= ctx.author.top_role
     ):
         error_embed.description = (
             f"{emoji('error')} | Your role is not higher than {member.mention}'s role."
@@ -263,9 +263,9 @@ async def common_checks(
         return False, error_embed
 
     elif (
-            not for_unban
-            and isinstance(member, disnake.Member)
-            and member.id == ctx.bot.user.id
+        not for_unban
+        and isinstance(member, disnake.Member)
+        and member.id == ctx.bot.user.id
     ):
         error_embed.description = (
             f"{emoji('error')} | You can't perform this action on the bot."
@@ -273,11 +273,11 @@ async def common_checks(
         return False, error_embed
 
     elif (
-            check_bot
-            and isinstance(member, disnake.Member)
-            and member.top_role >= ctx.guild.get_member(ctx.bot.user.id).top_role
-            and not ctx.author.guild.owner
-            and not for_unban
+        check_bot
+        and isinstance(member, disnake.Member)
+        and member.top_role >= ctx.guild.get_member(ctx.bot.user.id).top_role
+        and not ctx.author.guild.owner
+        and not for_unban
     ):
         error_embed.description = (
             f"{emoji('error')} | "
@@ -302,15 +302,15 @@ async def common_checks(
 
 class EmbedPaginator(disnake.ui.View):
     def __init__(
-            self,
-            interaction: Union[
-                disnake.MessageCommandInteraction, disnake.MessageInteraction
-            ],
-            author: disnake.Member,
-            embed: disnake.Embed,
-            data: Optional[Union[Dict, List]],
-            timeout: Optional[int] = None,
-            separate: int = 10,
+        self,
+        interaction: Union[
+            disnake.MessageCommandInteraction, disnake.MessageInteraction
+        ],
+        author: disnake.Member,
+        embed: disnake.Embed,
+        data: Optional[Union[Dict, List]],
+        timeout: Optional[int] = None,
+        separate: int = 10,
     ) -> None:
         super().__init__(timeout=timeout)
         self.current_page = 1
@@ -321,21 +321,21 @@ class EmbedPaginator(disnake.ui.View):
         self.data = data
 
     async def send_message(
-            self,
-            ctx: Union[
-                commands.Context,
-                disnake.MessageCommandInteraction,
-                disnake.MessageInteraction,
-            ],
+        self,
+        ctx: Union[
+            commands.Context,
+            disnake.MessageCommandInteraction,
+            disnake.MessageInteraction,
+        ],
     ) -> Union[Message, Any]:
         if isinstance(
-                ctx, (disnake.MessageCommandInteraction, disnake.MessageInteraction)
+            ctx, (disnake.MessageCommandInteraction, disnake.MessageInteraction)
         ):
             return await ctx.response.send_message(embed=self.embed, view=self)
         return await ctx.send(embed=self.embed, view=self)
 
     async def _create_embed(
-            self, embed: disnake.Embed, data: Union[Dict, List]
+        self, embed: disnake.Embed, data: Union[Dict, List]
     ) -> disnake.Embed:
         embed: disnake.Embed = disnake.Embed(
             title=embed.title,
@@ -357,15 +357,15 @@ class EmbedPaginator(disnake.ui.View):
         return embed
 
     async def update(
-            self,
-            message: Union[disnake.MessageCommandInteraction, disnake.MessageInteraction],
-            embed: disnake.Embed,
+        self,
+        message: Union[disnake.MessageCommandInteraction, disnake.MessageInteraction],
+        embed: disnake.Embed,
     ) -> None:
         await message.edit_original_response(embed=embed, view=self)
 
     @disnake.ui.button(label="️◀️", style=disnake.ButtonStyle.blurple)
     async def prev_page(
-            self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
+        self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ) -> None:
         await interaction.response.defer()
         self.current_page -= 1
@@ -376,7 +376,7 @@ class EmbedPaginator(disnake.ui.View):
 
     @disnake.ui.button(label="▶️", style=disnake.ButtonStyle.blurple)
     async def next_page(
-            self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
+        self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ) -> None:
         await interaction.response.defer()
         self.current_page += 1
