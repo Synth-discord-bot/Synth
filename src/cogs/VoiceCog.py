@@ -2,6 +2,7 @@ import datetime
 
 import disnake
 import mafic
+from disnake import Message
 from disnake.ext import commands
 from disnake.ui import View
 
@@ -128,7 +129,7 @@ class Music(commands.Cog, name="Voice Commands"):
     async def cog_load(self) -> None:
         await self.private_rooms.fetch_and_cache_all()
 
-    async def add_nodes(self):
+    async def add_nodes(self) -> None:
         await self.pool.create_node(
             label="MAIN",
             host="localhost",
@@ -150,7 +151,7 @@ class Music(commands.Cog, name="Voice Commands"):
     ########################
 
     @commands.command()
-    async def play(self, ctx: commands.Context, *, query: str = None):
+    async def play(self, ctx: commands.Context, *, query: str = None) -> Message:
         """
         Play a song from spotify
         """

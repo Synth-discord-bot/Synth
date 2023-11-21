@@ -22,26 +22,20 @@ class EventMessages(commands.Cog):
 
         if not logger_channel:
             return
-        
+
         if thread.author == thread.guild.me:
             return
-        
+
         embed = disnake.Embed(
             color=self.settings_db.get_embed_color(thread.guild.id),
             title="Synth | Thread created",
-            description=""
+            description="",
         )
+        embed.add_field(name="Thread name", value=thread.name)
+        embed.add_field(name="Thread channel", value=thread)
         embed.add_field(
-            name = "Thread name",
-            value = thread.name
-        )
-        embed.add_field(
-            name = "Thread channel",
-            value = thread
-        )
-        embed.add_field(
-            name = "Thread author",
-            value = f"{thread.author.mention} (`{thread.author}` `ID: {thread.author.id}`)"
+            name="Thread author",
+            value=f"{thread.author.mention} (`{thread.author}` `ID: {thread.author.id}`)",
         )
 
         if channel := await thread.guild.fetch_channel(int(logger_channel)):
@@ -55,26 +49,20 @@ class EventMessages(commands.Cog):
 
         if not logger_channel:
             return
-        
+
         if thread.author == thread.guild.me:
             return
-        
+
         embed = disnake.Embed(
             color=self.settings_db.get_embed_color(thread.guild.id),
             title="Synth | Thread deleted",
-            description=""
+            description="",
         )
+        embed.add_field(name="Thread name", value=thread.name)
+        embed.add_field(name="Thread channel", value=thread)
         embed.add_field(
-            name = "Thread name",
-            value = thread.name
-        )
-        embed.add_field(
-            name = "Thread channel",
-            value = thread
-        )
-        embed.add_field(
-            name = "Thread author",
-            value = f"{thread.author.mention} (`{thread.author}` `ID: {thread.author.id}`)"
+            name="Thread author",
+            value=f"{thread.author.mention} (`{thread.author}` `ID: {thread.author.id}`)",
         )
 
         if channel := await thread.guild.fetch_channel(int(logger_channel)):
@@ -94,7 +82,11 @@ class EventMessages(commands.Cog):
 
         files = []
         embeds = []
-        embed = disnake.Embed(color=self.settings_db.get_embed_color(message.guild.id), title="Synth | Deleted Message", description=None)
+        embed = disnake.Embed(
+            color=self.settings_db.get_embed_color(message.guild.id),
+            title="Synth | Deleted Message",
+            description=None,
+        )
         embed.add_field(name="Additional information", value="No information")
         field_dop_index = next(
             index
@@ -181,7 +173,9 @@ class EventMessages(commands.Cog):
         files = []
         embeds = []
         embed = disnake.Embed(
-            color=self.settings_db.get_embed_color(payload.guild.id), title="Synth | Deleted Messages", description=None
+            color=self.settings_db.get_embed_color(payload.guild.id),
+            title="Synth | Deleted Messages",
+            description=None,
         )
         embed.add_field(name="Additional information", value="No information")
         embeds.append(embed)

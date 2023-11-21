@@ -18,6 +18,7 @@ class Utility(commands.Cog):
     EMOJI = "<:globe:1169690501063123065>"
 
     def __init__(self, bot: commands.Bot) -> None:
+        self.settings_db = None
         self.bot = bot
         self.badges = {
             1: "<:staff:1168622635228344403>",
@@ -145,7 +146,8 @@ class Utility(commands.Cog):
         owner = interaction.guild.owner
 
         embed = disnake.Embed(
-            title=f"{interaction.guild.name}'s information", color=self.settings_db.get_embed_color(interaction.guild.id)
+            title=f"{interaction.guild.name}'s information",
+            color=self.settings_db.get_embed_color(interaction.guild.id),
         )
         embed.add_field(
             name="Main Information",
@@ -227,7 +229,9 @@ class Utility(commands.Cog):
             )
             return
 
-        embed = disnake.Embed(color=self.settings_db.get_embed_color(interaction.guild.id))
+        embed = disnake.Embed(
+            color=self.settings_db.get_embed_color(interaction.guild.id)
+        )
         embed.title = "<a:loading:1168599537682755584> Cleaning messages..."
         embed.description = f"Deleted **{len(deleted)}** messages"
         embed.set_footer(
@@ -296,7 +300,9 @@ class Utility(commands.Cog):
         ),
     ) -> None:
         user = user or interaction.author
-        embed = disnake.Embed(color=self.settings_db.get_embed_color(interaction.guild.id))
+        embed = disnake.Embed(
+            color=self.settings_db.get_embed_color(interaction.guild.id)
+        )
         embed.set_author(name=user, icon_url=str(user.display_avatar))
         if user.avatar is not None:
             embed.description = (
@@ -351,7 +357,7 @@ class Utility(commands.Cog):
 
             if failed_members:
                 failed_count = len(failed_members)
-                await processing_message.edit(
+                await processing_message.edit(  # type: ignore
                     embed=disnake.Embed(
                         description=f"Successfully {action_str} role for "
                         f"**{total_members - failed_count}/{total_members}** members. "
@@ -363,7 +369,7 @@ class Utility(commands.Cog):
                     )
                 )
             else:
-                await processing_message.edit(
+                await processing_message.edit(  # type: ignore
                     embed=disnake.Embed(
                         description=f"Successfully {action_str} role for all **{total_members}** members.",
                         color=self.settings_db.get_embed_color(interaction.guild.id),

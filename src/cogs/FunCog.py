@@ -32,7 +32,9 @@ class Fun(commands.Cog):
     ) -> None:
         roll = random.randint(1, number)
         embed = disnake.Embed(
-            title="Rolled", color=self.settings_db.get_embed_color(interaction.guild.id), description=f"You rolled a `{roll}`"
+            title="Rolled",
+            color=self.settings_db.get_embed_color(interaction.guild.id),
+            description=f"You rolled a `{roll}`",
         )
         await interaction.send(embed=embed)
 
@@ -133,31 +135,41 @@ class Fun(commands.Cog):
         match random.randint(1, 5):
             case 1:
                 embed = disnake.Embed(
-                    title="Yes", description=f"{question}", color=self.settings_db.get_embed_color(interaction.guild.id)
+                    title="Yes",
+                    description=f"{question}",
+                    color=self.settings_db.get_embed_color(interaction.guild.id),
                 ).set_image(
                     url="https://c.tenor.com/R_itimARcLAAAAAC/talking-ben-yes.gif"
                 )
             case 2:
                 embed = disnake.Embed(
-                    title="No", description=f"{question}", color=self.settings_db.get_embed_color(interaction.guild.id)
+                    title="No",
+                    description=f"{question}",
+                    color=self.settings_db.get_embed_color(interaction.guild.id),
                 ).set_image(
                     url="https://c.tenor.com/3ZLujiiPc4YAAAAC/talking-ben-no.gif"
                 )
             case 3:
                 embed = disnake.Embed(
-                    title="Hohoho", description=f"{question}", color=self.settings_db.get_embed_color(interaction.guild.id)
+                    title="Hohoho",
+                    description=f"{question}",
+                    color=self.settings_db.get_embed_color(interaction.guild.id),
                 ).set_image(
                     url="https://c.tenor.com/agrQMQjQTzgAAAAd/talking-ben-laugh.gif"
                 )
             case 4:
                 embed = disnake.Embed(
-                    title="Ugh...", description=f"{question}", color=self.settings_db.get_embed_color(interaction.guild.id)
+                    title="Ugh...",
+                    description=f"{question}",
+                    color=self.settings_db.get_embed_color(interaction.guild.id),
                 ).set_image(
                     url="https://c.tenor.com/fr6i8VzKJuEAAAAd/talking-ben-ugh.gif"
                 )
             case 5:
                 embed = disnake.Embed(
-                    title=f"Bye...", description=f"{question}", color=self.settings_db.get_embed_color(interaction.guild.id)
+                    title=f"Bye...",
+                    description=f"{question}",
+                    color=self.settings_db.get_embed_color(interaction.guild.id),
                 ).set_image(
                     url="https://c.tenor.com/7j3yFGeMMgIAAAAd/talking-ben-ben.gif"
                 )
