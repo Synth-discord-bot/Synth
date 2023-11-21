@@ -38,10 +38,6 @@ class Utility(commands.Cog):
             133172312: "<:synthdev:1169689479452311582>",
         }
 
-    @commands.command()
-    async def test(self, ctx: commands.Context) -> None:
-        await ctx.send(f"Test emoji: ")
-
     @commands.slash_command(
         name=Localized("user", key="USER_COMMAND_NAME"),
         description=Localized(
@@ -58,7 +54,7 @@ class Utility(commands.Cog):
         ),
     ) -> None:
         if user is None:
-            user = interaction.user
+            user: Union[disnake.User, disnake.Member] = interaction.user
 
         is_dev = (
             ""
@@ -117,7 +113,8 @@ class Utility(commands.Cog):
             [
                 user_badges
                 for badge, user_badges in self.badges.items()
-                if user.public_flags._has_flag(badge)
+                # if user.public_flags (self.value & o) == o
+                if (user.public_flags.value & badge) == badge
             ]
         )
 

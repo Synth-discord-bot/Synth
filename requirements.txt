@@ -8,3 +8,4 @@ aiohttp~=3.8.4
 memory_profiler
 aiofiles
 mafic
+black

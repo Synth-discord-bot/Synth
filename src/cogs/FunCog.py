@@ -20,7 +20,6 @@ class Fun(commands.Cog):
         name=Localized("roll", key="ROLL_COMMAND_NAME"),
         description=Localized("Roll a dice", key="ROLL_COMMAND_DESC"),
     )
-    @commands.CooldownMapping.from_cooldown(1, 5, commands.BucketType.user)
     async def roll(
         self,
         interaction: disnake.MessageCommandInteraction,
@@ -62,7 +61,7 @@ class Fun(commands.Cog):
             name=Localized("question", key="8BALL_COMMAND_QUESTION_NAME"),
         ),
     ) -> None:
-        global color, response
+        color, response = None, None
 
         good_responses = [
             "It is certain.",

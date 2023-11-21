@@ -6,16 +6,16 @@ from disnake import Message
 from disnake.ext import commands
 from disnake.ui import View
 
-from src.utils import private_rooms
+from src.utils import private_rooms, main_db
 from src.utils.misc import EmbedPaginator
 from src.utils.rooms import Buttons
 
 
 class MusicPlayer(mafic.Player[commands.Bot]):
     def __init__(
-        self,
-        client: commands.Bot,
-        channel: disnake.VoiceChannel,
+            self,
+            client: commands.Bot,
+            channel: disnake.VoiceChannel,
     ) -> None:
         super().__init__(client, channel)
 
@@ -26,11 +26,12 @@ class MusicPlayer(mafic.Player[commands.Bot]):
 class QueueView(View):
     def __init__(self, message_id: int, *, timeout: float | None = None) -> None:
         self.message_id = message_id
+        self.settings_db = main_db
         super().__init__(timeout=timeout)
 
     @disnake.ui.button(label="Skip", style=disnake.ButtonStyle.green)
     async def skip(
-        self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
+            self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ) -> None:
         player: MusicPlayer
 
@@ -55,7 +56,7 @@ class QueueView(View):
 
     @disnake.ui.button(label="Resume/Pause", style=disnake.ButtonStyle.gray)
     async def resume_and_pause(
-        self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
+            self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ):
         player: MusicPlayer
 
@@ -69,12 +70,16 @@ class QueueView(View):
 
     @disnake.ui.button(label="Queue", style=disnake.ButtonStyle.blurple)
     async def queue(
-        self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
+            self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ):
         player: MusicPlayer
 
         if player := interaction.guild.voice_client:  # type: ignore
-            embed = disnake.Embed(title="Music Queue", description="", color=0x2F3136)
+            embed = disnake.Embed(
+                title="Music Queue",
+                description="",
+                color=self.settings_db.get_embed_color(interaction.guild.id),
+            )
 
             if len(player.queue) > 0:
                 for index, music in enumerate(player.queue, start=1):
@@ -108,7 +113,7 @@ class QueueView(View):
                 embed=disnake.Embed(
                     title="Disconnecting...",
                     description="I have disconnected from voice channel",
-                    color=0x2F3136,
+                    color=self.settings_db.get_embed_color(interaction.guild.id),
                 ),
                 ephemeral=True,
             )
@@ -125,6 +130,7 @@ class Music(commands.Cog, name="Voice Commands"):
         self.pool = mafic.NodePool(self.bot)
         self.bot.loop.create_task(self.add_nodes())
         self.private_rooms = private_rooms
+        self.settings_db = main_db
 
     async def cog_load(self) -> None:
         await self.private_rooms.fetch_and_cache_all()
@@ -171,7 +177,7 @@ class Music(commands.Cog, name="Voice Commands"):
         if not tracks:
             return await ctx.send("No tracks found.")
 
-        embed = disnake.Embed(color=0x2F3136)
+        embed = disnake.Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
 
         if player.current:
             embed.title = "Queue"
@@ -259,7 +265,7 @@ class Music(commands.Cog, name="Voice Commands"):
             embed = disnake.Embed(
                 title=f"Now playing - {track.title}",
                 description=f"[{track.title}]({str(track.uri)})",
-                color=0x2F3136,
+                color=self.settings_db.get_embed_color(event.player.guild.id),
             )
             embed.add_field(name="Artist:", value=f"**`{track.author}`**", inline=True)
             embed.add_field(
@@ -285,26 +291,29 @@ class Music(commands.Cog, name="Voice Commands"):
         assert isinstance(event.player, MusicPlayer)
 
     #####################
-    ### PRIVATE ROOMS ###
+    #   PRIVATE ROOMS   #
     #####################
 
     @commands.Cog.listener()
-    async def on_message(self, message):
-        rooms = await self.private_rooms.get_private_room(
-            message.guild.id, to_return="channels"
-        )
-        if rooms:
-            for room in rooms:
-                if message.channel.id == room and message.author.id != self.bot.user.id:
-                    await message.delete()
-                    break
+    async def on_message(self, message: disnake.Message):
+        if message.guild:
+            if rooms := await self.private_rooms.get_private_room(
+                    message.guild.id, to_return="channels"
+            ):
+                for room in rooms:
+                    if (
+                            message.channel.id == room
+                            and message.author.id != self.bot.user.id
+                    ):
+                        await message.delete()
+                        break
 
     @commands.Cog.listener()
     async def on_voice_state_update(
-        self,
-        member: disnake.Member,
-        before: disnake.VoiceState,
-        after: disnake.VoiceState,
+            self,
+            member: disnake.Member,
+            before: disnake.VoiceState,
+            after: disnake.VoiceState,
     ):
         if after.channel and len(after.channel.members) != 0:
             is_main_room = await self.private_rooms.get_private_room(
@@ -339,7 +348,7 @@ class Music(commands.Cog, name="Voice Commands"):
                 return
         elif before.channel and len(before.channel.members) == 0:
             if room_channels := await self.private_rooms.get_private_room(
-                member.guild.id, to_return="channels"
+                    member.guild.id, to_return="channels"
             ):
                 for room in room_channels:
                     if room_id := room.get("channel_id", None):

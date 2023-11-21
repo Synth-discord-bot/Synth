@@ -39,7 +39,7 @@ class InviteTracker(commands.Cog):
             ),
         ),
     ) -> None:
-        invite_channel = await check_channel(channel=channel, interaction=interaction)
+        await check_channel(channel=channel, interaction=interaction)
         await self.invites.update_invite_info(
             guild_id=interaction.guild.id, inviter=interaction.user, invited=[]
         )

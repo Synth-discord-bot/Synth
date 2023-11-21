@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Union, Dict, Any
+from typing import Union
 
 import disnake
 
@@ -26,21 +26,17 @@ class WarnDatabase(BaseDatabase):
         :return: The case number of the warning.
         """
 
-        # Fetch the existing warnings for the guild
         warns_data = await self.find_one_from_db({"guild_id": guild_id})
         if not warns_data:
             warns_data = {
                 "guild_id": guild_id,
-                "warnings": {},  # A dictionary to store user warnings
+                "warnings": {},
             }
 
-        # Check if the user already has warnings, or initialize an empty list
         user_warnings = warns_data["warnings"].get(str(user.id), [])
 
-        # Get the current Unix timestamp (seconds since epoch)
         timestamp = int(datetime.now().timestamp())
 
-        # Add the new warning to the user's list of warnings with a timestamp
         new_case = {
             "moderator_id": administrator.id,
             "reason": reason,
@@ -48,13 +44,10 @@ class WarnDatabase(BaseDatabase):
         }
         user_warnings.append(new_case)
 
-        # Update the warnings for the user in the guild's data
         warns_data["warnings"][str(user.id)] = user_warnings
 
-        # Update the database with the modified guild data
         await self.update_db({"guild_id": guild_id}, warns_data)
 
-        # Return the case number of the new warning (index of the new warning in the user's list)
         return len(user_warnings)
 
     async def get_user_warnings(self, guild_id: int, user: disnake.Member) -> list:
@@ -64,12 +57,11 @@ class WarnDatabase(BaseDatabase):
         :param user: The disnake.Member object representing the user.
         :return: A list of warning cases for the user (including reason and timestamp).
         """
-        # Fetch the existing warnings for the guild
+
         warns_data = await self.find_one_from_db({"guild_id": guild_id})
         if not warns_data:
-            return []  # No warnings data for the guild
+            return []
 
-        # Check if the user has warnings, or return an empty list
         user_warnings = warns_data["warnings"].get(str(user.id), [])
         return user_warnings
 
@@ -78,31 +70,24 @@ class WarnDatabase(BaseDatabase):
     ) -> int | None:
         user_id = user.id if isinstance(user, disnake.Member) else user
 
-        # Fetch the existing warnings for the guild
         warns_data = await self.find_one(
             {"guild_id": guild_id}, return_first_result=True
         )
         if not warns_data:
-            return None  # No warnings data for the guild
+            return None
 
-        # Check if the user has warnings, or return 0
         user_warnings = warns_data["warnings"].get(str(user_id), None)
-        print(warns_data["warnings"].get(str(user_id)))
         if not user_warnings:
             return 0
 
-        # Ensure we don't remove more warnings than available
         if amount > len(user_warnings):
             amount = len(user_warnings)
 
-        # Remove the specified number of warnings
         removed_warnings = user_warnings[:amount]
         user_warnings = user_warnings[amount:]
 
-        # Update the warnings for the user in the guild's data
         warns_data["warnings"][str(user_id)] = user_warnings
 
-        # Update the database with the modified guild data
         await self.update_db(
             {"guild_id": guild_id}, {"warnings": warns_data["warnings"]}
         )

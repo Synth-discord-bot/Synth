@@ -34,7 +34,7 @@ class BaseDatabase:
 
         if self.debug:
             logging.info(
-                f"[{self.name}]: Added {id_to_update} to cache\nValue: {param_filter}"
+                f"[{self.name}]: Added {_id} to cache\nValue: {param_filter}"
             )
 
         return param_filter
@@ -48,8 +48,6 @@ class BaseDatabase:
         :param _id: _Id of the item to update
         :param new_value: New values to update the item in the cache.
         """
-
-        global id_to_update
 
         id_to_update = (
             _id.get("guild_id", None)
@@ -79,7 +77,7 @@ class BaseDatabase:
         """
         Remove an item from the cache based on the provided filter.
 
-        :param _id: Id of the item to remove
+        :param _id: Identifier of the item to remove
         :return: The removed item, or None if not found.
         """
 
@@ -108,7 +106,9 @@ class BaseDatabase:
 
     def get_items_in_cache(
         self, query: Dict[Any, Any], to_return: str = None
-    ) -> Union[List[Dict[Union[int, str], Dict[str, Any]]], Dict[str, Any]]:
+    ) -> Union[
+        List[Dict[Union[int, str], Dict[str, Any]]], Dict[str, Any], Dict[str, Any], int, str
+    ]:
         """
         Get items from cache by search query
 
@@ -117,7 +117,7 @@ class BaseDatabase:
             to_return (str, optional): Value to return.
 
         Returns:
-            List[Dict[int, Dict[str, Any]]]: List of items in query
+            List[Dict[int, Dict[str, Any]]]: List of items in a query
         """
         if _id := query.get("guild_id", None):
             query.pop("guild_id")
@@ -128,7 +128,7 @@ class BaseDatabase:
 
         if result := self.collection_cache.get(_id, {}):
             if self.debug:
-                logging.info(f"[{self.name}]: Found {id_to_update} in cache")
+                logging.info(f"[{self.name}]: Found {_id} in cache")
 
             if to_return:
                 if self.debug:
@@ -139,7 +139,7 @@ class BaseDatabase:
                         )
                     )
 
-                    return result.get(to_return, None)
+                return result.get(to_return, None)
             return result
 
     async def find_one_from_cache(self, value: Dict[str, Any]) -> Any:

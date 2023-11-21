@@ -1,9 +1,7 @@
-import logging
-
 from disnake import Member
 import disnake
 from disnake.ext import commands
-from src.utils import invites, main_db
+from src.utils import invites, main_db, logger
 
 
 class EventMember(commands.Cog):
@@ -12,6 +10,7 @@ class EventMember(commands.Cog):
         self.bot = bot
         self.invites = invites
         self.settings_db = main_db
+        self.logger = logger
 
     @commands.Cog.listener()
     async def on_member_join(self, member: Member) -> None:
@@ -26,13 +25,13 @@ class EventMember(commands.Cog):
     @commands.Cog.listener()
     async def on_member_ban(self, guild: disnake.Guild, member: Member) -> None:
         logger_channel = await self.logger.get_loggers(
-            guild_id=member.guild.id, to_return="guild"
+            guild_id=guild.id, to_return="guild"
         )
         if not logger_channel:
             return
 
         embed = disnake.Embed(
-            color=self.settings_db.get_embed_color(member.guild_id),
+            color=self.settings_db.get_embed_color(guild.id),
             title="Synth | Member Banned",
         )
 
@@ -50,13 +49,13 @@ class EventMember(commands.Cog):
     @commands.Cog.listener()
     async def on_member_unban(self, guild: disnake.Guild, member: disnake.User) -> None:
         logger_channel = await self.logger.get_loggers(
-            guild_id=member.guild.id, to_return="guild"
+            guild_id=guild.id, to_return="guild"
         )
         if not logger_channel:
             return
 
         embed = disnake.Embed(
-            color=self.settings_db.get_embed_color(member.guild_id),
+            color=self.settings_db.get_embed_color(guild.id),
             title="Synth | Member Unbanned",
         )
 
@@ -80,7 +79,7 @@ class EventMember(commands.Cog):
             return
 
         embed = disnake.Embed(
-            color=self.settings_db.get_embed_color(before.guild_id),
+            color=self.settings_db.get_embed_color(before.guild.id),
             title="Synth | Member Updated",
         )
         embed.set_thumbnail(url=before.avatar.url)

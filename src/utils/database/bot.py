@@ -7,7 +7,20 @@ class MainDatabase(BaseDatabase):
     def __init__(self, database_name: str) -> None:
         super().__init__(database_name)
 
+    def get_cooldown(self, guild_id: int) -> Optional[int]:
+        if custom_cd := self.get_items_in_cache(
+            {"id": guild_id}, to_return="custom_cd"
+        ):
+            return custom_cd  # type: ignore
+
     # prefixes
+
+    def get_prefix_from_cache(self, guild_id: int) -> Optional[str]:
+        if prefix := self.get_items_in_cache({"id": guild_id}, to_return="prefix"):
+            return prefix  # type: ignore
+
+        return ">>"
+
     async def get_prefix(self, guild_id: int) -> Optional[str]:
         if await self.find_one_from_db({"id": guild_id}) is None:
             return ">>"

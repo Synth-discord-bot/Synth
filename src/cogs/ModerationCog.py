@@ -345,7 +345,8 @@ class Moderation(commands.Cog):
                     icon_url=ctx.author.avatar,
                 )
 
-            for page in pages[index * per_page : (index + 1) * per_page]:
+            start = index * per_page
+            for page in pages[start:(index + 1) * per_page]:
                 mutes_embed.add_field(name="", value=page, inline=False)
             return mutes_embed
 
@@ -450,7 +451,9 @@ class Moderation(commands.Cog):
                 )
             else:
                 bans_embed.set_footer(text=f"{ctx.author}", icon_url=ctx.author.avatar)
-            for page in pages[index * per_page : (index + 1) * per_page]:
+
+            start = index * per_page
+            for page in pages[start: (index + 1) * per_page]:
                 bans_embed.add_field(name="", value=page, inline=False)
             return bans_embed
 
@@ -563,7 +566,7 @@ class Moderation(commands.Cog):
             return [prev_button, next_button, delete_button]
 
         async def refresh_embed(
-            context: commands.Context, warns_list: List[Any], i, total_pages
+            context: commands.Context, warns_list: List[Any], i, _
         ):
             warns_embed = Embed(
                 title=f"Warns of {user}",
@@ -739,7 +742,7 @@ class Moderation(commands.Cog):
     async def cross_kick(
         self, ctx, member: Union[int, disnake.Member], reason: str = None
     ):
-        ErrorEmbed = Embed(color=disnake.Color.red())
+        error_embed = Embed(color=disnake.Color.red())
         embed = Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
         success_servers = []
 
@@ -786,11 +789,11 @@ class Moderation(commands.Cog):
 
                     success_servers.append(guild.name)
                 except (disnake.HTTPException, disnake.Forbidden):
-                    ErrorEmbed.title = "<:kick:1170712514288435271> Crosskick Fail"
-                    ErrorEmbed.description = (
+                    error_embed.title = "<:kick:1170712514288435271> Crosskick Fail"
+                    error_embed.description = (
                         f"Failed to kick {member.mention} on **{guild.name}** guild."
                     )
-                    ErrorEmbed.set_footer(
+                    error_embed.set_footer(
                         text=f"Synth © 2023 | All Rights Reserved",
                         icon_url=self.bot.user.avatar,
                     )

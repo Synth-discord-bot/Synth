@@ -21,7 +21,7 @@ from disnake import (
 )
 from disnake.ext import commands
 
-from . import main_db
+from . import main_db, commands_db
 
 
 async def bot_get_guild_prefix(bot: commands.Bot, message: Message) -> List[str]:
@@ -37,7 +37,7 @@ async def get_prefix(message: Union[Message, Guild]) -> Union[List[str], str]:
     guild = message.guild if isinstance(message, Message) else message
 
     if not guild or await main_db.get_prefix(guild.id) is None:
-        return "s."
+        return ">>"
 
     prefix = await main_db.get_prefix(guild.id)
     return prefix
@@ -59,8 +59,8 @@ async def is_command_disabled(message: Message, command: str) -> bool:
 
 
 async def check_channel(
-    channel: TextChannel,
-    interaction: Union[MessageCommandInteraction, commands.Context],
+        channel: TextChannel,
+        interaction: Union[MessageCommandInteraction, commands.Context],
 ) -> bool:
     await interaction.send(
         f"Checking access to channel {channel.mention}...", ephemeral=True
@@ -161,21 +161,13 @@ async def str_to_seconds(input_string):
         "y": 31536000,
         "р": 31536000,
     }
-
     input_string = (
         str(input_string).lower().strip("-").replace("мес", "е").replace("mo", "o")
     )
-
-    total_seconds = 0
-    matches = re.findall(r"(\d+)\s*([a-zA-Zа-яА-Я]+)", input_string)
-
-    for number, unit in matches:
-        multiplier = units.get(unit, 1)
-        total_seconds += int(number) * multiplier
-
-    total_seconds = max(total_seconds, 0)
-
-    return total_seconds
+    return sum(
+        int(number) * units.get(unit, 1)
+        for number, unit in re.findall(r"(\d+)\s*([a-zA-Zа-яА-Я]+)", input_string)
+    )
 
 
 def word_correct(number, p1, p2, p3):
@@ -192,13 +184,13 @@ def word_correct(number, p1, p2, p3):
         "8": p3,
         "9": p3,
     }
-    if ld[0] == "1" and len(ld) > 1:
-        case = p3
-    else:
-        if len(ld) == 1:
-            case = cases.get(ld[0], p1)
-        else:
-            case = cases.get(ld[1], p2)
+    case = (
+        p3
+        if ld[0] == "1" and len(ld) > 1
+        else cases.get(ld[0], p1)
+        if len(ld) == 1
+        else cases.get(ld[1], p2)
+    )
     return case
 
 
@@ -226,91 +218,99 @@ async def hms(sec):
 
 
 async def common_checks(
-    ctx, member, check_bot=False, for_unban=False, for_mute=False, str_time=None
+        ctx: commands.Context,
+        member: Union[int, str, disnake.Member, disnake.User],
+        check_bot=False,
+        for_unban=False,
+        for_mute=False,
+        str_time=None,
 ):
-    ErrorEmbed = Embed(color=disnake.Colour.red())
+    error_embed = Embed(color=disnake.Colour.red())
 
     if isinstance(member, disnake.User):
         # Try to convert user to member
-        member = ctx.guild.get_member(member.id)
+        member = ctx.guild.get_member(member.id or member)
 
     elif not member and not for_unban:
-        ErrorEmbed.description = f"{emoji('error')} | Member not found in the guild"
-        return False, ErrorEmbed
+        error_embed.description = f"{emoji('error')} | Member not found in the guild"
+        return False, error_embed
 
     elif member == ctx.author:
-        ErrorEmbed.description = (
+        error_embed.description = (
             f"{emoji('error')} | You can't perform this action on yourself."
         )
-        return False, ErrorEmbed
+        return False, error_embed
 
     elif (
-        not for_unban
-        and isinstance(member, disnake.Member)
-        and check_bot
-        and member.bot
+            not for_unban
+            and isinstance(member, disnake.Member)
+            and check_bot
+            and member.bot
     ):
-        ErrorEmbed.description = (
+        error_embed.description = (
             f"{emoji('error')} | You can't perform this action on a bot."
         )
-        return False, ErrorEmbed
+        return False, error_embed
 
     elif (
-        not for_unban
-        and isinstance(member, disnake.Member)
-        and member.top_role >= ctx.author.top_role
+            not for_unban
+            and isinstance(member, disnake.Member)
+            and member.top_role >= ctx.author.top_role
     ):
-        ErrorEmbed.description = (
+        error_embed.description = (
             f"{emoji('error')} | Your role is not higher than {member.mention}'s role."
         )
-        return False, ErrorEmbed
+        return False, error_embed
 
     elif (
-        not for_unban
-        and isinstance(member, disnake.Member)
-        and member.id == ctx.bot.user.id
+            not for_unban
+            and isinstance(member, disnake.Member)
+            and member.id == ctx.bot.user.id
     ):
-        ErrorEmbed.description = (
+        error_embed.description = (
             f"{emoji('error')} | You can't perform this action on the bot."
         )
-        return False, ErrorEmbed
+        return False, error_embed
 
     elif (
-        check_bot
-        and isinstance(member, disnake.Member)
-        and member.top_role >= ctx.guild.get_member(ctx.bot.user.id).top_role
-        and not ctx.author.guild.owner
-        and not for_unban
+            check_bot
+            and isinstance(member, disnake.Member)
+            and member.top_role >= ctx.guild.get_member(ctx.bot.user.id).top_role
+            and not ctx.author.guild.owner
+            and not for_unban
     ):
-        ErrorEmbed.description = f"{emoji('error')} | {member.mention}'s role is higher than mine, I can't perform this action."
-        return False, ErrorEmbed
+        error_embed.description = (
+            f"{emoji('error')} | "
+            f"{member.mention}'s role is higher than mine, I can't perform this action."
+        )
+        return False, error_embed
 
     elif for_mute and str_time > 2419200:  # 28 days in seconds
-        ErrorEmbed.description = (
+        error_embed.description = (
             f"{emoji('error')} | Mute time cannot be more than 28 days."
         )
-        return False, ErrorEmbed
+        return False, error_embed
 
     elif for_mute and str_time < 60:
-        ErrorEmbed.description = (
+        error_embed.description = (
             f"{emoji('error')} | Mute time cannot be less then 1 minute."
         )
-        return False, ErrorEmbed
+        return False, error_embed
 
     return True, None
 
 
 class EmbedPaginator(disnake.ui.View):
     def __init__(
-        self,
-        interaction: Union[
-            disnake.MessageCommandInteraction, disnake.MessageInteraction
-        ],
-        author: disnake.Member,
-        embed: disnake.Embed,
-        data: Optional[Union[Dict, List]],
-        timeout: Optional[int] = None,
-        separate: int = 10,
+            self,
+            interaction: Union[
+                disnake.MessageCommandInteraction, disnake.MessageInteraction
+            ],
+            author: disnake.Member,
+            embed: disnake.Embed,
+            data: Optional[Union[Dict, List]],
+            timeout: Optional[int] = None,
+            separate: int = 10,
     ) -> None:
         super().__init__(timeout=timeout)
         self.current_page = 1
@@ -321,21 +321,21 @@ class EmbedPaginator(disnake.ui.View):
         self.data = data
 
     async def send_message(
-        self,
-        ctx: Union[
-            commands.Context,
-            disnake.MessageCommandInteraction,
-            disnake.MessageInteraction,
-        ],
+            self,
+            ctx: Union[
+                commands.Context,
+                disnake.MessageCommandInteraction,
+                disnake.MessageInteraction,
+            ],
     ) -> Union[Message, Any]:
         if isinstance(
-            ctx, (disnake.MessageCommandInteraction, disnake.MessageInteraction)
+                ctx, (disnake.MessageCommandInteraction, disnake.MessageInteraction)
         ):
             return await ctx.response.send_message(embed=self.embed, view=self)
         return await ctx.send(embed=self.embed, view=self)
 
     async def _create_embed(
-        self, embed: disnake.Embed, data: Union[Dict, List]
+            self, embed: disnake.Embed, data: Union[Dict, List]
     ) -> disnake.Embed:
         embed: disnake.Embed = disnake.Embed(
             title=embed.title,
@@ -357,30 +357,32 @@ class EmbedPaginator(disnake.ui.View):
         return embed
 
     async def update(
-        self,
-        message: Union[disnake.MessageCommandInteraction, disnake.MessageInteraction],
-        embed: disnake.Embed,
+            self,
+            message: Union[disnake.MessageCommandInteraction, disnake.MessageInteraction],
+            embed: disnake.Embed,
     ) -> None:
         await message.edit_original_response(embed=embed, view=self)
 
     @disnake.ui.button(label="️◀️", style=disnake.ButtonStyle.blurple)
     async def prev_page(
-        self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
+            self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ) -> None:
         await interaction.response.defer()
         self.current_page -= 1
 
-        data = self.data[self.current_page * self.separate :]
+        start = self.current_page * self.separate
+        data = self.data[start:]
         await self.update(self.interaction, await self._create_embed(self.embed, data))
 
     @disnake.ui.button(label="▶️", style=disnake.ButtonStyle.blurple)
     async def next_page(
-        self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
+            self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ) -> None:
         await interaction.response.defer()
         self.current_page += 1
 
-        data = self.data[self.current_page * self.separate :]
+        start = self.current_page * self.separate
+        data = self.data[start:]
         await self.update(self.interaction, await self._create_embed(self.embed, data))
 
     async def interaction_check(self, interaction: MessageInteraction) -> bool:
@@ -390,3 +392,14 @@ class EmbedPaginator(disnake.ui.View):
             )
             return False
         return True
+
+
+def custom_cooldown(message: disnake.Message):
+    prefix = main_db.get_prefix_from_cache(message.guild.id)
+    len_prefix = len(prefix)
+
+    if message.content.startswith(prefix):
+        command = message.content.split()[0][len_prefix:]
+
+        if cooldown := commands_db.get_command_cooldown(message.guild.id, command):
+            return commands.Cooldown(1, cooldown)

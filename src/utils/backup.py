@@ -1,6 +1,6 @@
 import asyncio
 import base64
-from datetime import datetime
+from datetime import datetime, timedelta
 from io import BytesIO
 from typing import Dict, Any, Union
 
@@ -290,6 +290,7 @@ class BackupCreator:
     ) -> Dict[str, Union[Dict[Any, Any], Dict[str, str], Dict[str, int]]]:
         icon_data = None  # Default to None
         banner_data = None  # Default to None
+        nextsave = datetime.now() + timedelta(days=7)
 
         try:
             async with aiohttp.ClientSession() as session:
@@ -317,7 +318,7 @@ class BackupCreator:
 
         backup_data = {
             "info": {
-                "nextsave": 2147483647,
+                "nextsave": nextsave.timestamp(),
                 "interval": 0,
                 "created": int(datetime.now().timestamp()),
             },

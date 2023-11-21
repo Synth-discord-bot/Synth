@@ -37,12 +37,13 @@ class Bot(commands.Bot):
 
     async def on_message(self, message: disnake.Message):
         prefix = await get_prefix(message)
+        prefix_len = len(prefix)
 
         if message.content.startswith(prefix):
             # TODO: blacklist
 
             # check if command is disabled
-            command = message.content.split()[0][len(prefix) :]
+            command = message.content.split()[0][prefix_len:]
             result = await is_command_disabled(message=message, command=command)
             if result:
                 return
@@ -88,10 +89,8 @@ class Bot(commands.Bot):
                 commands.ExtensionFailed,
                 commands.ExtensionError,
             ) as e:
-                exc_type = e.__class__.__name__
-                exc_line = sys.exc_info()[2].tb_lineno
                 logging.error(
-                    f"Failed to load {event}! {exc_type}: {str(e)}, line {exc_line}"
+                    f"\n\nFailed to load {extension}!\n{traceback.print_exception(e)}"
                 )
                 continue
             finally:

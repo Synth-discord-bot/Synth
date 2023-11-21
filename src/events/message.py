@@ -3,15 +3,15 @@ from datetime import datetime
 
 import disnake
 from disnake.ext import commands
-from src.utils import logger
 
-from src.utils import logger
+from src.utils import logger, main_db
 
 
 class EventMessages(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         super(EventMessages, self).__init__()
         self.logger = logger
+        self.settings_db = main_db
         self.bot = bot
 
     @commands.Cog.listener()
@@ -23,7 +23,7 @@ class EventMessages(commands.Cog):
         if not logger_channel:
             return
 
-        if thread.author == thread.guild.me:
+        if thread.owner == thread.guild.me:
             return
 
         embed = disnake.Embed(
@@ -35,7 +35,7 @@ class EventMessages(commands.Cog):
         embed.add_field(name="Thread channel", value=thread)
         embed.add_field(
             name="Thread author",
-            value=f"{thread.author.mention} (`{thread.author}` `ID: {thread.author.id}`)",
+            value=f"{thread.owner.mention} (`{thread.owner}` `ID: {thread.owner_id}`)",
         )
 
         if channel := await thread.guild.fetch_channel(int(logger_channel)):
@@ -50,7 +50,7 @@ class EventMessages(commands.Cog):
         if not logger_channel:
             return
 
-        if thread.author == thread.guild.me:
+        if thread.owner == thread.guild.me:
             return
 
         embed = disnake.Embed(
@@ -62,7 +62,7 @@ class EventMessages(commands.Cog):
         embed.add_field(name="Thread channel", value=thread)
         embed.add_field(
             name="Thread author",
-            value=f"{thread.author.mention} (`{thread.author}` `ID: {thread.author.id}`)",
+            value=f"{thread.owner.mention} (`{thread.owner}` `ID: {thread.owner_id}`)",
         )
 
         if channel := await thread.guild.fetch_channel(int(logger_channel)):
@@ -173,7 +173,7 @@ class EventMessages(commands.Cog):
         files = []
         embeds = []
         embed = disnake.Embed(
-            color=self.settings_db.get_embed_color(payload.guild.id),
+            color=self.settings_db.get_embed_color(payload.guild_id),
             title="Synth | Deleted Messages",
             description=None,
         )
@@ -236,7 +236,9 @@ class EventMessages(commands.Cog):
         await channel.send(embeds=embeds)
 
         for file in range(0, len(files), 10):
-            await channel.send(files=files[file : file + 10])
+            await channel.send(
+                files=files[file: file + 10]
+            )
 
     @commands.Cog.listener()
     async def on_message_edit(

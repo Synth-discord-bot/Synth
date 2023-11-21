@@ -3,12 +3,13 @@ from datetime import datetime
 import disnake
 from disnake.ext import commands
 
-from src.utils import logger
+from src.utils import logger, main_db
 
 
 class EventInvites(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         super(EventInvites, self).__init__()
+        self.settings_db = main_db
         self.logger = logger
         self.bot = bot
 

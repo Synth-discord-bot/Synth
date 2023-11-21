@@ -6,9 +6,9 @@ import disnake
 import ujson
 from disnake.ext import commands
 
-from src.utils import backups, main_db
+from src.utils import backups, main_db, commands_db
 from src.utils.backup import Backup as BackupGuild
-from src.utils.misc import save_file_to_memory, ConfirmEnum
+from src.utils.misc import save_file_to_memory, ConfirmEnum, custom_cooldown
 
 
 class BackupsView(disnake.ui.View):
@@ -233,13 +233,14 @@ class Backup(commands.Cog):
         self.bot = bot
         self.backups = backups
         self.settings_db = main_db
+        self.commands_db = commands_db
 
     async def cog_load(self) -> None:
         await self.backups.fetch_and_cache_all()
 
     @commands.group(invoke_without_command=True)
     @commands.has_permissions(administrator=True)
-    @commands.cooldown(1, 5, commands.BucketType.guild)
+    @commands.dynamic_cooldown(custom_cooldown, commands.BucketType.user)
     async def backup(self, ctx: commands.Context) -> None:
         embed = disnake.Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
         embed.title = "Backup system"

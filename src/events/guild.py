@@ -19,7 +19,7 @@ class EventGuild(commands.Cog):
     async def on_guild_role_create(self, role: disnake.Role) -> None:
         embed = disnake.Embed(
             title="Synth | Created Role",
-            color=self.settings_db.get_embed_color(role.guild_id),
+            color=self.settings_db.get_embed_color(role.guild.id),
         )
         logger_channel = await self.logger.get_loggers(
             guild_id=role.guild.id, to_return="guild"
@@ -46,14 +46,14 @@ class EventGuild(commands.Cog):
             inline=False,
         )
 
-        if channel := channel.guild.get_channel(int(logger_channel)):
+        if channel := role.guild.get_channel(int(logger_channel)):
             await channel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_guild_role_delete(self, role: disnake.Role) -> None:
         embed = disnake.Embed(
             title="Synth | Deleted Role",
-            color=self.settings_db.get_embed_color(role.guild_id),
+            color=self.settings_db.get_embed_color(role.guild.id),
         )
         logger_channel = await self.logger.get_loggers(
             guild_id=role.guild.id, to_return="guild"
@@ -86,10 +86,10 @@ class EventGuild(commands.Cog):
             await channel.send(embed=embed)
 
     @commands.Cog.listener()
-    async def on_guild_role_update(self, before: disnake.Role, after: disnake.Role):
+    async def on_guild_role_update(self, before: disnake.Role, after: disnake.Role) -> None:
         embed = disnake.Embed(
             title="Synth | Updated Role",
-            color=self.settings_db.get_embed_color(before.guild_id),
+            color=self.settings_db.get_embed_color(before.guild.id),
         )
         logger_channel = await self.logger.get_loggers(
             guild_id=before.guild.id, to_return="guild"
@@ -178,7 +178,8 @@ Hey :wave_tone1:. Thanks for adding our multi-functional bot, Synth.
 2. To get more information about a command, type `{await get_prefix(message=guild)}help <command>`
 3. Join our support server — [click](https://discord.gg/7vT3H3tVYp)
 
-Finally, if you have any issues with the bot, you can take a look at the website. You can also join the [Synth Community](https://discord.gg/7vT3H3tVYp) and ask for help.
+Finally, if you have any issues with the bot, you can take a look at the website. You can also join the 
+[Synth Community](https://discord.gg/7vT3H3tVYp) and ask for help.
             """,
                 color=0x2F3236,
             )
@@ -238,7 +239,7 @@ Finally, if you have any issues with the bot, you can take a look at the website
 
         embed = disnake.Embed(
             title="Synth | Deleted Channel",
-            color=self.settings_db.get_embed_color(channel.guild_id),
+            color=self.settings_db.get_embed_color(channel.guild.id),
         )
 
         match channel.type:
@@ -282,7 +283,7 @@ Finally, if you have any issues with the bot, you can take a look at the website
 
         embed = disnake.Embed(
             title="Synth | Created Channel",
-            color=self.settings_db.get_embed_color(channel.guild_id),
+            color=self.settings_db.get_embed_color(channel.guild.id),
         )
 
         match channel.type:
@@ -330,7 +331,7 @@ Finally, if you have any issues with the bot, you can take a look at the website
         embed = disnake.Embed(
             title="Synth | Updated Channel",
             description=None,
-            color=self.settings_db.get_embed_color(before.guild_id),
+            color=self.settings_db.get_embed_color(before.guild.id),
         )
         embed.add_field(
             name="Additional information", value="Unknown error ❓", inline=False

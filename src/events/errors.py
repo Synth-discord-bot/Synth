@@ -16,7 +16,8 @@ class EventErrorHandler(commands.Cog):
     async def on_slash_command_error(
         self, inter: disnake.ApplicationCommandInteraction, error: commands.CommandError
     ) -> None:
-        if isinstance(error, commands.CommandOnCooldown):
+        print(type(error))
+        if isinstance(error, commands.errors.CommandOnCooldown):
             embed = disnake.Embed(
                 title="Cooldown",
                 description=f"Please wait {error.retry_after:.2f}s before using this command again.",
@@ -61,28 +62,13 @@ class EventErrorHandler(commands.Cog):
             await inter.response.send_message(embed=embed, delete_after=15)
         elif isinstance(error, commands.CheckFailure):
             pass
-        else:
-            embed = disnake.Embed(
-                title="Error",
-                description="We apologise for the inconvenience, but an internal error has occurred during the runtime. Please contact Synth support and provide the error ID for further assistance.",
-                color=self.settings_db.get_embed_color(inter.guild.id),
-                timestamp=datetime.now(),
-            )
-            embed.set_footer(text="Error ID: ...")
-            url_button = disnake.ui.Button(
-                label="Support Server",
-                url="https://discord.gg/7vT3H3tVYp",
-                emoji="<:synth:1173688715529420850>",
-            )
-            await inter.author.send(
-                embed=embed, components=[disnake.ui.ActionRow(url_button)]
-            )
 
     @commands.Cog.listener()
     async def on_command_error(
         self, ctx: commands.Context, error: commands.CommandError
     ) -> None:
-        if isinstance(error, commands.CommandOnCooldown):
+        # print(type(error))
+        if isinstance(error, commands.errors.CommandOnCooldown):
             embed = disnake.Embed(
                 title="Cooldown",
                 description=f"Please wait {error.retry_after:.2f}s before using this command again.",
@@ -125,22 +111,14 @@ class EventErrorHandler(commands.Cog):
             await ctx.send(embed=embed, delete_after=15)
         elif isinstance(error, commands.CheckFailure):
             pass
-        else:
-            embed = disnake.Embed(
-                title="Error",
-                description="We apologise for the inconvenience, but an ctxnal error has occurred during the runtime. Please contact Synth support and provide the error ID for further assistance.",
-                color=0xFF0000,
-                timestamp=datetime.now(),
-            )
-            embed.set_footer(text="Error ID: ...")
-            url_button = disnake.ui.Button(
-                label="Support Server",
-                url="https://discord.gg/7vT3H3tVYp",
-                emoji="<:synth:1173688715529420850>",
-            )
-            await ctx.author.send(
-                embed=embed, components=[disnake.ui.ActionRow(url_button)]
-            )
+        # elif isinstance(error, commands.errors.CommandInvokeError): embed = disnake.Embed( title="Cooldown",
+        # description=f"Please wait {error.retry_after:.2f}s before using this command again.", color=0xFF0000,
+        # ) await ctx.send(embed=embed, delete_after=15) else: embed = disnake.Embed( title="Error", description="We
+        # apologise for the inconvenience, but an ctxnal error has occurred during the runtime. Please contact Synth
+        # support and provide the error ID for further assistance.", color=0xFF0000, timestamp=datetime.now(),
+        # ) embed.set_footer(text="Error ID: ...") url_button = disnake.ui.Button( label="Support Server",
+        # url="https://discord.gg/7vT3H3tVYp", emoji="<:synth:1173688715529420850>", ) await ctx.author.send(
+        # zembed=embed, components=[disnake.ui.ActionRow(url_button)] )
 
 
 def setup(bot: commands.Bot) -> None:

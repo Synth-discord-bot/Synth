@@ -105,11 +105,12 @@ class FormsView(disnake.ui.View):
     async def create_form(
         self, _: disnake.ui.Button, __: disnake.Interaction, ___: str
     ) -> None:
-        form_embed = disnake.Embed(
-            title="Creating Form",
-            colour=0x2F3136,
-            description="To create a form, please choose one of the options below:",
-        )
+        pass
+        # form_embed = disnake.Embed(
+        #     title="Creating Form",
+        #     colour=0x2F3136,
+        #     description="To create a form, please choose one of the options below:",
+        # )
 
         # modal = disnake.ui.Modal(
         #     title="Form",
