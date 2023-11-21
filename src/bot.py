@@ -17,7 +17,7 @@ from .utils.misc import get_prefix, is_command_disabled
 class Bot(commands.Bot):
     """The base class of Synth bot."""
 
-    def __init__(self) -> None:
+    def __init__(self, debug: bool = False) -> None:
         super(Bot, self).__init__(
             help_command=CustomHelpCommand(),
             command_prefix=misc.bot_get_guild_prefix,
@@ -28,12 +28,8 @@ class Bot(commands.Bot):
 
         # self.ipc = Server(self, secret_key=config.SECRET_IPC_KEY)  # well... need talk about config
         self.i18n.load("src/utils/locale")
+        self.debug = debug
 
-    # def view_add(self):
-    #     views = [SetupTicketSettings()]
-    #     for view in views:
-    #         self.add_view(view)
-    #         logging.info(f"Loaded {view.id} view")
 
     async def on_message(self, message: disnake.Message):
         prefix = await get_prefix(message)
@@ -65,10 +61,10 @@ class Bot(commands.Bot):
                     event_name = extension[:-3]
                     self.load_extension(f"src.cogs.{event_name}")
                 except (
-                    commands.ExtensionNotFound,
-                    commands.NoEntryPointError,
-                    commands.ExtensionFailed,
-                    commands.ExtensionError,
+                        commands.ExtensionNotFound,
+                        commands.NoEntryPointError,
+                        commands.ExtensionFailed,
+                        commands.ExtensionError,
                 ) as e:
                     logging.error(
                         f"\n\nFailed to load {extension}!\n{traceback.print_exception(e)}"
@@ -84,10 +80,10 @@ class Bot(commands.Bot):
             try:
                 self.load_extension(f"src.events.{event[:-3]}")
             except (
-                commands.ExtensionNotFound,
-                commands.NoEntryPointError,
-                commands.ExtensionFailed,
-                commands.ExtensionError,
+                    commands.ExtensionNotFound,
+                    commands.NoEntryPointError,
+                    commands.ExtensionFailed,
+                    commands.ExtensionError,
             ) as e:
                 logging.error(
                     f"\n\nFailed to load {extension}!\n{traceback.print_exception(e)}"
