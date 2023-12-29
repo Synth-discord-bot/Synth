@@ -76,9 +76,11 @@ class Settings(commands.Cog):
         await self.settings_db.fetch_and_cache_all()
         await self.command_db.fetch_and_cache_all()
 
-    @commands.command(name="settings", description="Get or set the bot's prefix")
-    async def settings(self, ctx):
-        await ctx.send("Choice a module", view=SettingsView(self.bot))
+    @commands.slash_command(name="settings", description="Get or set the bot's prefix")
+    async def settings(self, interaction):
+        await interaction.send(
+            "Choice a module", view=SettingsView(self.bot), ephemeral=True
+        )
 
     @staticmethod
     def custom_cooldown(message: disnake.Message):
@@ -115,11 +117,11 @@ class Settings(commands.Cog):
         #         return commands.Cooldown(1, 15)
 
     # @commands.check(CustomCooldown(1, 300, 1, 0, commands.BucketT., elements=[999682446675161148]))
-    @commands.dynamic_cooldown(custom_cooldown, commands.BucketType.user)
-    @commands.command()
-    async def test(self, ctx: commands.Context):
-        # await self.command_db.set_cooldown(ctx.guild.id, ctx.command.name, 10)
-        await ctx.send(await self.command_db.get_cooldown(ctx.message))
+    # @commands.dynamic_cooldown(custom_cooldown, commands.BucketType.user)
+    # @commands.command()
+    # async def test(self, ctx: commands.Context):
+    #     # await self.command_db.set_cooldown(ctx.guild.id, ctx.command.name, 10)
+    #     await ctx.send(await self.command_db.get_cooldown(ctx.message))
 
     # @Server.route()
     # async def get_prefix(self, data: ClientPayload) -> Dict[str, str]:
@@ -150,61 +152,61 @@ class Settings(commands.Cog):
     #         "status": "OK",
     #     }
 
-    @commands.command()
-    async def set_prefix(self, ctx: commands.Context, prefix: str) -> disnake.Message:
-        """Set the current prefix to another one"""
-        if prefix is None or prefix == "":
-            return await ctx.reply("Please enter a prefix!")
-        elif len(prefix) >= 5:
-            return await ctx.reply("Your prefix is too long!")
-        else:
-            await self.settings_db.set_prefix(ctx.guild.id, prefix)
-            return await ctx.reply(f"Successfully set prefix to {prefix}")
+    # @commands.command()
+    # async def set_prefix(self, ctx: commands.Context, prefix: str) -> disnake.Message:
+    #     """Set the current prefix to another one"""
+    #     if prefix is None or prefix == "":
+    #         return await ctx.reply("Please enter a prefix!")
+    #     elif len(prefix) >= 5:
+    #         return await ctx.reply("Your prefix is too long!")
+    #     else:
+    #         await self.settings_db.set_prefix(ctx.guild.id, prefix)
+    #         return await ctx.reply(f"Successfully set prefix to {prefix}")
 
-    @commands.command()
-    async def command_disable(
-        self, ctx: commands.Context, command: str
-    ) -> disnake.Message:
-        """Disable command for this guild (required administrator privileges)"""
+    # @commands.command()
+    # async def command_disable(
+    #     self, ctx: commands.Context, command: str
+    # ) -> disnake.Message:
+    #     """Disable command for this guild (required administrator privileges)"""
 
-        # first, try to get command from name
-        command_name = ctx.bot.get_command(command)
-        if command_name is None:
-            # try to get command from alias
-            for cmd in ctx.bot.commands:
-                if command in cmd.aliases:
-                    command_name = cmd
-                    break
+    #     # first, try to get command from name
+    #     command_name = ctx.bot.get_command(command)
+    #     if command_name is None:
+    #         # try to get command from alias
+    #         for cmd in ctx.bot.commands:
+    #             if command in cmd.aliases:
+    #                 command_name = cmd
+    #                 break
 
-        if command_name and command_name != ctx.command:
-            if isinstance(command_name, commands.Group):
-                for command in command_name.commands:
-                    await self.settings_db.add_command(
-                        guild_id=ctx.guild.id, command=command.name
-                    )
-            await self.settings_db.add_command(
-                guild_id=ctx.guild.id, command=command_name.name
-            )
-            return await ctx.reply(
-                embed=disnake.Embed(
-                    title="Information",
-                    description=f"Successfully disabled command "
-                    f"{'group' if isinstance(command_name, commands.Group) else ''} "
-                    f"{command_name.name}",
-                )
-            )
-        elif command_name == ctx.command:
-            return await ctx.reply(
-                embed=disnake.Embed(
-                    title="Error", description=f"You can't disable this command"
-                )
-            )
-        else:
-            return await ctx.reply(
-                embed=disnake.Embed(
-                    title="Error", description=f"Could not find command {command}"
-                )
-            )
+    #     if command_name and command_name != ctx.command:
+    #         if isinstance(command_name, commands.Group):
+    #             for command in command_name.commands:
+    #                 await self.settings_db.add_command(
+    #                     guild_id=ctx.guild.id, command=command.name
+    #                 )
+    #         await self.settings_db.add_command(
+    #             guild_id=ctx.guild.id, command=command_name.name
+    #         )
+    #         return await ctx.reply(
+    #             embed=disnake.Embed(
+    #                 title="Information",
+    #                 description=f"Successfully disabled command "
+    #                 f"{'group' if isinstance(command_name, commands.Group) else ''} "
+    #                 f"{command_name.name}",
+    #             )
+    #         )
+    #     elif command_name == ctx.command:
+    #         return await ctx.reply(
+    #             embed=disnake.Embed(
+    #                 title="Error", description=f"You can't disable this command"
+    #             )
+    #         )
+    #     else:
+    #         return await ctx.reply(
+    #             embed=disnake.Embed(
+    #                 title="Error", description=f"Could not find command {command}"
+    #             )
+    #         )
 
 
 def setup(bot: commands.Bot) -> None:

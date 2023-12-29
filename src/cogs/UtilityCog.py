@@ -8,6 +8,7 @@ from disnake.utils import format_dt
 from memory_profiler import memory_usage
 
 from src.utils.misc import check_if_user_is_developer, emoji
+from src.utils import main_db
 
 startup = datetime.datetime.now()
 
@@ -18,7 +19,7 @@ class Utility(commands.Cog):
     EMOJI = "<:globe:1169690501063123065>"
 
     def __init__(self, bot: commands.Bot) -> None:
-        self.settings_db = None
+        self.settings_db = main_db
         self.bot = bot
         self.badges = {
             1: "<:staff:1168622635228344403>",
@@ -144,7 +145,7 @@ class Utility(commands.Cog):
 
         embed = disnake.Embed(
             title=f"{interaction.guild.name}'s information",
-            color=self.settings_db.get_embed_color(interaction.guild.id),
+            color=await self.settings_db.get_embed_color(interaction.guild.id),
         )
         embed.add_field(
             name="Main Information",
@@ -188,46 +189,46 @@ class Utility(commands.Cog):
             channel = interaction.channel
 
         if amount > 100:
-            await interaction.send(
-                embed=disnake.Embed(
-                    title="Sorry, the maximum amount of messages to delete is 100",
-                    color=disnake.Color.red(),
-                ).set_footer(
-                    text=f"Synth © 2023 | All Rights Reserved",
-                    icon_url=self.bot.user.avatar,
-                ),
-                delete_after=10,
+            embed = disnake.Embed(
+                title="Sorry, the maximum amount of messages to delete is 100",
+                color=disnake.Color.red(),
             )
-            return
+            embed.set_footer(
+                text=f"Synth © 2023 | All Rights Reserved",
+                icon_url=self.bot.user.avatar,
+            )
+
+            return await interaction.channel.send(embed=embed, delete_after=10)
+
         try:
+            await interaction.response.defer()
             deleted = await channel.purge(limit=amount)
+
         except disnake.Forbidden:
-            await interaction.send(
-                embed=disnake.Embed(
-                    title="Sorry, the bot doesn't have enough permissions to delete messages",
-                    color=disnake.Color.red(),
-                ).set_footer(
-                    text=f"Synth © 2023 | All Rights Reserved",
-                    icon_url=self.bot.user.avatar,
-                ),
-                delete_after=10,
+            embed = disnake.Embed(
+                title="Sorry, the bot doesn't have enough permissions to delete messages",
+                color=disnake.Color.red(),
             )
-            return
+            embed.set_footer(
+                text=f"Synth © 2023 | All Rights Reserved",
+                icon_url=self.bot.user.avatar,
+            )
+            return await interaction.channel.send(embed=embed, delete_after=10)
+
         except disnake.HTTPException:
-            await interaction.send(
-                embed=disnake.Embed(
-                    title="Sorry, the bot doesn't have enough permissions to delete messages",
-                    color=disnake.Color.red(),
-                ).set_footer(
-                    text=f"Synth © 2023 | All Rights Reserved",
-                    icon_url=self.bot.user.avatar,
-                ),
-                delete_after=10,
+            embed = disnake.Embed(
+                title="Sorry, the bot doesn't have enough permissions to delete messages",
+                color=disnake.Color.red(),
             )
-            return
+            embed.set_footer(
+                text=f"Synth © 2023 | All Rights Reserved",
+                icon_url=self.bot.user.avatar,
+            )
+
+            return await interaction.channel.send(embed=embed, delete_after=10)
 
         embed = disnake.Embed(
-            color=self.settings_db.get_embed_color(interaction.guild.id)
+            color=await self.settings_db.get_embed_color(interaction.guild.id)
         )
         embed.title = "<a:loading:1168599537682755584> Cleaning messages..."
         embed.description = f"Deleted **{len(deleted)}** messages"
@@ -246,8 +247,10 @@ class Utility(commands.Cog):
         embed = disnake.Embed(
             title="Information about Synth",
             description="**Synth** - is a multi-functional Discord bot.",
-            color=self.settings_db.get_embed_color(interaction.guild.id),
-        ).set_thumbnail(url=self.bot.user.avatar)
+            color=await self.settings_db.get_embed_color(interaction.guild.id),
+        )
+        embed.set_thumbnail(url=self.bot.user.avatar)
+
         embed.add_field(
             name="Main",
             value=f"<:clock:1169690592465395722> Ping: **{round(self.bot.latency * 1000)} ms\n**"
@@ -280,13 +283,11 @@ class Utility(commands.Cog):
         support = disnake.ui.Button(
             label="Support server", url="https://discord.gg/7vT3H3tVYp"
         )
-        website = disnake.ui.Button(
-            label="Documentation", url="https://synth.gitbook.io/"
-        )
+        website = disnake.ui.Button(label="Website", url="https://synth.bot/")
 
         await interaction.send(embed=embed, components=[support, website])
 
-    @commands.slash_command(name="avatar", description="View user avatar")
+    @commands.slash_command(name="avatar", description="View user's avatar")
     async def avatar(
         self,
         interaction: disnake.MessageCommandInteraction,
@@ -301,116 +302,24 @@ class Utility(commands.Cog):
             color=self.settings_db.get_embed_color(interaction.guild.id)
         )
         embed.set_author(name=user, icon_url=str(user.display_avatar))
+
         if user.avatar is not None:
             embed.description = (
                 f"{emoji('users')} [JPG]({user.display_avatar.with_format('jpeg')}) | "
                 f"[PNG]({user.display_avatar.with_format('png')}) |  "
                 f"[WEBP]({user.display_avatar})"
             )
+
             if user.display_avatar.is_animated():
                 embed.description += (
                     f" | [GIF]({user.display_avatar.with_format('gif')})"
                 )
+
         else:
             embed.description = f"<:q_members:1031115958191931452> [PNG]({user.display_avatar.with_format('png')})"
+
         embed.set_image(url=str(user.display_avatar))
         await interaction.send(embed=embed)
-
-    async def send_processing_message(
-        self, interaction: disnake.MessageCommandInteraction, action: str, role
-    ) -> None:
-        message = await interaction.send(
-            embed=disnake.Embed(
-                title=f"<a:loading:1168599537682755584> Please wait...",
-                description=f"{action} {role.mention} to all members in this server.\n"
-                f"Please do not delete this message until the process is completed.",
-                color=self.settings_db.get_embed_color(interaction.guild.id),
-            ).set_footer(
-                text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
-            )
-        )
-        return message
-
-    async def process_role_action(
-        self,
-        interaction: disnake.MessageCommandInteraction,
-        role: disnake.Role,
-        action_func: Any,
-        action_str: str,
-    ):
-        total_members = len(interaction.guild.members)
-        failed_members = []
-
-        if not role.permissions.administrator:
-            processing_message = await self.send_processing_message(
-                interaction, action_str, role
-            )
-
-            for member in interaction.guild.members:
-                try:
-                    await action_func(member, role)
-                except disnake.Forbidden:
-                    failed_members.append(member)
-
-            if failed_members:
-                failed_count = len(failed_members)
-                await processing_message.edit(  # type: ignore
-                    embed=disnake.Embed(
-                        description=f"Successfully {action_str} role for "
-                        f"**{total_members - failed_count}/{total_members}** members. "
-                        f"Failed to {action_str} role for **{failed_count}** members.",
-                        color=self.settings_db.get_embed_color(interaction.guild.id),
-                    ).set_footer(
-                        text="Synth © 2023 | All Rights Reserved",
-                        icon_url=self.bot.user.avatar,
-                    )
-                )
-            else:
-                await processing_message.edit(  # type: ignore
-                    embed=disnake.Embed(
-                        description=f"Successfully {action_str} role for all **{total_members}** members.",
-                        color=self.settings_db.get_embed_color(interaction.guild.id),
-                    ).set_footer(
-                        text="Synth © 2023 | All Rights Reserved",
-                        icon_url=self.bot.user.avatar,
-                    )
-                )
-        else:
-            await interaction.send(
-                embed=disnake.Embed(
-                    description=f"<a:error:1168599839899144253> | Sorry, this role has administrator permissions, "
-                    f"so I can't {action_str} it to all members.",
-                    color=0xFF0000,
-                )
-            )
-
-    @commands.slash_command(
-        name="add-roles", description="Add a specific role to all users"
-    )
-    async def add_roles(
-        self,
-        interaction: disnake.MessageCommandInteraction,
-        role: disnake.Role = commands.Param(
-            name="role", description="The role to add to all users"
-        ),
-    ) -> None:
-        await self.process_role_action(
-            interaction, role, disnake.Member.add_roles, "Adding"
-        )
-
-    @commands.slash_command(
-        name="remove-roles", description="Remove a specific role from all users"
-    )
-    async def remove_roles(
-        self,
-        interaction: disnake.MessageCommandInteraction,
-        role: disnake.Role = commands.Param(
-            name="role", description="The role to remove from all users"
-        ),
-    ) -> None:
-        await self.process_role_action(
-            interaction, role, disnake.Member.remove_roles, "Removing"
-        )
 
     @commands.slash_command(
         name="lock", description="Lock the current channel for everyone"

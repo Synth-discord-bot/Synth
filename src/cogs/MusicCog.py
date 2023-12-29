@@ -6,9 +6,8 @@ from disnake import Message
 from disnake.ext import commands
 from disnake.ui import View
 
-from src.utils import private_rooms, main_db
+from src.utils import main_db
 from src.utils.misc import EmbedPaginator
-from src.utils.rooms import Buttons
 
 
 class MusicPlayer(mafic.Player[commands.Bot]):
@@ -119,7 +118,7 @@ class QueueView(View):
             )
 
 
-class Music(commands.Cog, name="Voice Commands"):
+class Music(commands.Cog, name="Music Commands"):
     """Music commands"""
 
     EMOJI = "🎶"
@@ -129,11 +128,6 @@ class Music(commands.Cog, name="Voice Commands"):
         self.bot = bot
         self.pool = mafic.NodePool(self.bot)
         self.bot.loop.create_task(self.add_nodes())
-        self.private_rooms = private_rooms
-        self.settings_db = main_db
-
-    async def cog_load(self) -> None:
-        await self.private_rooms.fetch_and_cache_all()
 
     async def add_nodes(self) -> None:
         await self.pool.create_node(
@@ -143,24 +137,10 @@ class Music(commands.Cog, name="Voice Commands"):
             password="youshallnotpass",
         )
 
-    # async def cog_load(self) -> None:
-    #     async def setup_hook(self) -> None:
-    #         sc = spotify.SpotifyClient(
-    #             client_id='35e4a1289f4745f494aa9e6c418c9a0a',
-    #             client_secret='2fe747df85f34bbdb23557e7ce31dc9b'
-    #         )
-    #         node: wavelink.Node = wavelink.Node(uri='http://localhost:2333', password='youshallnotpass')
-    #         await wavelink.NodePool.connect(client=self.bot, nodes=[node], spotify=sc)
-
-    ########################
-    #        MUSIC         #
-    ########################
-
-    @commands.command()
-    async def play(self, ctx: commands.Context, *, query: str = None) -> Message:
-        """
-        Play a song from spotify
-        """
+    @commands.slash_command()
+    async def play(
+        self, ctx: disnake.MessageCommandInteraction, *, query: str = None
+    ) -> Message:
         if not query:
             return await ctx.send("Please provide a query/URL to search")
 
@@ -276,10 +256,8 @@ class Music(commands.Cog, name="Voice Commands"):
             embed.set_footer(text="Synth © 2023 | All Rights Reserved")
             embed.set_image(url=track.artwork_url)
 
-            # Send the embed message and store the message ID
             message = await event.player.voice_channel.send(embed=embed)
 
-            # Pass the message ID to the QueueView constructor
             return await message.edit(
                 embed=embed, view=QueueView(message_id=message.id)
             )
@@ -289,110 +267,6 @@ class Music(commands.Cog, name="Voice Commands"):
     @commands.Cog.listener()
     async def on_track_start(self, event: mafic.TrackStartEvent) -> None:
         assert isinstance(event.player, MusicPlayer)
-
-    #####################
-    #   PRIVATE ROOMS   #
-    #####################
-
-    @commands.Cog.listener()
-    async def on_message(self, message: disnake.Message):
-        if message.guild:
-            if rooms := await self.private_rooms.get_private_room(
-                message.guild.id, to_return="channels"
-            ):
-                for room in rooms:
-                    if (
-                        message.channel.id == room
-                        and message.author.id != self.bot.user.id
-                    ):
-                        await message.delete()
-                        break
-
-    @commands.Cog.listener()
-    async def on_voice_state_update(
-        self,
-        member: disnake.Member,
-        before: disnake.VoiceState,
-        after: disnake.VoiceState,
-    ):
-        if after.channel and len(after.channel.members) != 0:
-            is_main_room = await self.private_rooms.get_private_room(
-                member.guild.id, to_return="main_channel_id"
-            )
-            if is_main_room and is_main_room == after.channel.id:
-                channel = await member.guild.create_voice_channel(
-                    name=f"Room {member.display_name}", category=after.channel.category
-                )
-                await member.move_to(channel=channel)
-
-                embed = disnake.Embed(
-                    title="Private Rooms Settings",
-                    colour=0x2F3136,
-                )
-                embed.description = """
-                    <:store:1169690541986959464> - edit channel name
-                    <:members:1169684583369949285> - change user count
-                    <:list:1169690529643114547> - remove the slot limit
-                    <:invite:1169690514430382160> - open/close the room for everyone
-                    <:ban:1170712517308317756> - kick user from the room
-                    <:hammer:1169685339720384512> - give/remove access for the room
-                    <:mute:1170712518725992529> - mute/unmute user
-                    <:owner:1169684595697004616> - transfer ownership of the room
-                """
-                await channel.send(
-                    content=member.mention,
-                    embed=embed,
-                    view=Buttons(bot=self.bot, author=member, channel=channel),
-                )
-                await self.private_rooms.create_private_room(member, channel)
-                return
-        elif before.channel and len(before.channel.members) == 0:
-            if room_channels := await self.private_rooms.get_private_room(
-                member.guild.id, to_return="channels"
-            ):
-                for room in room_channels:
-                    if room_id := room.get("channel_id", None):
-                        if room_id == before.channel.id:
-                            await before.channel.delete()
-                            await self.private_rooms.delete_private_room(
-                                member, before.channel
-                            )
-                            break
-
-        elif after.channel != before.channel and member.voice.mute:
-            await member.edit(mute=False)
-
-    @commands.command(
-        name="setup-voice",
-        aliases=["voice-setup", "voice-s", "setup-v", "vs"],
-    )
-    async def setup_voice(self, ctx: commands.Context):
-        """
-        Creates a voice channel for private rooms
-        """
-        message = await ctx.send(
-            embed=disnake.Embed(
-                title="Voice Setup", description="Please, wait...", color=0x2F3236
-            )
-        )
-        voice = await ctx.guild.create_voice_channel(
-            name="Create a private room", reason="Voice Setup"
-        )
-        await message.edit(
-            embed=disnake.Embed(
-                title="Voice Setup",
-                description="Successfully created the private room\nFinalizing...",
-                color=0x2F3236,
-            )
-        )
-        await self.private_rooms.create_main_room(ctx.guild.id, voice)
-        await message.edit(
-            embed=disnake.Embed(
-                title="Voice Rooms Setup",
-                description=f"Successfully created the private room. Channel: {voice.mention}",
-                color=0x2F3236,
-            )
-        )
 
 
 def setup(bot: commands.Bot) -> None:

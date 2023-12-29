@@ -5,7 +5,6 @@ import disnake
 from disnake.ext import commands
 
 from src.utils import logger, main_db
-from src.utils.misc import get_prefix
 
 
 class EventGuild(commands.Cog):
@@ -148,6 +147,7 @@ class EventGuild(commands.Cog):
     @commands.Cog.listener()
     async def on_guild_join(self, guild: disnake.Guild) -> None:
         embed = disnake.Embed(title="Synth | Joined Guild", color=0x2F3236)
+
         embed.add_field(
             name="Guild", value=f"`{guild.name}` / `{guild.id}`", inline=False
         )
@@ -169,44 +169,44 @@ class EventGuild(commands.Cog):
         )
 
         channel = await self.bot.fetch_channel(getenv("BOT_LOGS", "id"))
-        join_embed = (
-            disnake.Embed(
-                title="Synth | New Era",
-                description=f"""
+        join_embed = disnake.Embed(color=0x2F3236)
+        join_embed.title = "Synth"
+        join_embed.description = f"""
 Hey :wave_tone1:. Thanks for adding our multi-functional bot, Synth.
 
 :rocket: Quick start:
-1. Bot prefix: `{await get_prefix(message=guild)}`
-2. To get more information about a command, type `{await get_prefix(message=guild)}help <command>`
+1. Bot prefix: /
+2. To get more information about a command, type `/help <command>`
 3. Join our support server — [click](https://discord.gg/7vT3H3tVYp)
 
 Finally, if you have any issues with the bot, you can take a look at the website. You can also join the 
 [Synth Community](https://discord.gg/7vT3H3tVYp) and ask for help.
-            """,
-                color=0x2F3236,
-            )
-            .set_thumbnail(url=self.bot.user.avatar)
-            .set_image(
-                url=(
-                    "https://cdn.discordapp.com/attachments/1167873742240755843/1168533333010022410/"
-                    "synthbanner.png?ex=65521c78&is=653fa778&hm"
-                    "=5481d9be9b4f7e39f60d6ac52677de9b44b2236ceaae8b94c5cfd35348f6167a&"
-                )
+            """
+        join_embed.set_thumbnail(url=self.bot.user.avatar)
+        join_embed.set_image(
+            url=(
+                "https://cdn.discordapp.com/attachments/1167873742240755843/1168533333010022410/"
+                "synthbanner.png?ex=65521c78&is=653fa778&hm"
+                "=5481d9be9b4f7e39f60d6ac52677de9b44b2236ceaae8b94c5cfd35348f6167a&"
             )
         )
+
         url_button = disnake.ui.Button(
             label="Support Server",
             url="https://discord.gg/7vT3H3tVYp",
             emoji="<:synth:1173688715529420850>",
         )
+
         try:
             await guild.text_channels[0].send(
                 embed=join_embed, components=[disnake.ui.ActionRow(url_button)]
             )
+
         except (disnake.HTTPException, disnake.Forbidden, TypeError, ValueError):
             await guild.system_channel.send(
                 embed=join_embed, components=[disnake.ui.ActionRow(url_button)]
             )
+
         await channel.send(embed=embed)
 
     @commands.Cog.listener()
@@ -370,6 +370,7 @@ Finally, if you have any issues with the bot, you can take a look at the website
                     after_channel_type = "Unknown Type"
         else:
             before_channel_type = after_channel_type = before.type
+
         embed.add_field(
             name="Edited at",
             value=disnake.utils.format_dt(datetime.now(), style="f"),
@@ -386,8 +387,10 @@ Finally, if you have any issues with the bot, you can take a look at the website
 
         if before.type != after.type:
             value.append(
-                f"Before type of channel: **{before_channel_type}**\nAfter type of channel: **{after_channel_type}**\n"
+                f"Before type of channel: **{before_channel_type}**\n"
+                f"After type of channel: **{after_channel_type}**\n"
             )
+
         embed.set_field_at(
             field_index,
             name="Additional information",

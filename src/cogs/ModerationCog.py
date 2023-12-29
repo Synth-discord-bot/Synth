@@ -27,115 +27,102 @@ class Moderation(commands.Cog):
     async def cog_load(self) -> None:
         await self.warns.fetch_and_cache_all()
 
-    @commands.command()
-    @commands.cooldown(1, 5, commands.BucketType.guild)
-    @commands.has_permissions(kick_members=True, ban_members=True)
+    @commands.slash_command(name="ban", description="Ban a user")
     async def ban(
-        self, ctx, user: Union[int, str, disnake.Member], *, reason: str = None
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        user: disnake.Member,
+        *,
+        reason: str = None,
     ) -> None:
-        embed = Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
+        embed = Embed(color=self.settings_db.get_embed_color(interaction.guild.id))
 
-        member = (
-            user.id
-            if isinstance(user, disnake.Member)
-            else await UserConverter().convert(ctx, str(user))
-        )
-
-        check_result, error_embed = await common_checks(ctx, member)
+        check_result, error_embed = await common_checks(interaction, user.id)
         if not check_result:
-            return await ctx.send(embed=error_embed)
+            return await interaction.send(embed=error_embed)
 
         embed.title = "<:ban:1170712517308317756> Successfully banned"
         embed.description = (
-            f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
-            f"**Member:** {member.mention} ({member})\n"
+            f"**Administrator:** {interaction.user.mention} ({interaction.user})\n"
+            f"**Member:** {user.mention} ({user})\n"
             f"**Reason:** {reason}"
         )
         embed.set_footer(
             text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
         )
-        await ctx.send(embed=embed)
+        await interaction.send(embed=embed)
 
         try:
             embed.title = "<:ban:1170712517308317756> You were banned"
             embed.description = (
-                f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+                f"**Administrator:** {interaction.user.mention} ({interaction.user})\n"
                 f"**Reason:** {reason}\n"
-                f"**Server:** {ctx.guild.name}"
+                f"**Server:** {interaction.guild.name}"
             )
-            await member.send(embed=embed)
+            await user.send(embed=embed)
         except (Exception, BaseException, disnake.Forbidden):
             pass
 
-        await ctx.guild.ban(member, reason=f"{ctx.author}: {reason}")
+        await interaction.guild.ban(user, reason=f"{interaction.user}: {reason}")
 
-    @commands.command()
-    @commands.cooldown(1, 5, commands.BucketType.guild)
+    @commands.slash_command(name="unban", description="Unban a user")
     @commands.has_permissions(kick_members=True, ban_members=True)
     async def unban(
-        self, ctx: commands.Context, user: Union[int, str, disnake.Member]
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        member: disnake.Member,
     ) -> Message:
-        member = (
-            user.id
-            if isinstance(user, disnake.Member)
-            else await UserConverter().convert(ctx, str(user))
+        check_result, error_embed = await common_checks(
+            interaction, member.id, for_unban=True
         )
-
-        check_result, error_embed = await common_checks(ctx, member, for_unban=True)
         if not check_result:
-            return await ctx.send(embed=error_embed)
+            return await interaction.send(embed=error_embed)
 
-        embed = Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
+        embed = Embed(color=self.settings_db.get_embed_color(interaction.guild.id))
         embed.title = "<:invite:1169690514430382160> Successfully unbanned"
         embed.description = (
-            f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+            f"**Administrator:** {interaction.user.mention} ({interaction.user})\n"
             f"**Member:** {member.mention} (`{id}`)"
         )
         embed.set_footer(
             text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
         )
 
-        await ctx.guild.unban(member)
-        await ctx.send(embed=embed)
+        await interaction.guild.unban(member)
+        await interaction.send(embed=embed)
 
-    @commands.command()
-    @commands.cooldown(1, 5, commands.BucketType.guild)
+    @commands.slash_command(name="kick", description="Kick a user")
     @commands.has_permissions(kick_members=True, ban_members=True)
     async def kick(
         self,
-        ctx: commands.Context,
-        user: Union[int, str, disnake.Member],
+        interaction: disnake.MessageCommandInteraction,
+        member: disnake.Member,
         *,
         reason: str = None,
     ) -> Message:
-        embed = Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
+        embed = Embed(color=self.settings_db.get_embed_color(interaction.guild.id))
 
-        if isinstance(user, disnake.Member):
-            member = user.id
-        else:
-            member = await MemberConverter().convert(ctx, str(user))
-
-        check_result, error_embed = await common_checks(ctx, member)
+        check_result, error_embed = await common_checks(interaction, member.id)
         if not check_result:
-            return await ctx.send(embed=error_embed)
+            return await interaction.send(embed=error_embed)
 
         embed.title = "<:kick:1170712514288435271> Successfully kicked"
         embed.description = (
-            f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+            f"**Administrator:** {interaction.user.mention} ({interaction.user})\n"
             f"**Member:** {member.mention} ({member})\n"
             f"**Reason:** {reason}"
         )
         embed.set_footer(
             text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
         )
-        await ctx.send(embed=embed)
+        await interaction.send(embed=embed)
 
         try:
             embed.title = "<:kick:1170712514288435271> You were kicked"
             embed.description = (
-                f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+                f"**Administrator:** {interaction.user.mention} ({interaction.user})\n"
                 f"**Reason:** {reason}\n"
-                f"**Server:** {ctx.guild.name}"
+                f"**Server:** {interaction.guild.name}"
             )
             embed.set_footer(
                 text=f"Synth © 2023 | All Rights Reserved",
@@ -148,27 +135,18 @@ class Moderation(commands.Cog):
 
         await member.kick(reason=reason)
 
-    @commands.command()
-    @commands.cooldown(1, 5, commands.BucketType.guild)
+    @commands.slash_command(name="mute", description="Mute a user")
     @commands.has_permissions(kick_members=True, ban_members=True)
     async def mute(
         self,
-        ctx: commands.Context,
-        member: Union[int, str, disnake.Member],
+        interaction: disnake.MessageCommandInteraction,
+        member: disnake.Member,
         mute_time: str,
         *,
         reason: str = None,
     ) -> Message:
-        embed = Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
+        embed = Embed(color=self.settings_db.get_embed_color(interaction.guild.id))
         error_embed = Embed(color=disnake.Color.red())
-
-        member = (
-            await ctx.guild.fetch_member(member)
-            if isinstance(member, int)
-            else await MemberConverter().convert(ctx, str(member))
-            if isinstance(member, str)
-            else member
-        )
 
         try:
             str_time = await str_to_seconds(mute_time)
@@ -177,18 +155,18 @@ class Moderation(commands.Cog):
             error_embed.set_footer(
                 text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
             )
-            return await ctx.send(embed=error_embed)
+            return await interaction.send(embed=error_embed)
 
         check_result, error_embed = await common_checks(
-            ctx, member, for_mute=True, str_time=str_time
+            interaction, member, for_mute=True, str_time=str_time
         )
         if not check_result:
-            return await ctx.send(embed=error_embed)
+            return await interaction.send(embed=error_embed)
 
         embed.title = "<:mute:1170712518725992529> Successfully muted"
         embed.description = (
             f"**Member:** {member.mention} ({member})\n"
-            f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+            f"**Administrator:** {interaction.user.mention} ({interaction.user})\n"
             f"**Time:** {str(await hms(float(str_time)))}\n"
             f"**Reason:** {reason}\n"
             f"**Unmute date:** <t:{int(time.time()) + str_time}>"
@@ -200,13 +178,13 @@ class Moderation(commands.Cog):
         await member.edit(
             timeout=disnake.utils.utcnow() + datetime.timedelta(seconds=str_time)
         )
-        await ctx.send(embed=embed)
+        await interaction.send(embed=embed)
 
         try:
             embed.title = "<:mute:1170712518725992529> You were muted"
             embed.description = (
-                f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
-                f"**Server:** {ctx.guild.name}\n"
+                f"**Administrator:** {interaction.user.mention} ({interaction.user})\n"
+                f"**Server:** {interaction.guild.name}\n"
                 f"**Time:** {str(await hms(float(str_time)))}\n"
                 f"**Reason:** {reason}\n"
                 f"**Unmute date:** <t:{int(time.time() + float(str_time))}>"
@@ -218,32 +196,29 @@ class Moderation(commands.Cog):
         except (Exception, BaseException, disnake.Forbidden):
             pass
 
-    @commands.command()
-    @commands.cooldown(1, 5, commands.BucketType.guild)
+    @commands.slash_command(name="unmute", description="Unmute a user")
     @commands.has_permissions(kick_members=True, ban_members=True)
-    async def unmute(self, ctx, member: Union[int, str, disnake.Member]):
-        embed = Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
+    async def unmute(
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        member: disnake.Member,
+    ):
+        embed = Embed(color=self.settings_db.get_embed_color(interaction.guild.id))
 
-        member = (
-            member
-            if isinstance(member, disnake.Member)
-            else await MemberConverter().convert(ctx, str(member))
-        )
-
-        check_result, error_embed = await common_checks(ctx, member)
+        check_result, error_embed = await common_checks(interaction, member)
         if not check_result:
-            return await ctx.send(embed=error_embed)
+            return await interaction.send(embed=error_embed)
 
-        if member == ctx.author:
+        if member == interaction.user:
             error_embed.description = f"{emoji('error')} | You can't unmute yourself!"
             error_embed.set_footer(
                 text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
             )
-            return await ctx.send(embed=error_embed)
+            return await interaction.send(embed=error_embed)
 
         embed.title = "<:unmute:1169690521472614500> Successfully unmuted"
         embed.description = (
-            f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+            f"**Administrator:** {interaction.user.mention} ({interaction.user})\n"
             f"**Member:** {member.mention} ({member})"
         )
         embed.set_footer(
@@ -251,13 +226,13 @@ class Moderation(commands.Cog):
         )
 
         await member.edit(timeout=None)
-        await ctx.send(embed=embed)
+        await interaction.send(embed=embed)
 
         try:
             embed.title = "<:unmute:1169690521472614500> You were unmuted"
             embed.description = (
-                f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
-                f"**Server:** {ctx.guild.name}\n"
+                f"**Administrator:** {interaction.user.mention} ({interaction.user})\n"
+                f"**Server:** {interaction.guild.name}\n"
             )
             embed.set_footer(
                 text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
@@ -266,16 +241,18 @@ class Moderation(commands.Cog):
         except (Exception, BaseException, disnake.Forbidden):
             pass
 
-    @commands.command()
+    @commands.slash_command(name="mutes", description="View all mutes")
     @commands.cooldown(1, 5, commands.BucketType.guild)
-    async def mutes(self, ctx: commands.Context) -> Message:
+    async def mutes(self, interaction: disnake.MessageCommandInteraction) -> Message:
         pages = []
         per_page = 5
         total = 0
         index = 0
 
         for member in [
-            m for m in ctx.guild.members if not m.bot and m.current_timeout is not None
+            m
+            for m in interaction.guild.members
+            if not m.bot and m.current_timeout is not None
         ]:
             total += 1
             timeout = member.current_timeout
@@ -287,11 +264,11 @@ class Moderation(commands.Cog):
 
         if not pages:
             embed = disnake.Embed(
-                color=self.settings_db.get_embed_color(ctx.guild.id),
+                color=self.settings_db.get_embed_color(interaction.guild.id),
                 description="There are currently no mutes on this server.",
             )
-            embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar)
-            return await ctx.send(embed=embed)
+            embed.set_footer(text=interaction.user, icon_url=interaction.user.avatar)
+            return await interaction.send(embed=embed)
 
         total_pages = (total + per_page - 1) // per_page
 
@@ -334,15 +311,17 @@ class Moderation(commands.Cog):
         async def refresh_embed():
             mutes_embed: Embed = disnake.Embed(
                 title="<:calendar:1169690539168366712> Active mutes",
-                color=self.settings_db.get_embed_color(ctx.guild.id),
+                color=self.settings_db.get_embed_color(interaction.guild.id),
             )
 
             if total_pages <= 1:
-                mutes_embed.set_footer(text=f"{ctx.author}", icon_url=ctx.author.avatar)
+                mutes_embed.set_footer(
+                    text=f"{interaction.user}", icon_url=interaction.user.avatar
+                )
             else:
                 mutes_embed.set_footer(
-                    text=f"{ctx.author} | Page {index + 1} of {total_pages}",
-                    icon_url=ctx.author.avatar,
+                    text=f"{interaction.user} | Page {index + 1} of {total_pages}",
+                    icon_url=interaction.user.avatar,
                 )
 
             start = index * per_page
@@ -351,13 +330,16 @@ class Moderation(commands.Cog):
             return mutes_embed
 
         embed: Embed = await refresh_embed()
-        msg: Message = await ctx.send(embed=embed, components=await refresh_buttons())
+        msg: Message = await interaction.send(
+            embed=embed, components=await refresh_buttons()
+        )
 
         while True:
             try:
                 inter = await self.bot.wait_for(
                     "button_click",
-                    check=lambda i: i.message.id == msg.id and i.author == ctx.author,
+                    check=lambda i: i.message.id == msg.id
+                    and i.author == interaction.user,
                     timeout=600,
                 )
             except asyncio.TimeoutError:
@@ -378,15 +360,15 @@ class Moderation(commands.Cog):
 
         await msg.delete()
 
-    @commands.command()
+    @commands.slash_command()
     @commands.cooldown(1, 5, commands.BucketType.guild)
-    async def bans(self, ctx: commands.Context) -> Message:
+    async def bans(self, interaction: disnake.MessageCommandInteraction) -> Message:
         pages = []
         per_page = 5
         total = 0
         index = 0
 
-        async for ban in ctx.guild.bans(limit=200):
+        async for ban in interaction.guild.bans(limit=200):
             if not ban.user.bot:
                 member = ban.user
                 reason = ban.reason if ban.reason else "No Reason"
@@ -395,11 +377,11 @@ class Moderation(commands.Cog):
 
         if not pages:
             embed = disnake.Embed(
-                color=self.settings_db.get_embed_color(ctx.guild.id),
+                color=self.settings_db.get_embed_color(interaction.guild.id),
                 description="There are currently no bans on this server.",
             )
-            embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar)
-            return await ctx.send(embed=embed)
+            embed.set_footer(text=interaction.user, icon_url=interaction.user.avatar)
+            return await interaction.send(embed=embed)
 
         total_pages = (total + per_page - 1) // per_page
 
@@ -442,15 +424,17 @@ class Moderation(commands.Cog):
         async def refresh_embed():
             bans_embed: Embed = disnake.Embed(
                 title="<:calendar:1169690539168366712> Active bans",
-                color=self.settings_db.get_embed_color(ctx.guild.id),
+                color=self.settings_db.get_embed_color(interaction.guild.id),
             )
             if total_pages > 1:
                 bans_embed.set_footer(
-                    text=f"{ctx.author} | Page {index + 1} of {total_pages}",
-                    icon_url=ctx.author.avatar,
+                    text=f"{interaction.user} | Page {index + 1} of {total_pages}",
+                    icon_url=interaction.user.avatar,
                 )
             else:
-                bans_embed.set_footer(text=f"{ctx.author}", icon_url=ctx.author.avatar)
+                bans_embed.set_footer(
+                    text=f"{interaction.user}", icon_url=interaction.user.avatar
+                )
 
             start = index * per_page
             for page in pages[start : (index + 1) * per_page]:
@@ -458,10 +442,13 @@ class Moderation(commands.Cog):
             return bans_embed
 
         embed = await refresh_embed()
-        msg = await ctx.send(embed=embed, components=await refresh_buttons())
+        msg = await interaction.send(embed=embed, components=await refresh_buttons())
 
         def check(interaction: disnake.MessageInteraction) -> bool:
-            return interaction.message.id == msg.id and interaction.author == ctx.author
+            return (
+                interaction.message.id == msg.id
+                and interaction.user == interaction.user
+            )
 
         while True:
             try:
@@ -485,31 +472,32 @@ class Moderation(commands.Cog):
 
         await msg.delete()
 
-    @commands.command()
-    @commands.cooldown(1, 20, commands.BucketType.guild)
+    @commands.slash_command(name="warn", description="Warn a user")
     @commands.has_permissions(administrator=True)
-    async def warn(self, ctx, member: Union[int, str, disnake.Member], *, reason=None):
-        member = (
-            await ctx.guild.fetch_member(member)
-            if isinstance(member, int)
-            else await MemberConverter().convert(ctx, member)
-            if isinstance(member, str)
-            else member
+    async def warn(
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        member: disnake.Member,
+        *,
+        reason=None,
+    ):
+        check_result, error_embed = await common_checks(
+            interaction, member, check_bot=True
         )
-
-        check_result, error_embed = await common_checks(ctx, member, check_bot=True)
         if not check_result:
-            return await ctx.send(embed=error_embed)
+            return await interaction.send(embed=error_embed)
 
-        case = await self.warns.add_warn(ctx.guild.id, ctx.author, member, reason)
+        case = await self.warns.add_warn(
+            interaction.guild.id, interaction.user, member, reason
+        )
 
         embed = Embed(
             title=f"<:icons_warning:1170751866905296978> Warned {member} (Case #{case})",
-            color=self.settings_db.get_embed_color(ctx.guild.id),
+            color=self.settings_db.get_embed_color(interaction.guild.id),
         )
         embed.add_field(
             name="**Administrator:**",
-            value=f"{ctx.author.mention} ({ctx.author})",
+            value=f"{interaction.user.mention} ({interaction.user})",
             inline=False,
         )
         embed.add_field(
@@ -522,25 +510,22 @@ class Moderation(commands.Cog):
             text="Synth © 2023 | All Rights Reserved",
             icon_url=self.bot.user.avatar.url if self.bot.user.avatar else None,
         )
-        await ctx.send(embed=embed)
+        await interaction.send(embed=embed)
 
-    @commands.command()
-    @commands.cooldown(1, 20, commands.BucketType.guild)
+    @commands.slash_command(name="warns", description="View a user's warns")
     @commands.has_permissions(administrator=True)
-    async def warns(self, ctx, user: Union[int, str, disnake.Member] = None):
-        user = (
-            await ctx.guild.fetch_member(user)
-            if isinstance(user, int)
-            else await MemberConverter().convert(ctx, user)
-            if isinstance(user, str)
-            else user
+    async def warns(
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        user: disnake.Member = None,
+    ):
+        check_result, error_embed = await common_checks(
+            interaction, user, check_bot=True
         )
-
-        check_result, error_embed = await common_checks(ctx, user, check_bot=True)
         if not check_result:
-            return await ctx.send(embed=error_embed)
+            return await interaction.send(embed=error_embed)
 
-        warnings = await self.warns.get_user_warnings(ctx.guild.id, user)
+        warnings = await self.warns.get_user_warnings(interaction.guild.id, user)
 
         index = 0
         total_pages = (len(warnings) + 4) // 5
@@ -565,11 +550,13 @@ class Moderation(commands.Cog):
             )
             return [prev_button, next_button, delete_button]
 
-        async def refresh_embed(context: commands.Context, warns_list: List[Any], i, _):
+        async def refresh_embed(
+            context: disnake.MessageCommandInteraction, warns_list: List[Any], i, _
+        ):
             warns_embed = Embed(
                 title=f"Warns of {user}",
                 description=f"**Total warns count:** {len(warns_list)}",
-                color=self.settings_db.get_embed_color(ctx.guild.id),
+                color=self.settings_db.get_embed_color(interaction.guild.id),
             )
             warns_embed.set_thumbnail(url=user.avatar)
 
@@ -590,15 +577,18 @@ class Moderation(commands.Cog):
                 )
             return warns_embed
 
-        embed = await refresh_embed(ctx, warnings, index, total_pages)
+        embed = await refresh_embed(interaction, warnings, index, total_pages)
         buttons = await refresh_buttons(index, total_pages)
-        msg = await ctx.send(embed=embed, components=[disnake.ui.ActionRow(*buttons)])
+        msg = await interaction.send(
+            embed=embed, components=[disnake.ui.ActionRow(*buttons)]
+        )
 
         while True:
             try:
                 inter = await self.bot.wait_for(
                     "button_click",
-                    check=lambda i: i.message.id == msg.id and i.user == ctx.author,
+                    check=lambda i: i.message.id == msg.id
+                    and i.user == interaction.user,
                     timeout=600,
                 )
             except asyncio.TimeoutError:
@@ -611,46 +601,44 @@ class Moderation(commands.Cog):
             elif inter.data.custom_id == "delete_warns":
                 await msg.delete()
 
-            embed = await refresh_embed(ctx, warnings, index, total_pages)
+            embed = await refresh_embed(interaction, warnings, index, total_pages)
             buttons = await refresh_buttons(index, total_pages)
             await inter.response.edit_message(
                 embed=embed, components=[disnake.ui.ActionRow(*buttons)]
             )
 
-    @commands.command(aliases=["unwarn"])
-    @commands.cooldown(1, 20, commands.BucketType.guild)
+    @commands.slash_command(name="remove_warn", description="Remove a user's warns")
     @commands.has_permissions(administrator=True)
     async def remove_warn(
-        self, ctx, user: Union[int, disnake.Member] = None, amount: int = 1
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        user: disnake.Member,
+        amount: int = 1,
     ):
-        user = (
-            await ctx.guild.fetch_member(user)
-            if isinstance(user, int)
-            else await MemberConverter().convert(ctx, user)
-            if isinstance(user, str)
-            else user
+        check_result, error_embed = await common_checks(
+            interaction, user, check_bot=True
         )
-
-        check_result, error_embed = await common_checks(ctx, user, check_bot=True)
         if not check_result:
-            return await ctx.send(embed=error_embed)
+            return await interaction.send(embed=error_embed)
 
-        count_deleted = await self.warns.delete_warnings(ctx.guild.id, user.id, amount)
+        count_deleted = await self.warns.delete_warnings(
+            interaction.guild.id, user.id, amount
+        )
         if isinstance(count_deleted, int):
             embed = Embed(
                 title=f"Removed {count_deleted} warns",
-                description=f"Administrator: {ctx.author.mention} ({ctx.author})\n"
-                f"Member: {ctx.guild.get_member(user.id).mention} ({ctx.guild.get_member(user.id)})",
-                color=self.settings_db.get_embed_color(ctx.guild.id),
+                description=f"Administrator: {interaction.user.mention} ({interaction.user})\n"
+                f"Member: {interaction.guild.get_member(user.id).mention} ({interaction.guild.get_member(user.id)})",
+                color=self.settings_db.get_embed_color(interaction.guild.id),
             )
             embed.set_thumbnail(
-                url=str(ctx.guild.get_member(user.id).display_avatar.url)
+                url=str(interaction.guild.get_member(user.id).display_avatar.url)
             )
             embed.set_footer(
                 text=f"Synth © 2023 | All Rights Reserved",
                 icon_url=self.bot.user.avatar,
             )
-            await ctx.send(embed=embed)
+            await interaction.send(embed=embed)
         else:
             error_embed.description = (
                 f"{emoji('error')} | Sorry, I couldn't remove any warns"
@@ -659,35 +647,29 @@ class Moderation(commands.Cog):
                 text=f"Synth © 2023 | All Rights Reserved",
                 icon_url=self.bot.user.avatar,
             )
-            return await ctx.send(embed=error_embed)
+            return await interaction.send(embed=error_embed)
 
-    @commands.command(aliases=["crossban"])
-    @commands.cooldown(1, 20, commands.BucketType.guild)
+    @commands.slash_command(name="cross_ban", description="Ban a user from all servers")
     @commands.has_permissions(administrator=True)
     async def cross_ban(
-        self, ctx, member: Union[int, str, disnake.Member], reason: str = None
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        member: disnake.Member,
+        reason: str = None,
     ):
-        embed = Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
+        embed = Embed(color=self.settings_db.get_embed_color(interaction.guild.id))
         success_servers = []
 
-        member = (
-            await ctx.guild.fetch_member(member)
-            if isinstance(member, int)
-            else await MemberConverter().convert(ctx, member)
-            if isinstance(member, str)
-            else member
-        )
-
-        check_result, error_embed = await common_checks(ctx, member)
+        check_result, error_embed = await common_checks(interaction, member)
         if not check_result:
-            return await ctx.send(embed=error_embed)
+            return await interaction.send(embed=error_embed)
 
         if not member:
-            member = ctx.author
+            member = interaction.user
 
         for guild in self.bot.guilds:
             author_permissions = (
-                await guild.fetch_member(ctx.author.id)
+                await guild.fetch_member(interaction.user.id)
             ).guild_permissions
             if not author_permissions.administrator:
                 continue
@@ -696,10 +678,10 @@ class Moderation(commands.Cog):
                 try:
                     await guild.ban(member)
 
-                    if not guild == ctx.guild:
+                    if not guild == interaction.guild:
                         embed.title = "<:ban:1170712517308317756> Crossban"
                         embed.description = (
-                            f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+                            f"**Administrator:** {interaction.user.mention} ({interaction.user})\n"
                             f"**Member:** {member} (`{member.id}`)\n"
                             f"**Reason:** {reason}"
                         )
@@ -719,51 +701,55 @@ class Moderation(commands.Cog):
                         text=f"Synth © 2023 | All Rights Reserved",
                         icon_url=self.bot.user.avatar,
                     )
-                    await ctx.send(embed=embed)
+                    await interaction.send(embed=embed)
                     continue
 
         embed.title = "<:ban:1170712517308317756> Crossban Success"
         embed.description = (
             f"**Banned from {len(success_servers)} servers.**\n"
-            f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+            f"**Administrator:** {interaction.user.mention} ({interaction.user})\n"
             f"**Member:** {member} (`{member.id}`)\n"
             f"**Reason:** {reason}"
         )
         embed.set_footer(
             text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
         )
-        await ctx.send(embed=embed)
+        await interaction.send(embed=embed)
 
-    @commands.command(aliases=["crosskick"])
-    @commands.cooldown(1, 20, commands.BucketType.guild)
+    @commands.slash_command(
+        name="crosskick", description="Kick a user from all servers"
+    )
     @commands.has_permissions(administrator=True)
     async def cross_kick(
-        self, ctx, member: Union[int, disnake.Member], reason: str = None
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        member: disnake.Member,
+        reason: str = None,
     ):
         error_embed = Embed(color=disnake.Color.red())
-        embed = Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
+        embed = Embed(color=self.settings_db.get_embed_color(interaction.guild.id))
         success_servers = []
 
         if not member:
-            member = ctx.author
+            member = interaction.user
 
         member = (
-            await ctx.guild.fetch_member(member)
+            await interaction.guild.fetch_member(member)
             if isinstance(member, int)
-            else await MemberConverter().convert(ctx, member)
+            else await MemberConverter().convert(interaction, member)
             if isinstance(member, str)
             else member
         )
 
         common_check_result, error_embed = await common_checks(
-            ctx, member, check_bot=False
+            interaction, member, check_bot=False
         )
         if not common_check_result:
-            return await ctx.send(embed=error_embed)
+            return await interaction.send(embed=error_embed)
 
         for guild in self.bot.guilds:
             author_permissions = (
-                await guild.fetch_member(ctx.author.id)
+                await guild.fetch_member(interaction.user.id)
             ).guild_permissions
             if not author_permissions.administrator:
                 continue
@@ -772,10 +758,10 @@ class Moderation(commands.Cog):
                 try:
                     await guild.kick(member)
 
-                    if not guild == ctx.guild:
+                    if not guild == interaction.guild:
                         embed.title = "<:kick:1170712514288435271> Crosskick"
                         embed.description = (
-                            f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+                            f"**Administrator:** {interaction.user.mention} ({interaction.user})\n"
                             f"**Member:** {member} (`{member.id}`)\n"
                             f"**Reason:** {reason}"
                         )
@@ -795,51 +781,43 @@ class Moderation(commands.Cog):
                         text=f"Synth © 2023 | All Rights Reserved",
                         icon_url=self.bot.user.avatar,
                     )
-                    await ctx.send(embed=embed)
+                    await interaction.send(embed=embed)
                     continue
 
         embed.title = "<:kick:1170712514288435271> Crosskick Success"
         embed.description = (
             f"**Kicked from {len(success_servers)} servers.**\n"
-            f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+            f"**Administrator:** {interaction.user.mention} ({interaction.user})\n"
             f"**Member:** {member} (`{member.id}`)\n"
             f"**Reason:** {reason}"
         )
         embed.set_footer(
             text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
         )
-        await ctx.send(embed=embed)
+        await interaction.send(embed=embed)
 
-    @commands.command(aliases=["crossmute"])
+    @commands.slash_command(name="crossmute")
     @commands.cooldown(1, 20, commands.BucketType.guild)
     @commands.has_permissions(administrator=True)
     async def cross_mute(
         self,
-        ctx,
-        member: Union[int, disnake.Member],
+        interaction: disnake.MessageCommandInteraction,
+        member: disnake.Member,
         mute_time: str,
         *,
         reason: str = None,
     ):
-        embed = Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
+        embed = Embed(color=self.settings_db.get_embed_color(interaction.guild.id))
         success_servers = []
 
         if not member:
-            member = ctx.author
-
-        member = (
-            await ctx.guild.fetch_member(member)
-            if isinstance(member, int)
-            else await MemberConverter().convert(ctx, member)
-            if isinstance(member, str)
-            else member
-        )
+            member = interaction.user
 
         common_check_result, error_embed = await common_checks(
-            ctx, member, check_bot=False, for_mute=True
+            interaction, member, check_bot=False, for_mute=True
         )
         if not common_check_result:
-            return await ctx.send(embed=error_embed)
+            return await interaction.send(embed=error_embed)
 
         try:
             str_time = await str_to_seconds(mute_time)
@@ -848,11 +826,11 @@ class Moderation(commands.Cog):
             error_embed.set_footer(
                 text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
             )
-            return await ctx.send(embed=error_embed)
+            return await interaction.send(embed=error_embed)
 
         for guild in self.bot.guilds:
             author_permissions = (
-                await guild.fetch_member(ctx.author.id)
+                await guild.fetch_member(interaction.user.id)
             ).guild_permissions
             if not author_permissions.administrator:
                 continue
@@ -863,10 +841,10 @@ class Moderation(commands.Cog):
                         seconds=str_time
                     )
                     await member.edit(timeout=timeout)
-                    if not guild == ctx.guild:
+                    if not guild == interaction.guild:
                         embed.title = "<:mute:1170712518725992529> Crossmute"
                         embed.description = (
-                            f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+                            f"**Administrator:** {interaction.user.mention} ({interaction.user})\n"
                             f"**Member:** {member} (`{member.id}`)\n"
                             f"**Time:** {str(await hms(float(str_time)))}\n"
                             f"**Unmute date:** <t:{int(time.time()) + str_time}>"
@@ -888,13 +866,13 @@ class Moderation(commands.Cog):
                         text=f"Synth © 2023 | All Rights Reserved",
                         icon_url=self.bot.user.avatar,
                     )
-                    await ctx.send(embed=embed)
+                    await interaction.send(embed=embed)
                     continue
 
         embed.title = "<:mute:1170712518725992529> Crossmute Success"
         embed.description = (
             f"**Muted on {len(success_servers)} servers.**\n"
-            f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+            f"**Administrator:** {interaction.user.mention} ({interaction.user})\n"
             f"**Member:** {member} (`{member.id}`)\n"
             f"**Time:** {str(await hms(float(str_time)))}\n"
             f"**Unmute date:** <t:{int(time.time()) + str_time}>"
@@ -903,37 +881,33 @@ class Moderation(commands.Cog):
         embed.set_footer(
             text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
         )
-        await ctx.send(embed=embed)
+        await interaction.send(embed=embed)
 
-    @commands.command()
+    @commands.slash_command(name="crosswarn")
     @commands.cooldown(1, 20, commands.BucketType.guild)
     @commands.has_permissions(administrator=True)
     async def crosswarn(
-        self, ctx, member: Union[int, disnake.Member], *, reason: str = None
+        self,
+        interaction: disnake.MessageCommandInteraction,
+        member: disnake.Member,
+        *,
+        reason: str = None,
     ):
-        embed = Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
+        embed = Embed(color=self.settings_db.get_embed_color(interaction.guild.id))
         success_servers = []
 
         if not member:
-            member = ctx.author
-
-        member = (
-            await ctx.guild.fetch_member(member)
-            if isinstance(member, int)
-            else await MemberConverter().convert(ctx, member)
-            if isinstance(member, str)
-            else member
-        )
+            member = interaction.user
 
         common_check_result, error_embed = await common_checks(
-            ctx, member, check_bot=False
+            interaction, member, check_bot=False
         )
         if not common_check_result:
-            return await ctx.send(embed=error_embed)
+            return await interaction.send(embed=error_embed)
 
         for guild in self.bot.guilds:
             author_permissions = (
-                await guild.fetch_member(ctx.author.id)
+                await guild.fetch_member(interaction.user.id)
             ).guild_permissions
             if not author_permissions.administrator:
                 continue
@@ -941,12 +915,12 @@ class Moderation(commands.Cog):
             if member := await guild.fetch_member(member.id):
                 try:
                     case = await self.warns.add_warn(
-                        ctx.guild.id, ctx.author, member, reason
+                        interaction.guild.id, interaction.user, member, reason
                     )
-                    if not guild == ctx.guild:
+                    if not guild == interaction.guild:
                         embed.title = "<:hammer:1169685339720384512> Crosswarn"
                         embed.description = (
-                            f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+                            f"**Administrator:** {interaction.user.mention} ({interaction.user})\n"
                             f"**Member:** {member} (`{member.id}`)\n"
                             f"**Warn Number:** #{case}\n"
                             f"**Reason:** {reason}"
@@ -967,20 +941,20 @@ class Moderation(commands.Cog):
                         text=f"Synth © 2023 | All Rights Reserved",
                         icon_url=self.bot.user.avatar,
                     )
-                    await ctx.send(embed=embed)
+                    await interaction.send(embed=embed)
                     continue
 
         embed.title = "<:hammer:1169685339720384512> Crosswarn Success"
         embed.description = (
             f"**Warned on {len(success_servers)} servers.**\n"
-            f"**Administrator:** {ctx.author.mention} ({ctx.author})\n"
+            f"**Administrator:** {interaction.user.mention} ({interaction.user})\n"
             f"**Member:** {member} (`{member.id}`)\n"
             f"**Reason:** {reason}"
         )
         embed.set_footer(
             text=f"Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
         )
-        await ctx.send(embed=embed)
+        await interaction.send(embed=embed)
 
 
 def setup(bot):

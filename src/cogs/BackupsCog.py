@@ -238,11 +238,12 @@ class Backup(commands.Cog):
     async def cog_load(self) -> None:
         await self.backups.fetch_and_cache_all()
 
-    @commands.group(invoke_without_command=True)
+    @commands.slash_command(name="backup", description="Backup system")  # TODO: locale
     @commands.has_permissions(administrator=True)
-    @commands.dynamic_cooldown(custom_cooldown, commands.BucketType.user)
-    async def backup(self, ctx: commands.Context) -> None:
-        embed = disnake.Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
+    async def backup(self, interaction: disnake.MessageCommandInteraction) -> None:
+        embed = disnake.Embed(
+            color=self.settings_db.get_embed_color(interaction.guild_id)
+        )
         embed.title = "Backup system"
         embed.add_field(
             name="Information",
@@ -252,8 +253,8 @@ class Backup(commands.Cog):
             inline=False,
         )
 
-        if backups.check_backup(ctx.guild):
-            data = await backups.get(guild_id=ctx.guild.id)
+        if backups.check_backup(interaction.guild):
+            data = await backups.get(guild_id=interaction.guild_id)
             if data and data.get("backup_data", None):
                 data = data.get("backup_data", None)
                 embed.add_field(
@@ -264,7 +265,7 @@ class Backup(commands.Cog):
         embed.set_footer(
             text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
         )
-        await ctx.send(embed=embed, view=BackupsView(self.bot))
+        await interaction.send(embed=embed, view=BackupsView(self.bot), ephemeral=True)
 
 
 def setup(bot: commands.Bot) -> None:

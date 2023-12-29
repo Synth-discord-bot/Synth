@@ -10,10 +10,11 @@
 - [x] Private Rooms
 - [ ] Starboard system (custom setting)
 - [ ] Welcome/goodbye messages
-- [ ] Music player (spotify && your files)
+- [ ] Music player (spotify && your files)
+
 - [ ] Eval system (without internet connection && unrelated to the bot)
 - [ ] Ticket system
-- [x] Backup system 
+- [ ] Backup system 
 - [ ] Economy system (?, incomplete)
 - [x] Giveaways 
 - [ ] Forms system (https://docs.google.com/document/d/1LywTG8IN6ACVAJMPqUHMXY8DrSV-DpPOFIEdCt6OEVk/edit)

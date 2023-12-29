@@ -4,7 +4,9 @@ import re
 from enum import StrEnum
 from io import BytesIO
 from typing import List, Union, Literal, Any, Optional, Dict
-
+import logging
+import os
+import traceback
 import disnake
 import mafic
 import ujson
@@ -24,23 +26,37 @@ from disnake.ext import commands
 from . import main_db, commands_db
 
 
-async def bot_get_guild_prefix(bot: commands.Bot, message: Message) -> List[str]:
-    if not message.guild or await main_db.get_prefix(message.guild.id) is None:
-        return commands.when_mentioned_or(">>", ">")(bot, message)
+async def extension(bot):
+    paths = ["src/cogs", "src/events"]
 
-    prefix = await main_db.get_prefix(message.guild.id)
-    return commands.when_mentioned_or(prefix)(bot, message)
+    for path in paths:
+        for file in os.listdir(path):
+            if not file.endswith(".py"):
+                continue
 
+            match path:
+                case "src/cogs":
+                    kakashe4ki = "module"
+                case "src/events":
+                    kakashe4ki = "event"
+                case _:
+                    kakashe4ki = "unknown"
 
-# get prefix for commands, events etc..
-async def get_prefix(message: Union[Message, Guild]) -> Union[List[str], str]:
-    guild = message.guild if isinstance(message, Message) else message
-
-    if not guild or await main_db.get_prefix(guild.id) is None:
-        return ">>"
-
-    prefix = await main_db.get_prefix(guild.id)
-    return prefix
+            try:
+                module = f"{path.replace('/', '.')}.{file[:-3]}"
+                bot.load_extension(module)
+                logging.info(f"Loaded {kakashe4ki} {file[:-3]}")
+            except (
+                commands.ExtensionNotFound,
+                commands.NoEntryPointError,
+                commands.ExtensionFailed,
+                commands.ExtensionError,
+            ) as e:
+                logging.info(f"Error loading {kakashe4ki} {file[:-3]}\n\n")
+                traceback.print_exception(e)
+                continue
+            # except commands.ExtensionAlreadyLoaded:
+            #     continue
 
 
 async def is_command_disabled(message: Message, command: str) -> bool:
@@ -83,7 +99,13 @@ def check_if_user_is_developer(bot: commands.Bot, user_id: int) -> bool:
 
 
 def is_owner():
-    async def predicate(ctx: commands.Context) -> bool:
+    async def predicate(
+        ctx: Union[
+            disnake.Interaction,
+            disnake.MessageCommandInteraction,
+            disnake.ApplicationCommandInteraction,
+        ]
+    ) -> bool:
         result = ctx.author == ctx.guild.owner
 
         if not result:

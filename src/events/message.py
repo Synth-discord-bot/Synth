@@ -31,6 +31,7 @@ class EventMessages(commands.Cog):
             title="Synth | Thread created",
             description="",
         )
+
         embed.add_field(name="Thread name", value=thread.name)
         embed.add_field(name="Thread channel", value=thread)
         embed.add_field(

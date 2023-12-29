@@ -128,7 +128,7 @@ class EmbedColorSettings(disnake.ui.View):
                 "Embed color must start with `0x`", ephemeral=True
             )
         await self.settings_db.add_embed_color(
-            interaction.guild.id, modal_response.text_values["new_embed_color"]
+            interaction.guild.id, int(modal_response.text_values["new_embed_color"], 16)
         )
         await modal_response.response.send_message(
             f"New embed color is `{modal_response.text_values['new_embed_color']}`",
