@@ -8,22 +8,16 @@
 - [x] Moderation commands
 - [x] Fun commands 
 - [x] Private Rooms
-- [ ] Starboard system (custom setting)
+- [ ] Starboard system
 - [ ] Welcome/goodbye messages
-- [ ] Music player (spotify && your files)
-
-- [ ] Eval system (without internet connection && unrelated to the bot)
-- [ ] Ticket system
-- [ ] Backup system 
-- [ ] Economy system (?, incomplete)
-- [x] Giveaways 
-- [ ] Forms system (https://docs.google.com/document/d/1LywTG8IN6ACVAJMPqUHMXY8DrSV-DpPOFIEdCt6OEVk/edit)
-- [ ] Logging system (?, incomplete)
+- [x] Music player (spotify)
+- [ ] Invite Tracker
+- [ ] Eval system
+- [x] Backup system 
+- [x] Giveaways (Implement '/end')
+- [x] Logging system 
 - [ ] Youtube/Twitch/Trovo notifications
 - [x] Localization for slash commands
-- [ ] Localization for context commands
-- [ ] Hybrid commands (slash commands && context commands)
-
 
 
 ## Developers:
