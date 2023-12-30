@@ -235,6 +235,14 @@ class Backup:
         if data["guild"]["banner"]:
             banner_data = BytesIO(base64.b64decode(data["guild"]["banner"]))
 
+        splash_data = None
+        if data["guild"]["splash"]:
+            banner_data = BytesIO(base64.b64decode(data["guild"]["splash"]))
+
+        discovery_splash_data = None
+        if data["guild"]["discovery_splash"]:
+            discovery_splash_data = BytesIO(base64.b64decode(data["guild"]["discovery_splash"]))
+
         verification_level_mapping = {
             "none": disnake.VerificationLevel.none,
             "low": disnake.VerificationLevel.low,
@@ -264,12 +272,22 @@ class Backup:
             description=data["guild"]["description"],
             rules_channel=rules_channel or None,
             public_updates_channel=data["guild"]["public_updates_channel"] or None,
+            safety_alerts_channel=data["guild"]["safety_alerts_channel"] or None,
             premium_progress_bar_enabled=data["guild"]["premium_progress_bar_enabled"],
             system_channel=system_channel,
             afk_channel=afk_channel,
             verification_level=ver_level,
-            icon=icon_data.read() if icon_data is not None else None,
-            banner=banner_data.read() if banner_data is not None else None,
+            icon=icon_data.read() if icon_data else None,
+            banner=banner_data.read() if banner_data else None,
+            splash=splash_data.read() if splash_data else None,
+            discovery_splash=discovery_splash_data.read() if splash_data else None,
+            community=data["guild"]["community"],
+            preferred_locale=data["guild"]["preferred_locale"],
+            invites_disabled=data["guild"]["invites_disabled"],
+            raid_alerts_disabled=data["guild"]["raid_alerts_disabled"],
+            explicit_content_filter=data["guild"]["explicit_content_filter"],
+            default_notifications=data["guild"]["default_notifications"],
+            system_channel_flags=data["guild"]["system_channel_flags"],
         )
 
         await asyncio.sleep(3)
@@ -290,6 +308,8 @@ class BackupCreator:
     ) -> Dict[str, Union[Dict[Any, Any], Dict[str, str], Dict[str, int]]]:
         icon_data = None  # Default to None
         banner_data = None  # Default to None
+        splash_data = None  # Default to None
+        discovery_splash_data = None  # Default to None
         nextsave = datetime.now() + timedelta(days=7)
 
         try:
@@ -316,6 +336,30 @@ class BackupCreator:
         finally:
             await session.close()
 
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(self.guild.splash.url) as splash_response:
+                    if splash_response.status == 200:
+                        splash_data = base64.b64encode(
+                            await splash_response.read()
+                        ).decode("utf-8")
+        except (Exception, disnake.Forbidden):
+            pass
+        finally:
+            await session.close()
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(self.guild.discovery_splash.url) as discovery_splash_response:
+                    if discovery_splash_response.status == 200:
+                        discovery_splash_data = base64.b64encode(
+                            await discovery_splash_response.read()
+                        ).decode("utf-8")
+        except (Exception, disnake.Forbidden):
+            pass
+        finally:
+            await session.close()
+
         backup_data = {
             "info": {
                 "nextsave": nextsave.timestamp(),
@@ -330,20 +374,37 @@ class BackupCreator:
                 "public_updates_channel": self.guild.public_updates_channel.name
                 if self.guild.public_updates_channel
                 else None,
+
+                "safety_alerts_channel": self.guild.safety_alerts_channel.name
+                if self.guild.safety_alerts_channel
+                else None,
+
                 "afk_channel": self.guild.afk_channel.name
                 if self.guild.afk_channel
                 else None,
+
                 "afk_timeout": self.guild.afk_timeout if self.guild.afk_timeout else 0,
                 "premium_progress_bar_enabled": self.guild.premium_progress_bar_enabled,
                 "verification_level": self.guild.verification_level
                 if self.guild.verification_level
                 else disnake.VerificationLevel.none,
+
                 "system_channel": self.guild.system_channel.name
                 if self.guild.system_channel
                 else None,
+
                 "description": self.guild.description,
                 "icon": icon_data if self.guild.icon else None,
                 "banner": banner_data if self.guild.banner else None,
+                "splash": splash_data if self.guild.splash else None,
+                "discovery_splash": discovery_splash_data if self.guild.discovery_splash else None,
+                "community": self.guild.community,
+                "preferred_locale": self.guild.preferred_locale,
+                "invites_disabled": self.guild.invites_disabled,
+                "raid_alerts_disabled": self.guild.raid_alerts_disabled,
+                "explicit_content_filter": self.guild.explicit_content_filter,
+                "default_notifications": self.guild.default_notifications,
+                "system_channel_flags": self.guild.system_channel_flags,
             },
             "text": {},
             "voice": {},
