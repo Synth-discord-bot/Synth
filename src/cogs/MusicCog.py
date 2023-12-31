@@ -12,9 +12,9 @@ from src.utils.misc import EmbedPaginator
 
 class MusicPlayer(mafic.Player[commands.Bot]):
     def __init__(
-        self,
-        client: commands.Bot,
-        channel: disnake.VoiceChannel,
+            self,
+            client: commands.Bot,
+            channel: disnake.VoiceChannel,
     ) -> None:
         super().__init__(client, channel)
 
@@ -23,14 +23,14 @@ class MusicPlayer(mafic.Player[commands.Bot]):
 
 
 class QueueView(View):
-    def __init__(self, message_id: int, *, timeout: float | None = None) -> None:
+    def __init__(self, bot: commands.bot, message_id: int, *, timeout: float | None = None) -> None:
         self.message_id = message_id
-        self.settings_db = main_db
+        self.bot = bot
         super().__init__(timeout=timeout)
 
-    @disnake.ui.button(label="Skip", style=disnake.ButtonStyle.green)
+    @disnake.ui.button(label="Skip", style=disnake.ButtonStyle.green, row=0)
     async def skip(
-        self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
+            self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ) -> None:
         player: MusicPlayer
 
@@ -53,9 +53,9 @@ class QueueView(View):
                     ephemeral=True,
                 )
 
-    @disnake.ui.button(label="Resume/Pause", style=disnake.ButtonStyle.gray)
+    @disnake.ui.button(label="Resume/Pause", style=disnake.ButtonStyle.gray, row=0)
     async def resume_and_pause(
-        self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
+            self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ):
         player: MusicPlayer
 
@@ -67,9 +67,49 @@ class QueueView(View):
                 await player.pause()
                 await interaction.response.edit_message(content=f"")
 
-    @disnake.ui.button(label="Queue", style=disnake.ButtonStyle.blurple)
+    @disnake.ui.button(label="Volume", style=disnake.ButtonStyle.green, row=0)
+    async def _volume(self, _: disnake.ui.Button, interaction: disnake.MessageInteraction):
+        player: MusicPlayer
+
+        if player := interaction.guild.voice_client:  # type: ignore
+            modal = disnake.ui.Modal(
+                title="Enter the volume",
+                custom_id="volume",
+                components=[
+                    disnake.ui.TextInput(
+                        label="New volume:",
+                        custom_id="new_volume",
+                        style=disnake.TextInputStyle.short,
+                    )
+                ],
+            )
+            await interaction.response.send_modal(modal=modal)
+            response_modal = await self.bot.wait_for(
+                "modal_submit",
+                check=lambda i: i.custom_id == "volume" and i.user == interaction.user,
+            )
+            new_volume = int(response_modal.text_values["new_volume"])
+            try:
+                await player.set_volume(new_volume)
+                embed = disnake.Embed(
+                    title=f"Set volume to {new_volume}",
+                    color=disnake.Color.green()
+                )
+                await response_modal.response.send_message(embed=embed, ephemeral=True)
+            except (Exception, BaseException, disnake.Forbidden):
+                embed = disnake.Embed(
+                    color=disnake.Color.red()
+                )
+                if new_volume > 100 or new_volume < 1:
+                    embed.title = f"Please enter a number, between `1` and `100`"
+                else:
+                    embed.title = f"Sorry, something went wrong"
+
+                await response_modal.response.send_message(embed=embed, ephemeral=True)
+
+    @disnake.ui.button(label="Queue", style=disnake.ButtonStyle.blurple, row=1)
     async def queue(
-        self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
+            self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ):
         player: MusicPlayer
 
@@ -77,7 +117,7 @@ class QueueView(View):
             embed = disnake.Embed(
                 title="Music Queue",
                 description="",
-                color=self.settings_db.get_embed_color(interaction.guild.id),
+                color=0x2F3236,
             )
 
             if len(player.queue) > 0:
@@ -100,9 +140,9 @@ class QueueView(View):
 
             embed.set_footer(text="Synth © 2023 | All Rights Reserved")
 
-            await interaction.response.send_message(embed=embed)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @disnake.ui.button(label="Disconnect", style=disnake.ButtonStyle.danger)
+    @disnake.ui.button(label="Disconnect", style=disnake.ButtonStyle.danger, row=1)
     async def dc(self, _: disnake.ui.Button, interaction: disnake.MessageInteraction):
         player: MusicPlayer
 
@@ -112,7 +152,7 @@ class QueueView(View):
                 embed=disnake.Embed(
                     title="Disconnecting...",
                     description="I have disconnected from voice channel",
-                    color=self.settings_db.get_embed_color(interaction.guild.id),
+                    color=0x2F3236,
                 ),
                 ephemeral=True,
             )
@@ -128,6 +168,7 @@ class Music(commands.Cog, name="Music Commands"):
         self.bot = bot
         self.pool = mafic.NodePool(self.bot)
         self.bot.loop.create_task(self.add_nodes())
+        self.invoked_channel = None
 
     async def add_nodes(self) -> None:
         await self.pool.create_node(
@@ -137,29 +178,36 @@ class Music(commands.Cog, name="Music Commands"):
             password="youshallnotpass",
         )
 
-    @commands.slash_command()
-    async def play(
-        self, ctx: disnake.MessageCommandInteraction, *, query: str = None
-    ) -> Message:
+    @commands.slash_command(description="Search and play music from Spotify")
+    async def play(self, interaction, *, query: str = None):
+        ErrorEmbed = disnake.Embed(color=disnake.Color.red())
         if not query:
-            return await ctx.send("Please provide a query/URL to search")
+            ErrorEmbed.title = "Please provide a query/URL to search"
+            return await interaction.send(embed=ErrorEmbed, ephemeral=True)
 
-        if not getattr(ctx.author.voice, "channel", None):
-            return await ctx.send("Join a voice channel first")
+        if not getattr(interaction.author.voice, "channel", None):
+            ErrorEmbed.title = "Join a voice channel first"
+            return await interaction.send(embed=ErrorEmbed, ephemeral=True)
 
-        voice = ctx.author.voice.channel
+        voice = interaction.author.voice.channel
 
-        player: MusicPlayer = ctx.guild.voice_client or await voice.connect(
+        player: MusicPlayer = interaction.guild.voice_client or await voice.connect(
             cls=MusicPlayer  # type: ignore
         )
 
         tracks = await player.fetch_tracks(query, search_type="spsearch")
-        if not tracks:
-            return await ctx.send("No tracks found.")
 
-        embed = disnake.Embed(color=self.settings_db.get_embed_color(ctx.guild.id))
+        if not tracks:
+            ErrorEmbed.title = f"No tracks found, by `{query}` query..."
+            return await interaction.send(embed=ErrorEmbed)
+
+        embed = disnake.Embed(color=0x2F3236)
+
+        self.invoked_channel = interaction.channel.id
 
         if player.current:
+            await interaction.response.defer()
+
             embed.title = "Queue"
 
             if isinstance(tracks, mafic.Playlist):
@@ -184,10 +232,12 @@ class Music(commands.Cog, name="Music Commands"):
                 embed.set_image(url=tracks[0].artwork_url)
 
             embed.set_footer(text="Synth © 2023 | All Rights Reserved")
-            message = await voice.send(embed=embed, delete_after=15)
-            await message.edit(embed=embed, delete_after=15, view=QueueView(message.id))
+            message = await interaction.followup.send(embed=embed, delete_after=15)
+            await message.edit(embed=embed, delete_after=15, view=QueueView(self.bot, message.id))
 
         else:
+            await interaction.response.defer()
+            
             if isinstance(tracks, mafic.Playlist):
                 player.queue.extend(tracks.tracks[1:])
                 await player.play(tracks.tracks[0])
@@ -209,8 +259,8 @@ class Music(commands.Cog, name="Music Commands"):
                 )
                 embed.set_image(url=tracks.tracks[0].artwork_url)
 
-                message = await voice.send(embed=embed)
-                return await message.edit(embed=embed, view=QueueView(message.id))
+                message = await interaction.followup.send(embed=embed)
+                return await message.edit(embed=embed, view=QueueView(self.bot, message.id))
             else:
                 await player.play(tracks[0])
 
@@ -224,17 +274,12 @@ class Music(commands.Cog, name="Music Commands"):
                     value=f"`{str(datetime.timedelta(seconds=round(tracks[0].length / 1000)))}`",
                     inline=True,
                 )
-                embed.add_field(
-                    name="Message deletion in:",
-                    value=f"**`15 seconds`**",
-                    inline=True,
-                )
                 embed.set_image(url=tracks[0].artwork_url)
 
                 embed.set_footer(text="Synth © 2023 | All Rights Reserved")
 
-            message = await voice.send(embed=embed, delete_after=15)
-            await message.edit(embed=embed, delete_after=15, view=QueueView(message.id))
+            message = await interaction.followup.send(embed=embed)
+            await message.edit(embed=embed, view=QueueView(self.bot, message.id))
 
     @commands.Cog.listener()
     async def on_track_end(self, event: mafic.TrackEndEvent[MusicPlayer]):
@@ -245,7 +290,7 @@ class Music(commands.Cog, name="Music Commands"):
             embed = disnake.Embed(
                 title=f"Now playing - {track.title}",
                 description=f"[{track.title}]({str(track.uri)})",
-                color=self.settings_db.get_embed_color(event.player.guild.id),
+                color=0x2F3236,
             )
             embed.add_field(name="Artist:", value=f"**`{track.author}`**", inline=True)
             embed.add_field(
@@ -256,10 +301,11 @@ class Music(commands.Cog, name="Music Commands"):
             embed.set_footer(text="Synth © 2023 | All Rights Reserved")
             embed.set_image(url=track.artwork_url)
 
-            message = await event.player.voice_channel.send(embed=embed)
+            channel = await event.player.guild.fetch_channel(self.invoked_channel)
+            message = await channel.send(embed=embed)
 
             return await message.edit(
-                embed=embed, view=QueueView(message_id=message.id)
+                embed=embed, view=QueueView(self.bot, message_id=message.id)
             )
         else:
             return await event.player.disconnect(force=True)

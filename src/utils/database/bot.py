@@ -51,7 +51,7 @@ class MainDatabase(BaseDatabase):
 
     async def get_embed_color(self, guild_id: int) -> Optional[int]:
         if await self.find_one_from_db({"id": guild_id}) is None:
-            return None
+            return int("0x2F3236", 16)
         return (await self.find_one_from_db({"id": guild_id})).get(
             "embed_color", 0x2F3236
         )
