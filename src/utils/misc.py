@@ -36,27 +36,25 @@ async def extension(bot):
 
             match path:
                 case "src/cogs":
-                    kakashe4ki = "module"
+                    load_type = "module"
                 case "src/events":
-                    kakashe4ki = "event"
+                    load_type = "event"
                 case _:
-                    kakashe4ki = "unknown"
+                    load_type = "unknown"
 
             try:
                 module = f"{path.replace('/', '.')}.{file[:-3]}"
                 bot.load_extension(module)
-                logging.info(f"Loaded {kakashe4ki} {file[:-3]}")
+                logging.info(f"Loaded {load_type} {file[:-3]}")
             except (
                 commands.ExtensionNotFound,
                 commands.NoEntryPointError,
                 commands.ExtensionFailed,
                 commands.ExtensionError,
             ) as e:
-                logging.info(f"Error loading {kakashe4ki} {file[:-3]}\n\n")
+                logging.info(f"Error loading {load_type} {file[:-3]}\n\n")
                 traceback.print_exception(e)
                 continue
-            # except commands.ExtensionAlreadyLoaded:
-            #     continue
 
 
 async def is_command_disabled(message: Message, command: str) -> bool:

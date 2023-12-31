@@ -36,7 +36,7 @@ class BackupsView(disnake.ui.View):
             embed = disnake.Embed(
                 title="Confirmation",
                 description="Are you sure?",
-                color=self.settings_db.get_embed_color(interaction.guild.id),
+                color=await self.settings_db.get_embed_color(interaction.guild.id),
             )
 
         await interaction.send(embed=embed, ephemeral=True, components=buttons)
@@ -55,13 +55,13 @@ class BackupsView(disnake.ui.View):
         self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ) -> None:
         embed = disnake.Embed(
-            color=self.settings_db.get_embed_color(interaction.guild.id)
+            color=await self.settings_db.get_embed_color(interaction.guild.id)
         )
 
         confirm_embed = disnake.Embed(
             title="Confirmation",
             description="Are you sure you want to **create** server backup?",
-            color=self.settings_db.get_embed_color(interaction.guild.id),
+            color=await self.settings_db.get_embed_color(interaction.guild.id),
         )
         response = await self.confirm(interaction=interaction, embed=confirm_embed)
         if response == ConfirmEnum.OK:
@@ -101,10 +101,7 @@ class BackupsView(disnake.ui.View):
                 raise e
         else:
             await interaction.followup.send(
-                content="Operation cancelled", embed=None, ephemeral=True
-            )
-            await interaction.edit_original_message(
-                content="Operation cancelled", embed=None, view=None
+                content="Operation cancelled.", embed=None, ephemeral=True
             )
 
     @disnake.ui.button(label="Load", style=disnake.ButtonStyle.blurple)
@@ -112,13 +109,13 @@ class BackupsView(disnake.ui.View):
         self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ) -> None:
         embed = disnake.Embed(
-            color=self.settings_db.get_embed_color(interaction.guild.id)
+            color=await self.settings_db.get_embed_color(interaction.guild.id)
         )
 
         confirm_embed = disnake.Embed(
             title="Confirmation",
             description="Are you sure you want to **load** server backup?",
-            color=self.settings_db.get_embed_color(interaction.guild.id),
+            color=await self.settings_db.get_embed_color(interaction.guild.id),
         )
         response = await self.confirm(interaction=interaction, embed=confirm_embed)
         if response == ConfirmEnum.OK:
@@ -145,7 +142,7 @@ class BackupsView(disnake.ui.View):
                         )
                         await message.delete()
                 except asyncio.TimeoutError:
-                    await interaction.send(content="timeout.", ephemeral=True)
+                    await interaction.send(content="Timeout has finished. Restart the command!", ephemeral=True)
 
             embed.title = "<a:loading:1168599537682755584> Loading Backup"
             embed.description = None
@@ -163,10 +160,7 @@ class BackupsView(disnake.ui.View):
             await BackupGuild(interaction.guild).restore(data=data, message=interaction)
         else:
             await interaction.followup.send(
-                content="OK. Operation cancelled", embed=None, ephemeral=True
-            )
-            await interaction.edit_original_message(
-                content="Operation cancelled", embed=None, view=None
+                content="Operation cancelled.", embed=None, ephemeral=True
             )
 
     @disnake.ui.button(label="Delete", style=disnake.ButtonStyle.red)
@@ -177,9 +171,9 @@ class BackupsView(disnake.ui.View):
             embed = disnake.Embed(
                 title="An error occurred",
                 description="There is no backup for this server",
-                color=self.settings_db.get_embed_color(interaction.guild.id),
+                color=await self.settings_db.get_embed_color(interaction.guild.id),
             )
-            await interaction.send(embed=embed)
+            await interaction.send(embed=embed, ephemeral=True)
             return
 
         embed = disnake.Embed(
@@ -188,14 +182,16 @@ class BackupsView(disnake.ui.View):
             color=self.settings_db.get_embed_color(interaction.guild.id),
         )
         response = await self.confirm(interaction=interaction, embed=embed)
+
         if response == ConfirmEnum.OK:
             await self.backups.delete_backup(interaction.guild.id)
             embed.title = "Success"
             embed.description = "Successfully deleted backup from the database"
-            await interaction.edit_original_response(embed=embed, view=None)
+            await interaction.edit_original_response(embed=embed, view=None, ephemeral=True)
         else:
             await interaction.followup.send(
-                content="OK. Operation cancelled", embed=None
+                content="Operation cancelled.", embed=None, 
+                ephemeral=True
             )
 
     @disnake.ui.button(label="File", style=disnake.ButtonStyle.gray)
@@ -242,14 +238,14 @@ class Backup(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def backup(self, interaction: disnake.MessageCommandInteraction) -> None:
         embed = disnake.Embed(
-            color=self.settings_db.get_embed_color(interaction.guild_id)
+            color=await self.settings_db.get_embed_color(interaction.guild.id)
         )
         embed.title = "Backup system"
         embed.add_field(
             name="Information",
             value=f"<:pin:1169690524073087088> Using this panel you can save your server backup.\n"
             f"<:pin:1169690524073087088> Our system, is one of the most powerful backup system in discord.\n"
-            f"<:pin:1169690524073087088> To **interact with backups** use emojis under this message.\n",
+            f"<:pin:1169690524073087088> To **interact with backups** use buttons under this message.\n",
             inline=False,
         )
 
@@ -260,6 +256,11 @@ class Backup(commands.Cog):
                 embed.add_field(
                     name="Last backup",
                     value=f"<t:{data['info']['created']}:f> (<t:{data['info']['created']}:R>)",
+                    inline=False,
+                )
+                embed.add_field(
+                    name="Next AutoSave",
+                    value=f"<t:{data['info']['nextsave']}:f> (<t:{data['info']['nextsave']}:R>)",
                     inline=False,
                 )
         embed.set_footer(
