@@ -10,8 +10,9 @@ class BackupDatabase(BaseDatabase):
         super().__init__(database_name)
 
     def check_backup(self, guild: disnake.Guild) -> bool:
-        return len(self.get_items_in_cache({"guild_id": guild.id})) != 0
-
+        if backups := self.get_items_in_cache({"guild_id": guild.id}):
+            return len(backups) != 0
+    
     async def get(
         self,
         guild_id: Union[int, str, disnake.Guild],
