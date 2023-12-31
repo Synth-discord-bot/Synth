@@ -89,8 +89,9 @@ class PrivateRooms(commands.Cog, name="Private Rooms"):
                             )
                             break
 
-        elif after.channel != before.channel and member.voice.mute:
-            await member.edit(mute=False)
+        elif member.voice:
+            if after.channel != before.channel and member.voice.mute:
+                await member.edit(mute=False)
 
     @commands.slash_command(name="setup-voice")
     async def setup_voice(self, interaction: disnake.MessageCommandInteraction):

@@ -1,10 +1,11 @@
 import asyncio
+from datetime import datetime
 import io
 from typing import Optional
 
 import disnake
 import ujson
-from disnake.ext import commands
+from disnake.ext import commands, tasks
 
 from src.utils import backups, main_db, commands_db
 from src.utils.backup import Backup as BackupGuild
@@ -142,7 +143,10 @@ class BackupsView(disnake.ui.View):
                         )
                         await message.delete()
                 except asyncio.TimeoutError:
-                    await interaction.send(content="Timeout has finished. Restart the command!", ephemeral=True)
+                    await interaction.send(
+                        content="Timeout has finished. Restart the command!",
+                        ephemeral=True,
+                    )
 
             embed.title = "<a:loading:1168599537682755584> Loading Backup"
             embed.description = None
@@ -187,11 +191,12 @@ class BackupsView(disnake.ui.View):
             await self.backups.delete_backup(interaction.guild.id)
             embed.title = "Success"
             embed.description = "Successfully deleted backup from the database"
-            await interaction.edit_original_response(embed=embed, view=None, ephemeral=True)
+            await interaction.edit_original_response(
+                embed=embed, view=None, ephemeral=True
+            )
         else:
             await interaction.followup.send(
-                content="Operation cancelled.", embed=None, 
-                ephemeral=True
+                content="Operation cancelled.", embed=None, ephemeral=True
             )
 
     @disnake.ui.button(label="File", style=disnake.ButtonStyle.gray)
@@ -230,6 +235,7 @@ class Backup(commands.Cog):
         self.backups = backups
         self.settings_db = main_db
         self.commands_db = commands_db
+        self.auto_backup.start()
 
     async def cog_load(self) -> None:
         await self.backups.fetch_and_cache_all()
@@ -267,6 +273,19 @@ class Backup(commands.Cog):
             text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
         )
         await interaction.send(embed=embed, view=BackupsView(self.bot), ephemeral=True)
+
+    @tasks.loop(seconds=1)
+    async def auto_backup(self):
+        await self.bot.wait_until_ready()
+
+        async for backup_data in self.backups.collection.find({}):
+            timestamp = backup_data["backup_data"]["info"]["nextsave"]
+            guild = await self.bot.fetch_guild(backup_data["guild_id"])
+
+            if datetime.now().timestamp() >= timestamp:
+                backup_data = await BackupGuild(guild).create()
+
+                await self.backups.update_backups_info(guild.id, backup_data)
 
 
 def setup(bot: commands.Bot) -> None:

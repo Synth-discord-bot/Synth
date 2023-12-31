@@ -230,13 +230,14 @@ class Backup:
 
         for image_type in image_types:
             if data["guild"][image_type]:
-                image_data[image_type] = BytesIO(base64.b64decode(data["guild"][image_type]))
+                image_data[image_type] = BytesIO(
+                    base64.b64decode(data["guild"][image_type])
+                )
 
         icon_data = image_data.get("icon")
         banner_data = image_data.get("banner")
         splash_data = image_data.get("splash")
         discovery_splash_data = image_data.get("discovery_splash")
-
 
         verification_level_mapping = {
             "none": disnake.VerificationLevel.none,
@@ -246,11 +247,12 @@ class Backup:
             "highest": disnake.VerificationLevel.highest,
         }
 
-        mongo_verification_level = data.get("guild", {}).get("verification_level", [])[0]
+        mongo_verification_level = data.get("guild", {}).get("verification_level", [])[
+            0
+        ]
         discord_verification_level = verification_level_mapping.get(
             mongo_verification_level, disnake.VerificationLevel.none
         )
-
 
         channel_types = ["afk_channel", "system_channel", "rules_channel"]
         channels = {}
@@ -258,8 +260,10 @@ class Backup:
         for channel_type in channel_types:
             channel_name = data["guild"].get(channel_type)
             channels[channel_type] = disnake.utils.get(
-                self.guild.voice_channels if channel_type == "afk_channel" else self.guild.text_channels,
-                name=channel_name
+                self.guild.voice_channels
+                if channel_type == "afk_channel"
+                else self.guild.text_channels,
+                name=channel_name,
             )
 
         afk_channel = channels.get("afk_channel")
@@ -270,24 +274,23 @@ class Backup:
             name=data["guild"]["name"],
             afk_timeout=data["guild"]["afk_timeout"],
             description=data["guild"]["description"],
-
             community=data["guild"]["community"],
             verification_level=discord_verification_level,
             premium_progress_bar_enabled=data["guild"]["premium_progress_bar_enabled"],
-
             system_channel=system_channel,
             rules_channel=rules_channel or None,
             public_updates_channel=data["guild"]["public_updates_channel"] or None,
             safety_alerts_channel=data["guild"]["safety_alerts_channel"] or None,
             afk_channel=afk_channel or None,
-
             icon=icon_data.read() if icon_data else None,
             banner=banner_data.read() if banner_data else None,
             splash=splash_data.read() if splash_data else None,
             discovery_splash=discovery_splash_data.read() if splash_data else None,
         )
         await self.guild.edit(invites_disabled=data["guild"]["invites_disabled"])
-        await self.guild.edit(raid_alerts_disabled=data["guild"]["raid_alerts_disabled"])
+        await self.guild.edit(
+            raid_alerts_disabled=data["guild"]["raid_alerts_disabled"]
+        )
 
         await asyncio.sleep(3)
 
@@ -303,22 +306,37 @@ class BackupCreator:
         self.guild: disnake.Guild = guild
 
     async def create_backup(
-            self,
+        self,
     ) -> Dict[str, Union[Dict[Any, Any], Dict[str, str], Dict[str, int]]]:
         nextsave = datetime.now() + timedelta(days=7)
 
         async with aiohttp.ClientSession() as session:
+
             async def fetch_and_process(url):
                 async with session.get(url) as response:
                     if response.status == 200:
                         return base64.b64encode(await response.read()).decode("utf-8")
 
-            icon_data = await fetch_and_process(self.guild.icon.url) if self.guild.icon else None
-            banner_data = await fetch_and_process(self.guild.banner.url) if self.guild.banner else None
-            splash_data = await fetch_and_process(self.guild.splash.url) if self.guild.splash else None
-            discovery_splash_data = await fetch_and_process(
-                self.guild.discovery_splash.url
-            ) if self.guild.discovery_splash else None
+            icon_data = (
+                await fetch_and_process(self.guild.icon.url)
+                if self.guild.icon
+                else None
+            )
+            banner_data = (
+                await fetch_and_process(self.guild.banner.url)
+                if self.guild.banner
+                else None
+            )
+            splash_data = (
+                await fetch_and_process(self.guild.splash.url)
+                if self.guild.splash
+                else None
+            )
+            discovery_splash_data = (
+                await fetch_and_process(self.guild.discovery_splash.url)
+                if self.guild.discovery_splash
+                else None
+            )
 
         backup_data = {
             "info": {
@@ -326,11 +344,9 @@ class BackupCreator:
                 "interval": 0,
                 "created": int(datetime.now().timestamp()),
             },
-
             "guild": {
                 "name": self.guild.name,
                 "description": self.guild.description,
-
                 "rules_channel": self.guild.rules_channel.name
                 if self.guild.rules_channel
                 else None,
@@ -346,23 +362,26 @@ class BackupCreator:
                 "system_channel": self.guild.system_channel.name
                 if self.guild.system_channel
                 else None,
-
                 "community": "COMMUNITY" in self.guild.features
-                if "COMMUNITY" in self.guild.features else False,
+                if "COMMUNITY" in self.guild.features
+                else False,
                 "premium_progress_bar_enabled": self.guild.premium_progress_bar_enabled,
                 "verification_level": self.guild.verification_level
                 if self.guild.verification_level
                 else disnake.VerificationLevel.none,
                 "invites_disabled": "INVITES_DISABLED" in self.guild.features
-                if "INVITES_DISABLED" in self.guild.features else False,
+                if "INVITES_DISABLED" in self.guild.features
+                else False,
                 "raid_alerts_disabled": "RAID_ALERTS_DISABLED" in self.guild.features
-                if "RAID_ALERTS_DISABLED" in self.guild.features else False,
+                if "RAID_ALERTS_DISABLED" in self.guild.features
+                else False,
                 "afk_timeout": self.guild.afk_timeout if self.guild.afk_timeout else 0,
-
                 "icon": icon_data if self.guild.icon else None,
                 "banner": banner_data if self.guild.banner else None,
                 "splash": splash_data if self.guild.splash else None,
-                "discovery_splash": discovery_splash_data if self.guild.discovery_splash else None,
+                "discovery_splash": discovery_splash_data
+                if self.guild.discovery_splash
+                else None,
             },
             "text": {},
             "voice": {},
