@@ -9,7 +9,7 @@ from src.utils.misc import check_channel
 
 
 class Logger(commands.Cog):
-    """Helper commands to setup logger."""
+    """Commands to setup logging system."""
 
     EMOJI = "<:list:1169690529643114547>️"
 

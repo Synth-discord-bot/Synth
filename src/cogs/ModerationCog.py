@@ -14,7 +14,7 @@ from src.utils.misc import emoji, str_to_seconds, hms, common_checks
 
 
 class Moderation(commands.Cog):
-    """Helper commands for server moderation"""
+    """Commands to moderate your server."""
 
     EMOJI = "<:hammer:1169685339720384512>"
 

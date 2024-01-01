@@ -11,7 +11,7 @@ from src.utils.rooms import Buttons
 
 
 class PrivateRooms(commands.Cog, name="Private Rooms"):
-    """Private Rooms"""
+    """Command to set up private rooms system."""
 
     EMOJI = "🎶"
 

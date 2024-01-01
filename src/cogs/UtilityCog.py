@@ -14,7 +14,7 @@ startup = datetime.datetime.now()
 
 
 class Utility(commands.Cog):
-    """Utility commands"""
+    """Commands to utilize the server."""
 
     EMOJI = "<:globe:1169690501063123065>"
 

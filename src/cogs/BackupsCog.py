@@ -225,7 +225,7 @@ class BackupsView(disnake.ui.View):
 
 
 class Backup(commands.Cog):
-    """Backup commands"""
+    """Commands to manage guild backup(s)."""
 
     EMOJI = "<:category:1169684586666663999>"
 

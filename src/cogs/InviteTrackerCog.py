@@ -7,7 +7,7 @@ from src.utils.misc import check_channel
 
 
 class InviteTracker(commands.Cog):
-    """Helper commands to set up invite a tracker system."""
+    """Commands to set up invite tracker system."""
 
     EMOJI = "<:link:1169685349409226893>"
 

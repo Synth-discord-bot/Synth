@@ -8,7 +8,7 @@ from src.utils import main_db
 
 
 class Fun(commands.Cog):
-    """Fun commands."""
+    """Commands to help you waste your time."""
 
     EMOJI = "<:created_at:1169684592006017034>"
 

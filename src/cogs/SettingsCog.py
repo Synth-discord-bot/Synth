@@ -63,7 +63,7 @@ class SettingsView(disnake.ui.View):
 
 
 class Settings(commands.Cog):
-    """Helper commands to set up the bot."""
+    """Commands to fully customize the bot."""
 
     EMOJI = "<:settings:1169685352114552922>️"
 

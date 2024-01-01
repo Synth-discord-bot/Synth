@@ -13,7 +13,7 @@ time_units = {"d": "days", "h": "hours", "m": "minutes", "s": "seconds"}
 
 
 class Giveaway(commands.Cog):
-    """Commands that help you with giveaways."""
+    """Commands to manage giveaways."""
 
     EMOJI = "<:tada:1169690533719986297>"
 

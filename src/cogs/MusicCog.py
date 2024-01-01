@@ -161,7 +161,7 @@ class QueueView(View):
 
 
 class Music(commands.Cog, name="Music Commands"):
-    """Music commands"""
+    """Commands that help you to manage music."""
 
     EMOJI = "🎶"
 
