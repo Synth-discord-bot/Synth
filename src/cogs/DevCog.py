@@ -162,9 +162,6 @@ class PanelView(disnake.ui.Select):
                 and i.user == interaction.user,
             )
 
-            if interaction.user.id not in self.bot.owner_ids:
-                return
-
             await modal_response.response.defer(ephemeral=True)
             pending_embed = disnake.Embed(description='Code is processing...', color=disnake.Colour.from_rgb(255, 255, 0))
             message = await modal_response.followup.send(embed=pending_embed, ephemeral=True)
@@ -219,6 +216,7 @@ class Developers(commands.Cog):
     # TODO: BLACKLIST SETTINGS
 
     @commands.slash_command(name="panel", description="Panel menu", guild_ids=[1109511263509291098])
+    @commands.is_owner()
     async def panel_menu(self, interaction):
         embed=disnake.Embed(color=disnake.Color.blurple())
         embed.title="Control panel for Synth"

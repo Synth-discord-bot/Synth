@@ -347,11 +347,15 @@ class EmbedPaginator(disnake.ui.View):
             disnake.MessageCommandInteraction,
             disnake.MessageInteraction,
         ],
-    ) -> Union[Message, Any]:
+    ) -> Union[disnake.Message, Any]:
+        
+        self.prev_page.disabled = True
+        self.next_page.disabled = False
+
         if isinstance(
             ctx, (disnake.MessageCommandInteraction, disnake.MessageInteraction)
         ):
-            return await ctx.response.send_message(embed=self.embed, view=self)
+            return await ctx.response.send_message(embed=self.embed, view=self, ephemeral=True)
         return await ctx.send(embed=self.embed, view=self)
 
     async def _create_embed(
@@ -370,8 +374,8 @@ class EmbedPaginator(disnake.ui.View):
 
             music: mafic.Track
             embed.description += f"`{index}.` **{music.author} - {music.title}**\n"
-
-        all_pages = math.ceil(len(self.data) / self.separate)
+        
+        all_pages = (math.ceil(len(self.data) / self.separate) - 1)
         embed.set_footer(text=f"Page {self.current_page} of {all_pages}")
 
         return embed
@@ -387,25 +391,50 @@ class EmbedPaginator(disnake.ui.View):
     async def prev_page(
         self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ) -> None:
+        if self.current_page <= 0:
+            self.prev_page.disabled = True
+            self.next_page.disabled = False
+
+            return await self.update(self.interaction, self.embed)
+
         await interaction.response.defer()
+
         self.current_page -= 1
 
-        start = self.current_page * self.separate
-        data = self.data[start:]
-        await self.update(self.interaction, await self._create_embed(self.embed, data))
+        if self.current_page <= 0:
+            self.prev_page.disabled = True
+            self.next_page.disabled = False
+            return await self.update(self.interaction, self.embed)
+        else:
+            self.prev_page.disabled = False if self.current_page > 0 else True
+            self.next_page.disabled = False if self.current_page < (math.ceil(len(self.data) / self.separate) - 1) else True
+
+            start = self.current_page * self.separate
+            data = self.data[start:]
+            return await self.update(self.interaction, await self._create_embed(self.embed, data))
+        # await self.update_buttons()
 
     @disnake.ui.button(label="▶️", style=disnake.ButtonStyle.blurple)
     async def next_page(
         self, _: disnake.ui.Button, interaction: disnake.MessageInteraction
     ) -> None:
+        if self.current_page >= (math.ceil(len(self.data) / self.separate) - 1):
+            self.next_page.disabled = True
+            self.prev_page.disabled = False
+
+            return await self.update(self.interaction, self.embed)
+        
         await interaction.response.defer()
         self.current_page += 1
 
+        self.prev_page.disabled = False if self.current_page > 0 else True
+        self.next_page.disabled = False if self.current_page < (math.ceil(len(self.data) / self.separate) - 1) else True
         start = self.current_page * self.separate
         data = self.data[start:]
-        await self.update(self.interaction, await self._create_embed(self.embed, data))
+        return await self.update(self.interaction, await self._create_embed(self.embed, data))
+        # await self.update_buttons()
 
-    async def interaction_check(self, interaction: MessageInteraction) -> bool:
+    async def interaction_check(self, interaction: disnake.MessageInteraction) -> bool:
         if interaction.user.id != self.author.id:
             await interaction.send(
                 content="You are not allowed to use this buttons!", ephemeral=True

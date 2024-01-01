@@ -94,20 +94,17 @@ class QueueView(View):
                 check=lambda i: i.custom_id == "volume" and i.user == interaction.user,
             )
             new_volume = int(response_modal.text_values["new_volume"])
-            try:
-                await player.set_volume(new_volume)
-                embed = disnake.Embed(
-                    title=f"Set volume to {new_volume}", color=disnake.Color.green()
-                )
-                await response_modal.response.send_message(embed=embed, ephemeral=True)
-            except (Exception, BaseException, disnake.Forbidden):
-                embed = disnake.Embed(color=disnake.Color.red())
-                if new_volume > 100 or new_volume < 1:
-                    embed.title = f"Please enter a number, between `1` and `100`"
-                else:
-                    embed.title = f"Sorry, something went wrong"
+            
+            error_embed = disnake.Embed(color=disnake.Color.red())
+            if new_volume > 100 or new_volume < 1:
+                error_embed.title = f"Please enter a number, between `1` and `100`"
+                return await response_modal.response.send_message(embed=error_embed, ephemeral=True)
 
-                await response_modal.response.send_message(embed=embed, ephemeral=True)
+            await player.set_volume(new_volume)
+            embed = disnake.Embed(
+                title=f"Set volume to {new_volume}", color=disnake.Color.green()
+            )
+            await response_modal.response.send_message(embed=embed, ephemeral=True)
 
     @disnake.ui.button(label="Queue", style=disnake.ButtonStyle.blurple, row=1)
     async def queue(
@@ -131,7 +128,7 @@ class QueueView(View):
                         f"`{index}.` **{music.author} - {music.title}**\n"
                     )
 
-                embed.set_footer(text="Page 1")
+                embed.set_footer(text="Page 0")
 
                 paginator = EmbedPaginator(
                     interaction, interaction.user, embed, player.queue[10:], None, 10
