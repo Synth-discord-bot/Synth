@@ -313,7 +313,6 @@ class Music(commands.Cog, name="Music Commands"):
         embed.set_footer(text="Synth © 2023 | All Rights Reserved")
         embed.set_image(url=track.artwork_url)
 
-        # channel = await event.player.guild.fetch_channel(self.channels.get(event.player.guild.id))
         if channel := self.channels.get(event.player.guild.id):
             message = await channel.send(embed=embed)
 
