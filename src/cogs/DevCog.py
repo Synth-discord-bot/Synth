@@ -51,20 +51,20 @@ class PanelView(disnake.ui.Select):
         selected_option = interaction.values[0]
         if selected_option == "reload":
             modal = disnake.ui.Modal(
-                title="Realod cog",
-                custom_id="reaload_cog",
+                title="Reload cog",
+                custom_id="reload_cog",
                 components=[
                     disnake.ui.TextInput(
                         label="Enter the cog name you'd like to reload",
                         custom_id="reload_cog_input",
-                        placeholder="cog... (withought .py)",
+                        placeholder="cog... (without .py)",
                     )
                 ],
             )
             await interaction.response.send_modal(modal=modal)
             modal_response = await self.bot.wait_for(
                 "modal_submit",
-                check=lambda i: i.custom_id == "reaload_cog"
+                check=lambda i: i.custom_id == "reload_cog"
                 and i.user == interaction.user,
             )
             await modal_response.response.defer(ephemeral=True)
@@ -88,7 +88,7 @@ class PanelView(disnake.ui.Select):
                     disnake.ui.TextInput(
                         label="Enter the cog name you'd like to load",
                         custom_id="load_cog_input",
-                        placeholder="cog... (withought .py)",
+                        placeholder="cog... (without .py)",
                     )
                 ],
             )
@@ -119,7 +119,7 @@ class PanelView(disnake.ui.Select):
                     disnake.ui.TextInput(
                         label="Enter the cog name you'd like to unload",
                         custom_id="unload_cog_input",
-                        placeholder="cog... (withought .py)",
+                        placeholder="cog... (without .py)",
                     )
                 ],
             )
