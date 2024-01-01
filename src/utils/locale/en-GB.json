@@ -60,9 +60,11 @@
     "GIVEAWAY_REROLL_COMMAND_NAME": "reroll",
     "GIVEAWAY_REROLL_COMMAND_DESC": "Re-roll the giveaway",
     "GIVEAWAY_REROLL_COMMAND_MESSAGEID_NAME": "message-id",
-    "GIVEAWAY_REROLL_COMMAND_MESSAGEID_DESC": "Message ID to giveaway",
+    "GIVEAWAY_REROLL_COMMAND_MESSAGEID_DESC": "Giveaway message ID",
     "GIVEAWAY_REROLL_COMMAND_WINNERS_NAME": "winners",
     "GIVEAWAY_REROLL_COMMAND_WINNERS_DESC": "Pick the number of winners",
+    "GIVEAWAY_END_COMMAND_NAME": "end",
+    "GIVEAWAY_END_COMMAND_DESC": "End the giveaway",
 
 
     "INVITE_TRACKER_COMMAND_NAME": "invite_tracker",

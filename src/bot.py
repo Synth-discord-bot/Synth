@@ -18,7 +18,7 @@ class Bot(commands.InteractionBot):
             intents=disnake.Intents.all(),
             reload=True,
             owner_ids=[419159175009009675, 999682446675161148, 1167458549132181668],
-            test_guilds=[1109511263509291098, 1175423496088735857],
+            test_guilds=[1109511263509291098]#, 1175423496088735857],
         )
 
         # self.ipc = Server(self, secret_key=config.SECRET_IPC_KEY)  # well... need talk about config
