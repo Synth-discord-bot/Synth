@@ -270,8 +270,7 @@ class Backup(commands.Cog):
                     inline=False,
                 )
         embed.set_footer(
-            text="Synth © 2023 | All Rights Reserved", 
-            icon_url=self.bot.user.avatar
+            text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
         )
         await interaction.send(embed=embed, view=BackupsView(self.bot), ephemeral=True)
 

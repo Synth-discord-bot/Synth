@@ -94,11 +94,13 @@ class QueueView(View):
                 check=lambda i: i.custom_id == "volume" and i.user == interaction.user,
             )
             new_volume = int(response_modal.text_values["new_volume"])
-            
+
             error_embed = disnake.Embed(color=disnake.Color.red())
             if new_volume > 100 or new_volume < 1:
                 error_embed.title = f"Please enter a number, between `1` and `100`"
-                return await response_modal.response.send_message(embed=error_embed, ephemeral=True)
+                return await response_modal.response.send_message(
+                    embed=error_embed, ephemeral=True
+                )
 
             await player.set_volume(new_volume)
             embed = disnake.Embed(

@@ -207,8 +207,8 @@ class Giveaway(commands.Cog):
         await interaction.response.defer(ephemeral=True)
 
         embed = disnake.Embed(color=disnake.Color.green())
-        embed.title="Giveaway Reroll"
-        embed.description=(
+        embed.title = "Giveaway Reroll"
+        embed.description = (
             f"The [giveaway](https://discord.com/channels/{interaction.guild.id}/{interaction.channel.id}/{message_id}) has been rerolled.\n"
             f"🎉 New winners: {winners_text}"
         )
@@ -216,7 +216,6 @@ class Giveaway(commands.Cog):
             text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
         )
         await interaction.followup.send(embed=embed, ephemeral=True)
-
 
     @giveaway.sub_command(
         description=Localized("End giveaway", key="GIVEAWAY_END_COMMAND_DESC"),
@@ -229,8 +228,8 @@ class Giveaway(commands.Cog):
             description=Localized(
                 "Message ID", key="GIVEAWAY_REROLL_COMMAND_MESSAGEID_DESC"
             ),
-            name=Localized("message_id", key="GIVEAWAY_REROLL_COMMAND_MESSAGEID_NAME")
-        )
+            name=Localized("message_id", key="GIVEAWAY_REROLL_COMMAND_MESSAGEID_NAME"),
+        ),
     ):
         try:
             giveaway_msg = await interaction.channel.fetch_message(message_id)
@@ -255,13 +254,15 @@ class Giveaway(commands.Cog):
             )
             return
 
-        giveaway_data = await self.giveaway_db.collection.find_one({"message_id": int(message_id)})
+        giveaway_data = await self.giveaway_db.collection.find_one(
+            {"message_id": int(message_id)}
+        )
         await self.end_gw(giveaway_data)
         await interaction.response.defer(ephemeral=True)
 
         embed = disnake.Embed(color=disnake.Color.green())
-        embed.title="Force Giveaway Ended"
-        embed.description=(
+        embed.title = "Force Giveaway Ended"
+        embed.description = (
             f"The [giveaway](https://discord.com/channels/{interaction.guild.id}/{interaction.channel.id}/{message_id}) has ended.\n"
             f"To reroll the giveaway use `/giveaway reroll {message_id}`"
         )
@@ -269,7 +270,6 @@ class Giveaway(commands.Cog):
             text="Synth © 2023 | All Rights Reserved", icon_url=self.bot.user.avatar
         )
         await interaction.followup.send(embed=embed, ephemeral=True)
-        
 
     @tasks.loop(seconds=1)
     async def check_gw(self):
