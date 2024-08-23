@@ -1,4 +1,4 @@
-## The Synth Discord Bot
+## The Synth Discord Bot - Deprecated Project.
 
 ### **Synth** -  is a multi-functional Discord bot with a wide range of features to help you customize your guild. It includes everything from basic utility commands and fun commands to more advanced features. 
 
@@ -22,5 +22,5 @@
 
 ## Developers:
 #### [LazyDev](https://github.com/devbutlazy)
-#### [Weever](https://github.com/prunus1337)
-#### [Snaky](https://github.com/Snaky1a)
+#### [Weever](https://github.com/Weever1337)
+#### [Snaky](https://github.com/nixxoq)
